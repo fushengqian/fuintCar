@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fuint.repository.mapper.MtVehicleMapper">
+    <select id="getVehicleByUserId" resultType="com.fuint.repository.model.MtVehicle">
+        select * from mt_vehicle t where t.USER_ID = #{userId} and t.status != 'D'
+        <if test="isDefault != null and isDefault">
+            AND t.IS_DEFAULT = 'Y'
+        </if>
+        order by t.IS_DEFAULT DESC
+    </select>
+</mapper>
