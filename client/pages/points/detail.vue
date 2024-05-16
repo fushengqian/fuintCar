@@ -156,7 +156,7 @@
   .my-point {
       height: 320rpx;
       color: #FFFFFF;
-      background: #409EFF;
+      background: $fuint-theme;
       padding-top: 80rpx;
       text-align: center;
       .my-tip {
@@ -224,6 +224,6 @@
     text-align: center;
     color: #fff;
     border-radius: 5rpx;
-    background: linear-gradient(to right, #409EFF, #409EFF);
+    background: linear-gradient(to right, $fuint-theme, $fuint-theme);
   }
 </style>

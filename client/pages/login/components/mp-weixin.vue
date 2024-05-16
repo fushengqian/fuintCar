@@ -206,7 +206,7 @@
     .button {
       height: 88rpx;
       line-height: 88rpx;
-      background: #00acac;
+      background: $fuint-theme;
       color: #fff;
       font-size: 30rpx;
       border-radius: 12rpx;
@@ -215,7 +215,7 @@
     .button-mobile {
         height: 88rpx;
         line-height: 88rpx;
-        background: #00acac;
+        background: $fuint-theme;
         color: #fff;
         font-size: 30rpx;
         border-radius: 12rpx;

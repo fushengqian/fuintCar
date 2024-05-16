@@ -201,7 +201,7 @@
   .header {
     display: flex;
     justify-content: space-between;
-    background-color: #409EFF;
+    background-color: $fuint-theme;
     height: 280rpx;
     padding: 56rpx 30rpx 0 30rpx;
 
@@ -566,7 +566,7 @@
       &.common {
           color: #fff;
           border: none;
-          background: linear-gradient(to right, #409EFF, #409EFF);
+          background: linear-gradient(to right, $fuint-theme, $fuint-theme);
       }
 
       &.active {
@@ -595,7 +595,7 @@
         padding: 30rpx;
         font-size: 30rpx;
         background: #fff;
-        border: 1rpx solid #409EFF;
+        border: 1rpx solid $fuint-theme;
         border-radius: 8rpx;
         color: #888;
         margin-bottom: 12rpx;
@@ -610,7 +610,7 @@
           }
 
           &.balance {
-            color: #409EFF;
+            color: $fuint-theme;
           }
         }
       }

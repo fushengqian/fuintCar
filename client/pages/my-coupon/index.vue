@@ -275,7 +275,7 @@
    text-align: center;
    color: #fff;
    border-radius: 5rpx;
-   background: linear-gradient(to right, #00acac, #00acac);
+   background: linear-gradient(to right, $fuint-theme, $fuint-theme);
  }
 }
 </style>

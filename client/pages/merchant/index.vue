@@ -313,7 +313,7 @@
     display: flex;
     align-items: center;
     padding-left: 30rpx;
-    background: #409EFF;
+    background: $fuint-theme;
     margin: 0 20rpx;
     border-top-left-radius: 8rpx;
     border-top-right-radius: 8rpx;
@@ -392,7 +392,7 @@
     height: 260rpx;
     text-align: center;
     color: #fff;
-    background: #409EFF;
+    background: $fuint-theme;
     margin: 0 20rpx;
     border-bottom-right-radius: 8rpx;
     border-bottom-left-radius: 8rpx;

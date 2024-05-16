@@ -137,7 +137,7 @@ export default {
     width: 398upx;
     height: 76upx;
     border-radius: 80upx;
-    border: 3upx solid #409EFF;
+    border: 3upx solid $fuint-theme;
     font-weight: bold;
     position: relative;
     .switch_view{

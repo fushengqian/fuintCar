@@ -16,7 +16,7 @@
      padding: 30rpx;
      font-size: 30rpx;
      background: #fff;
-     border: 1rpx solid #409EFF;
+     border: 1rpx solid $fuint-theme;
      border-radius: 8rpx;
      color: #888;
      margin-bottom: 12rpx;
@@ -31,7 +31,7 @@
        }
 
        &.balance {
-         color: #409EFF;
+         color: $fuint-theme;
        }
      }
    }
@@ -155,8 +155,8 @@
       margin-top: 30rpx;
       margin-bottom: 1rpx;
       color: #fff;
-      background: #409EFF;
-      border: 1rpx solid #409EFF;
+      background: $fuint-theme;
+      border: 1rpx solid $fuint-theme;
       border-radius: 8rpx;
     }
   }
@@ -399,7 +399,7 @@
   
   // 提交按钮
   .flow-btn {
-    background: linear-gradient(to right, #409EFF, #409EFF);
+    background: linear-gradient(to right, $fuint-theme, $fuint-theme);
     color: #fff;
     text-align: center;
     height: 92rpx;

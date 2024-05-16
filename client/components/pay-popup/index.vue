@@ -337,7 +337,7 @@
          padding: 30rpx;
          font-size: 30rpx;
          background: #fff;
-         border: 1rpx solid #409EFF;
+         border: 1rpx solid $fuint-theme;
          border-radius: 8rpx;
          color: #888;
          margin-bottom: 12rpx;
@@ -352,7 +352,7 @@
            }
    
            &.balance {
-             color: #409EFF;
+             color: $fuint-theme;
            }
          }
        }
@@ -454,7 +454,7 @@
                 border-radius: 10rpx;
                 .iconfont {
                     margin-right: 10rpx;
-                    color: #409EFF
+                    color: $fuint-theme;
                 }
                 .item-point {
                     .amount {
@@ -462,7 +462,7 @@
                     }
                     .modify {
                         margin-left: 30rpx;
-                        color: #409EFF;
+                        color: $fuint-theme;
                     }
                 }
                 .item-amount {

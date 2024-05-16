@@ -173,7 +173,7 @@
       height: 78rpx;
       font-size: 28rpx;
       border-radius: 0 20px 20px 0;
-      background: #409EFF;
+      background: $fuint-theme;
     }
   }
 

@@ -222,11 +222,11 @@
 
   // 立即购买按钮
   .btn-item-main {
-    background: linear-gradient(to right, #f9211c, #ff6335);
+    background: #f9211c;
   }
 
   // 购物车按钮
   .btn-item-deputy {
-    background: linear-gradient(to right, #409EFF, #409EFF);
+    background: $fuint-theme;
   }
 }

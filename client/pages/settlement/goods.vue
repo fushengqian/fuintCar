@@ -110,7 +110,7 @@
         </view>
         <view class="flex-five dis-flex flex-x-end flex-y-center">
           <text class="points-money col-m">-￥{{ usePointAmount }}</text>
-          <u-switch v-model="isUsePoints" size="48" active-color="#00acac" @change="getCartList()"></u-switch>
+          <u-switch v-model="isUsePoints" size="48" active-color="#409EFF" @change="getCartList()"></u-switch>
         </view>
       </view>
     </view>

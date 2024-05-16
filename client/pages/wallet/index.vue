@@ -114,7 +114,7 @@
   .space-upper {
     padding: 100rpx 0;
     text-align: center;
-    background: #409EFF;
+    background: $fuint-theme;
     margin: 50rpx 30rpx 10rpx 30rpx;
     border-radius: 8rpx;
   }

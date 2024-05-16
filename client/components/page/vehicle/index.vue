@@ -41,7 +41,7 @@
     height: 100rpx;
     padding: 0 10rpx;
     .plate {
-       background: #409EFF;
+       background: $fuint-theme;
        color: #ffffff;
        border: #f5f5f5 solid 1rpx;
        height: 100rpx;

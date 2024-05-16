@@ -288,7 +288,7 @@
       width: 100%;
       min-height: 220rpx;
       padding: 20rpx;
-      border: 1rpx solid #409EFF;
+      border: 1rpx solid $fuint-theme;
       padding: 10rpx;
       border-radius: 5rpx;
       box-sizing: border-box;
@@ -299,7 +299,7 @@
   .row-item {
     padding: 40rpx 20rpx;
     font-size: 30rpx;
-    background: #409EFF;
+    background: $fuint-theme;
     margin-left: 20rpx;
     margin-right: 20rpx;
     border-radius: 10rpx;
@@ -338,8 +338,8 @@
         margin-top: 30rpx;
         margin-bottom: 1rpx;
         color: #fff;
-        background: #409EFF;
-        border: 1rpx solid #409EFF;
+        background: $fuint-theme;
+        border: 1rpx solid $fuint-theme;
         border-radius: 8rpx;
       }
     }
@@ -384,7 +384,7 @@
       }
 
       &.color-default {
-        background: linear-gradient(-128deg, #409EFF, #409EFF);
+        background: linear-gradient(-128deg, $fuint-theme, $fuint-theme);
       }
 
       &.color-gray {
@@ -504,7 +504,7 @@
     }
 
     .btn-item-main {
-      background: linear-gradient(to right, #409EFF, #409EFF);
+      background: linear-gradient(to right, $fuint-theme, $fuint-theme);
       // 禁用按钮
       &.disabled {
         background: #cccccc;

@@ -411,7 +411,7 @@
     text-align: center;
     color: #fff;
     border-radius: 5rpx;
-    background: linear-gradient(to right, #409EFF, #409EFF);
+    background: linear-gradient(to right, $fuint-theme, $fuint-theme);
   }
 
   // 底部操作栏
@@ -481,7 +481,7 @@
 
       // 立即购买按钮
       .btn-main {
-        background: linear-gradient(to right, #409EFF, #409EFF);
+        background: linear-gradient(to right, $fuint-theme, $fuint-theme);
         color: #fff;
         padding-top: 5rpx;
         border-radius: 5rpx;

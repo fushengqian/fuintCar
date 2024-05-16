@@ -254,6 +254,6 @@
     text-align: center;
     color: #fff;
     border-radius: 5rpx;
-    background: linear-gradient(to right, #409EFF, #409EFF);
+    background: linear-gradient(to right, $fuint-theme, $fuint-theme);
   }
 </style>

@@ -158,7 +158,7 @@
     box-sizing: border-box;
     border-radius: 8rpx;
     color: #fff;
-    background: #409EFF;
+    background: $fuint-theme;
     box-shadow: 0 5px 22px 0 rgba(0, 0, 0, 0.26);
   }
 

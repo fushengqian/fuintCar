@@ -273,7 +273,7 @@
     text-align: center;
     color: #fff;
     border-radius: 5rpx;
-    background: linear-gradient(to right, #409EFF, #409EFF);
+    background: linear-gradient(to right, $fuint-theme, $fuint-theme);
   }
   
   // 排序组件
@@ -396,8 +396,8 @@
       color: #FFFFFF;
       float: right;
       margin-right: 20rpx;
-      border: solid 1rpx #409EFF;
-      background: #409EFF;
+      border: solid 1rpx $fuint-theme;
+      background: $fuint-theme;
       padding: 8rpx 20rpx 8rpx 20rpx;
       border-radius: 5rpx;
       display: block;

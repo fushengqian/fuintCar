@@ -203,7 +203,7 @@
     .btn-item-back {
       margin-top: 20rpx;
       background: #FFFFFF;
-      border: 1px solid #409EFF;
+      border: 1px solid $fuint-theme;
       color: #666666;
     }
 

@@ -160,7 +160,7 @@
     }
 
     .btn-item-main {
-      background: linear-gradient(to right, #409EFF, #00acab);
+      background: $fuint-theme;
       // 禁用按钮
       &.disabled {
         background: #cccccc;

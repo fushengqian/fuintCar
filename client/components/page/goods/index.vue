@@ -171,7 +171,7 @@
   .goods-container {
       .diy-goods {
         .goods-list {
-          padding: 4rpx;
+          padding: 5rpx;
           box-sizing: border-box;
           .goods-item {
             box-sizing: border-box;
@@ -335,8 +335,8 @@
                   color: #FFFFFF;
                   float: right;
                   margin-right: 20rpx;
-                  border: solid 1rpx #409EFF;
-                  background: #409EFF;
+                  border: solid 1rpx $fuint-theme;
+                  background: $fuint-theme;
                   padding: 8rpx 20rpx 8rpx 20rpx;
                   border-radius: 5rpx;
                   display: block;

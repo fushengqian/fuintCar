@@ -115,6 +115,6 @@
           border-radius: 40rpx;
           width: 300rpx;
           margin: 50rpx auto;
-          background: #409EFF;
+          background: $fuint-theme;
       }
 </style>
