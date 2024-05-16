@@ -3,9 +3,9 @@
 #### 介绍
 fuint汽车美容4S店会员系统是一套开源的汽车行业会员管理和营销系统。适用于汽车4S店、洗车店、汽车维修店、汽修厂、汽车美容养护会所等汽车相关服务商家。系统基于前后端分离的架构，后端采用<b>Java SpringBoot</b> + <b>Mysql</b>，前端基于当前流行的<b>Uniapp</b>，<b>Element UI</b>，支持小程序、h5。提供会员车辆绑定管理，次卡核销服务，服务订单管理，以及汽车保养，周边商品售卖等功能。。
 以下是前台的页面展示：
-<p><img src="https://fuint-cn.oss-cn-shenzhen.aliyuncs.com/screenshots/car/g1.png?v=1" alt="前台页面1"></p>
-<p><img src="https://fuint-cn.oss-cn-shenzhen.aliyuncs.com/screenshots/car/g2.png?v=2" alt="前台页面2"></p>
-<p><img src="https://fuint-cn.oss-cn-shenzhen.aliyuncs.com/screenshots/car/g3.png?v=2" alt="前台页面3"></p>
+<p><img src="https://fuint-cn.oss-cn-shenzhen.aliyuncs.com/screenshots/car/g1.png?v=21" alt="前台页面1"></p>
+<p><img src="https://fuint-cn.oss-cn-shenzhen.aliyuncs.com/screenshots/car/g2.png?v=21" alt="前台页面2"></p>
+<p><img src="https://fuint-cn.oss-cn-shenzhen.aliyuncs.com/screenshots/car/g3.png?v=21" alt="前台页面3"></p>
 
 本系统侧重于线下实体店的私域流量的运营，同时提供会员端小程序和收银系统的线上线下统一渠道，帮助商户降低获客成本。顾客通过扫码支付成为私域流量，支付即可成为会员。积分和卡券功能建立起会员等级体系，通过消息推送和短信营销方便触达用户。
 <p>1、会员运营自动化：商家通过日常活动设置，如开卡礼设置，沉睡唤醒等，成为会员后自动给顾客送优惠券，让顾客更有黏性，提升会员运营效率。</p>
