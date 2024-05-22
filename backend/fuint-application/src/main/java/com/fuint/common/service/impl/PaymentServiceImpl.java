@@ -72,11 +72,20 @@ public class PaymentServiceImpl implements PaymentService {
     private OpenGiftService openGiftService;
 
     /**
-     * 创建支付订单
+     * 创建预支付订单
+     *
+     * @param userInfo 会员信息
+     * @param orderInfo 订单信息
+     * @param payAmount 支付金额
+     * @param authCode 付款码
+     * @param giveAmount 赠送金额
+     * @param ip 支付IP地址
+     * @param platform 支付平台
+     * @param isWechat 是否微信客户端
      * @return
      * */
     @Override
-    public ResponseObject createPrepayOrder(MtUser userInfo, MtOrder orderInfo, Integer payAmount, String authCode, Integer giveAmount, String ip, String platform) throws BusinessCheckException {
+    public ResponseObject createPrepayOrder(MtUser userInfo, MtOrder orderInfo, Integer payAmount, String authCode, Integer giveAmount, String ip, String platform, String isWechat) throws BusinessCheckException {
         logger.info("PaymentService createPrepayOrder inParams userInfo={} payAmount={} giveAmount={} goodsInfo={}", userInfo, payAmount, giveAmount, orderInfo);
 
         ResponseObject responseObject;
@@ -85,7 +94,7 @@ public class PaymentServiceImpl implements PaymentService {
             responseObject = alipayService.createPrepayOrder(userInfo, orderInfo, payAmount, authCode, giveAmount, ip, platform);
         } else {
             // 微信支付
-            responseObject = weixinService.createPrepayOrder(userInfo, orderInfo, payAmount, authCode, giveAmount, ip, platform);
+            responseObject = weixinService.createPrepayOrder(userInfo, orderInfo, payAmount, authCode, giveAmount, ip, platform, isWechat);
         }
 
         logger.info("PaymentService createPrepayOrder outParams {}", responseObject.toString());
@@ -95,7 +104,7 @@ public class PaymentServiceImpl implements PaymentService {
     /**
      * 支付成功回调
      *
-     * @param orderInfo
+     * @param orderInfo 订单信息
      * @return
      * */
     @Override
@@ -108,11 +117,6 @@ public class PaymentServiceImpl implements PaymentService {
         Boolean isPay = orderService.setOrderPayed(orderInfo.getId(), null);
         if (mtOrder == null || !isPay) {
             return false;
-        }
-
-        // 会员升级订单
-        if (mtOrder.getType().equals(OrderTypeEnum.MEMBER.getKey())) {
-            openGiftService.openGift(mtOrder.getUserId(), Integer.parseInt(mtOrder.getParam()), false);
         }
 
         // 储值卡订单
@@ -152,9 +156,9 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     /**
-     * 订单支付
+     * 发起支付
      *
-     * @param request
+     * @param request 请求参数
      * @return
      * */
     @Override
@@ -162,6 +166,7 @@ public class PaymentServiceImpl implements PaymentService {
     public Map<String, Object> doPay(HttpServletRequest request) throws BusinessCheckException {
         String token = request.getHeader("Access-Token");
         String platform = request.getHeader("platform") == null ? "" : request.getHeader("platform");
+        String isWechat = request.getHeader("isWechat") == null ? "" : request.getHeader("isWechat");
         String payType = request.getParameter("payType") == null ? PayTypeEnum.JSAPI.getKey() : request.getParameter("payType");
         String cashierPayAmount = request.getParameter("cashierPayAmount") == null ? "" : request.getParameter("cashierPayAmount"); // 收银台实付金额
         String cashierDiscountAmount = request.getParameter("cashierDiscountAmount") == null ? "" : request.getParameter("cashierDiscountAmount"); // 收银台优惠金额
@@ -181,6 +186,11 @@ public class PaymentServiceImpl implements PaymentService {
         if (loginInfo != null) {
             mtUser = memberService.queryMemberById(loginInfo.getId());
         }
+
+        // 重新生成订单号
+        String orderSn = CommonUtil.createOrderSN(orderInfo.getUserId().toString());
+        orderInfo.setOrderSn(orderSn);
+        orderService.updateOrder(orderInfo);
 
         // 收银员操作
         AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
@@ -215,6 +225,9 @@ public class PaymentServiceImpl implements PaymentService {
         BigDecimal realPayAmount = orderInfo.getAmount().subtract(new BigDecimal(orderInfo.getDiscount().toString())).subtract(new BigDecimal(orderInfo.getPointAmount().toString())).add(orderInfo.getDeliveryFee());
         Object payment = null;
         if (payType.equals(PayTypeEnum.BALANCE.getKey())) {
+            if (orderInfo.getType().equals(OrderTypeEnum.PRESTORE.getKey()) || orderInfo.getType().equals(OrderTypeEnum.RECHARGE.getKey())) {
+                throw new BusinessCheckException("抱歉，不能使用余额支付");
+            }
             // 余额支付
             MtBalance balance = new MtBalance();
             balance.setMobile(mtUser.getMobile());
@@ -255,7 +268,7 @@ public class PaymentServiceImpl implements PaymentService {
             String ip = CommonUtil.getIPFromHttpRequest(request);
             BigDecimal pay = realPayAmount.multiply(new BigDecimal("100"));
             orderInfo.setPayType(payType);
-            ResponseObject paymentInfo = createPrepayOrder(mtUser, orderInfo, (pay.intValue()), authCode, 0, ip, platform);
+            ResponseObject paymentInfo = createPrepayOrder(mtUser, orderInfo, (pay.intValue()), authCode, 0, ip, platform, isWechat);
             if (paymentInfo.getData() == null) {
                 throw new BusinessCheckException("抱歉，支付失败");
             }
