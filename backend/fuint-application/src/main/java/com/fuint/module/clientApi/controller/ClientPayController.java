@@ -1,10 +1,10 @@
 package com.fuint.module.clientApi.controller;
 
 import com.alipay.api.AlipayApiException;
-import com.fuint.common.bean.WxPayBean;
 import com.fuint.common.dto.*;
 import com.fuint.common.enums.OrderStatusEnum;
 import com.fuint.common.enums.SettingTypeEnum;
+import com.fuint.common.enums.YesOrNoEnum;
 import com.fuint.common.service.*;
 import com.fuint.common.util.TokenUtil;
 import com.fuint.framework.exception.BusinessCheckException;
@@ -43,8 +43,6 @@ import java.util.Map;
 public class ClientPayController extends BaseController {
 
     private static final Logger logger = LoggerFactory.getLogger(ClientPayController.class);
-
-    WxPayBean wxPayBean;
 
     /**
      * 微信服务接口
@@ -99,6 +97,7 @@ public class ClientPayController extends BaseController {
     @CrossOrigin
     public ResponseObject prePay(HttpServletRequest request) throws BusinessCheckException {
         String token = request.getHeader("Access-Token");
+        Integer storeId = request.getHeader("storeId") == null ? 0 : Integer.parseInt(request.getHeader("storeId"));
         String useFor = request.getParameter("type") == null ? "" : request.getParameter("type");
         String merchantNo = request.getHeader("merchantNo");
         UserInfo userInfo = TokenUtil.getUserInfoByToken(token);
@@ -109,7 +108,7 @@ public class ClientPayController extends BaseController {
         Map<String, Object> outParams = new HashMap<>();
 
         List<MtSetting> settingList = settingService.getSettingList(mtUser.getMerchantId(), SettingTypeEnum.POINT.getKey());
-        String canUsedAsMoney = "false";
+        String canUsedAsMoney = YesOrNoEnum.FALSE.getKey();
         String exchangeNeedPoint = "0";
         for (MtSetting setting : settingList) {
             if (setting.getName().equals("canUsedAsMoney")) {
@@ -122,7 +121,7 @@ public class ClientPayController extends BaseController {
         // 可用卡券
         CouponDto canUseCouponInfo = null;
         if (mtUser != null) {
-            List<CouponDto> couponList = userCouponService.getPayAbleCouponList(mtUser.getId(), useFor);
+            List<CouponDto> couponList = userCouponService.getPayAbleCouponList(mtUser.getId(), storeId, useFor);
             if (couponList.size() > 0) {
                 canUseCouponInfo = couponList.get(0);
             }
@@ -136,13 +135,16 @@ public class ClientPayController extends BaseController {
             if (userGrade != null) {
                 if (userGrade.getDiscount() > 0) {
                     payDiscount = new BigDecimal(userGrade.getDiscount()).divide(new BigDecimal("10"), BigDecimal.ROUND_CEILING, 3);
+                    if (payDiscount.compareTo(new BigDecimal("0")) <= 0) {
+                        payDiscount = new BigDecimal("1");
+                    }
                 }
             }
         }
 
         // 可用积分
         Integer canUsePointAmount = 0;
-        if (mtUser != null && canUsedAsMoney.equals("true")) {
+        if (mtUser != null && canUsedAsMoney.equals(YesOrNoEnum.TRUE.getKey())) {
             canUsePointAmount = mtUser.getPoint();
         }
 
@@ -162,13 +164,9 @@ public class ClientPayController extends BaseController {
     @ApiOperation(value = "发起支付")
     @RequestMapping(value = "/doPay", method = RequestMethod.GET)
     @CrossOrigin
-    public ResponseObject doPay(HttpServletRequest request) {
-        try {
-            Map<String, Object> result = paymentService.doPay(request);
-            return getSuccessResult(result);
-        } catch (BusinessCheckException e) {
-            return getFailureResult(201, e.getMessage() == null ? "订单支付出错" : e.getMessage());
-        }
+    public ResponseObject doPay(HttpServletRequest request) throws BusinessCheckException {
+       Map<String, Object> result = paymentService.doPay(request);
+       return getSuccessResult(result);
     }
 
     /**

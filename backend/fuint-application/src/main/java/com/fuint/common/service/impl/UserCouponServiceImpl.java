@@ -91,7 +91,6 @@ public class UserCouponServiceImpl extends ServiceImpl<MtUserCouponMapper, MtUse
      */
     @Override
     public PaginationResponse<MtUserCoupon> queryUserCouponListByPagination(PaginationRequest paginationRequest) {
-        com.github.pagehelper.Page<MtUserCoupon> pageHelper = PageHelper.startPage(paginationRequest.getCurrentPage(), paginationRequest.getPageSize());
         LambdaQueryWrapper<MtUserCoupon> lambdaQueryWrapper = Wrappers.lambdaQuery();
         lambdaQueryWrapper.ne(MtUserCoupon::getStatus, StatusEnum.DISABLE.getKey());
 
@@ -121,6 +120,7 @@ public class UserCouponServiceImpl extends ServiceImpl<MtUserCouponMapper, MtUse
         }
 
         lambdaQueryWrapper.orderByDesc(MtUserCoupon::getId);
+        Page<MtUserCoupon> pageHelper = PageHelper.startPage(paginationRequest.getCurrentPage(), paginationRequest.getPageSize());
         List<MtUserCoupon> dataList = mtUserCouponMapper.selectList(lambdaQueryWrapper);
 
         PageRequest pageRequest = PageRequest.of(paginationRequest.getCurrentPage(), paginationRequest.getPageSize());
@@ -135,7 +135,8 @@ public class UserCouponServiceImpl extends ServiceImpl<MtUserCouponMapper, MtUse
 
     /**
      * 领取卡券(优惠券、计次卡)
-     * @param receiveParam
+     *
+     * @param receiveParam 领取参数
      * @return
      * */
     @Override
@@ -235,7 +236,7 @@ public class UserCouponServiceImpl extends ServiceImpl<MtUserCouponMapper, MtUse
              if (userCouponId > 0) {
                  userCoupon = mtUserCouponMapper.selectById(userCouponId);
              }
-
+             userCoupon.setMerchantId(userInfo.getMerchantId());
              userCoupon.setCouponId(couponInfo.getId());
              userCoupon.setType(couponInfo.getType());
              userCoupon.setAmount(couponInfo.getAmount());
@@ -285,7 +286,8 @@ public class UserCouponServiceImpl extends ServiceImpl<MtUserCouponMapper, MtUse
 
     /**
      * 储值卡券
-     * @param paramMap
+     *
+     * @param paramMap 储值参数
      * @return
      * */
     public boolean preStore(Map<String, Object> paramMap) throws BusinessCheckException {
@@ -331,8 +333,9 @@ public class UserCouponServiceImpl extends ServiceImpl<MtUserCouponMapper, MtUse
 
     /**
      * 获取会员卡券列表
-     * @param userId
-     * @param status
+     *
+     * @param userId 会员ID
+     * @param status 状态
      * @return
      * */
     @Override
@@ -342,8 +345,10 @@ public class UserCouponServiceImpl extends ServiceImpl<MtUserCouponMapper, MtUse
 
     /**
      * 获取会员卡券列表
+     *
      * @param paramMap
      * @throws BusinessCheckException
+     * @return
      * */
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -351,9 +356,11 @@ public class UserCouponServiceImpl extends ServiceImpl<MtUserCouponMapper, MtUse
         Integer pageNumber = paramMap.get("pageNumber") == null ? Constants.PAGE_NUMBER : Integer.parseInt(paramMap.get("pageNumber").toString());
         Integer pageSize = paramMap.get("pageSize") == null ? Constants.PAGE_SIZE : Integer.parseInt(paramMap.get("pageSize").toString());
         String userId = paramMap.get("userId") == null ? "" : paramMap.get("userId").toString();
+        String userNo = paramMap.get("userNo") == null ? "" : paramMap.get("userNo").toString();
         String status =  paramMap.get("status") == null ? "" : paramMap.get("status").toString();
         String type =  paramMap.get("type") == null ? "": paramMap.get("type").toString();
         String mobile = paramMap.get("mobile") == null ? "" : paramMap.get("mobile").toString();
+        String merchantId = paramMap.get("merchantId") == null ? "" : paramMap.get("merchantId").toString();
         String storeId = paramMap.get("storeId") == null ? "" : paramMap.get("storeId").toString();
         String couponId = paramMap.get("couponId") == null ? "" : paramMap.get("couponId").toString();
         String code = paramMap.get("code") == null ? "" : paramMap.get("code").toString();
@@ -394,11 +401,23 @@ public class UserCouponServiceImpl extends ServiceImpl<MtUserCouponMapper, MtUse
         if (StringUtil.isNotEmpty(userId)) {
             lambdaQueryWrapper.eq(MtUserCoupon::getUserId, userId);
         }
+        if (StringUtil.isNotEmpty(userNo)) {
+            if (StringUtil.isEmpty(merchantId)) {
+                merchantId = "0";
+            }
+            MtUser userInfo = memberService.queryMemberByUserNo(Integer.parseInt(merchantId), userNo);
+            if (userInfo != null) {
+                lambdaQueryWrapper.eq(MtUserCoupon::getUserId, userInfo.getId());
+            }
+        }
         if (StringUtil.isNotEmpty(mobile)) {
             lambdaQueryWrapper.eq(MtUserCoupon::getMobile, mobile);
         }
         if (StringUtil.isNotEmpty(type)) {
             lambdaQueryWrapper.eq(MtUserCoupon::getType, type);
+        }
+        if (StringUtil.isNotEmpty(merchantId)) {
+            lambdaQueryWrapper.eq(MtUserCoupon::getMerchantId, merchantId);
         }
         if (StringUtil.isNotEmpty(storeId)) {
             lambdaQueryWrapper.eq(MtUserCoupon::getStoreId, storeId);
@@ -423,7 +442,7 @@ public class UserCouponServiceImpl extends ServiceImpl<MtUserCouponMapper, MtUse
                 MtCoupon couponInfo = couponService.queryCouponById(userCouponDto.getCouponId());
                 MtUser userInfo = memberService.queryMemberById(userCouponDto.getUserId());
                 MtStore storeInfo = storeService.queryStoreById(userCouponDto.getStoreId());
-                if (couponInfo == null || userInfo == null) {
+                if (couponInfo == null) {
                     continue;
                 }
 
@@ -445,6 +464,7 @@ public class UserCouponServiceImpl extends ServiceImpl<MtUserCouponMapper, MtUse
                 dto.setCreateTime(userCouponDto.getCreateTime());
                 dto.setUserInfo(userInfo);
                 dto.setStoreInfo(storeInfo);
+                dto.setNum(0);
 
                 boolean canUse = couponService.isCouponEffective(couponInfo, userCouponDto);
                 if (!userCouponDto.getStatus().equals(UserCouponStatusEnum.UNUSED.getKey())) {
@@ -480,7 +500,8 @@ public class UserCouponServiceImpl extends ServiceImpl<MtUserCouponMapper, MtUse
                 // 计次卡tips
                 if (couponInfo.getType().equals(CouponTypeEnum.TIMER.getKey())) {
                     Long confirmNum = confirmLogService.getConfirmNum(userCouponDto.getId());
-                    tips = "已集"+ confirmNum +"次，需集满" + couponInfo.getOutRule() + "次";
+                    tips = "已使用"+ confirmNum +"次，可使用" + couponInfo.getOutRule() + "次";
+                    dto.setNum(Integer.parseInt(couponInfo.getOutRule()) - confirmNum.intValue());
                 }
 
                 dto.setTips(tips);
@@ -504,11 +525,14 @@ public class UserCouponServiceImpl extends ServiceImpl<MtUserCouponMapper, MtUse
 
     /**
      * 获取会员可支付使用的卡券
-     * @param userId
+     *
+     * @param userId 会员ID
+     * @param storeId 使用门店
+     * @param useFor 用途
      * @return
      * */
     @Override
-    public List<CouponDto> getPayAbleCouponList(Integer userId, String useFor) throws BusinessCheckException {
+    public List<CouponDto> getPayAbleCouponList(Integer userId, Integer storeId, String useFor) throws BusinessCheckException {
         List<String> statusList = Arrays.asList(UserCouponStatusEnum.UNUSED.getKey());
         List<MtUserCoupon> userCouponList = mtUserCouponMapper.getUserCouponList(userId, statusList);
         List<CouponDto> dataList = new ArrayList<>();
@@ -516,6 +540,13 @@ public class UserCouponServiceImpl extends ServiceImpl<MtUserCouponMapper, MtUse
         if (userCouponList.size() > 0) {
             for (MtUserCoupon userCoupon : userCouponList) {
                  MtCoupon couponInfo = couponService.queryCouponById(userCoupon.getCouponId());
+                 // 适用门店
+                 if (storeId != null && storeId > 0 && StringUtil.isNotEmpty(couponInfo.getStoreIds())) {
+                     String[] storeIds = couponInfo.getStoreIds().split(",");
+                     if (!Arrays.asList(storeIds).contains(storeId.toString())) {
+                         continue;
+                     }
+                 }
                  // 只取专用卡券
                  if (StringUtil.isNotEmpty(useFor) && !couponInfo.getUseFor().equals(useFor)) {
                      continue;
@@ -553,8 +584,9 @@ public class UserCouponServiceImpl extends ServiceImpl<MtUserCouponMapper, MtUse
 
     /**
      * 获取会员卡券详情
-     * @param userId
-     * @param couponId
+     *
+     * @param userId 会员ID
+     * @param couponId 卡券ID
      * @return
      * */
     @Override
@@ -564,7 +596,8 @@ public class UserCouponServiceImpl extends ServiceImpl<MtUserCouponMapper, MtUse
 
     /**
      * 获取会员卡券详情
-     * @param userCouponId
+     *
+     * @param userCouponId 会员卡券ID
      * @return
      * */
     @Override
@@ -575,10 +608,11 @@ public class UserCouponServiceImpl extends ServiceImpl<MtUserCouponMapper, MtUse
 
     /**
      * 根据过期时间查询会员卡券
-     * @param userId
-     * @param status
-     * @param startTime
-     * @param endTime
+     *
+     * @param userId 会员ID
+     * @param status 状态
+     * @param startTime 开始时间
+     * @param endTime 结束时间
      * @return
      * */
     @Override
@@ -589,10 +623,11 @@ public class UserCouponServiceImpl extends ServiceImpl<MtUserCouponMapper, MtUse
 
     /**
      * 会员发送卡券
-     * @param orderId
-     * @param couponId
-     * @param userId
-     * @param mobile
+     *
+     * @param orderId 订单ID
+     * @param couponId 卡券ID
+     * @param userId 会员ID
+     * @param mobile 手机号
      * @return
      * */
     public boolean buyCouponItem(Integer orderId, Integer couponId, Integer userId, String mobile) throws BusinessCheckException {
@@ -658,8 +693,9 @@ public class UserCouponServiceImpl extends ServiceImpl<MtUserCouponMapper, MtUse
 
     /**
      * 预存单张
-     * @param couponInfo
-     * @param userInfo
+     *
+     * @param couponInfo 卡券信息
+     * @param userInfo 会员信息
      * @return
      * */
     private boolean preStoreItem(MtCoupon couponInfo, MtUser userInfo, Integer orderId, BigDecimal amount) {
