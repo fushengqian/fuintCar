@@ -5,17 +5,24 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fuint.common.dto.AccountDto;
 import com.fuint.common.dto.AccountInfo;
+import com.fuint.common.enums.StatusEnum;
 import com.fuint.common.service.AccountService;
+import com.fuint.common.service.CaptchaService;
 import com.fuint.common.service.StaffService;
+import com.fuint.common.service.StoreService;
+import com.fuint.common.util.TokenUtil;
 import com.fuint.framework.annoation.OperationServiceLog;
 import com.fuint.framework.exception.BusinessCheckException;
 import com.fuint.framework.exception.BusinessRuntimeException;
 import com.fuint.framework.pagination.PaginationRequest;
 import com.fuint.framework.pagination.PaginationResponse;
+import com.fuint.module.backendApi.request.LoginRequest;
+import com.fuint.module.backendApi.response.LoginResponse;
 import com.fuint.repository.mapper.*;
 import com.fuint.repository.model.*;
 import com.fuint.utils.Digests;
 import com.fuint.utils.Encodes;
+import com.fuint.utils.StringUtil;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import lombok.AllArgsConstructor;
@@ -53,6 +60,16 @@ public class AccountServiceImpl extends ServiceImpl<TAccountMapper, TAccount> im
     private StaffService staffService;
 
     /**
+     * 店铺服务接口
+     * */
+    private StoreService storeService;
+
+    /**
+     * 验证码服务接口
+     * */
+    private CaptchaService captchaService;
+
+    /**
      * 分页查询账号列表
      *
      * @param paginationRequest
@@ -65,23 +82,23 @@ public class AccountServiceImpl extends ServiceImpl<TAccountMapper, TAccount> im
         lambdaQueryWrapper.ne(TAccount::getAccountStatus, -1); // 1:启用；0:禁用；-1:删除
 
         String name = paginationRequest.getSearchParams().get("name") == null ? "" : paginationRequest.getSearchParams().get("name").toString();
-        if (StringUtils.isNotBlank(name)) {
+        if (StringUtils.isNotEmpty(name)) {
             lambdaQueryWrapper.like(TAccount::getAccountName, name);
         }
         String realName = paginationRequest.getSearchParams().get("realName") == null ? "" : paginationRequest.getSearchParams().get("realName").toString();
-        if (StringUtils.isNotBlank(realName)) {
+        if (StringUtils.isNotEmpty(realName)) {
             lambdaQueryWrapper.like(TAccount::getRealName, realName);
         }
         String status = paginationRequest.getSearchParams().get("status") == null ? "" : paginationRequest.getSearchParams().get("status").toString();
-        if (StringUtils.isNotBlank(status)) {
+        if (StringUtils.isNotEmpty(status)) {
             lambdaQueryWrapper.eq(TAccount::getAccountStatus, status);
         }
         String merchantId = paginationRequest.getSearchParams().get("merchantId") == null ? "" : paginationRequest.getSearchParams().get("merchantId").toString();
-        if (StringUtils.isNotBlank(merchantId)) {
+        if (StringUtils.isNotEmpty(merchantId)) {
             lambdaQueryWrapper.eq(TAccount::getMerchantId, merchantId);
         }
         String storeId = paginationRequest.getSearchParams().get("storeId") == null ? "" : paginationRequest.getSearchParams().get("storeId").toString();
-        if (StringUtils.isNotBlank(storeId)) {
+        if (StringUtils.isNotEmpty(storeId)) {
             lambdaQueryWrapper.eq(TAccount::getStoreId, storeId);
         }
 
@@ -116,10 +133,17 @@ public class AccountServiceImpl extends ServiceImpl<TAccountMapper, TAccount> im
         return paginationResponse;
     }
 
+    /**
+     * 根据账号名称获取账号信息
+     *
+     * @param userName 账号名称
+     * @return
+     * */
     @Override
     public AccountInfo getAccountByName(String userName) {
         Map<String, Object> param = new HashMap();
         param.put("account_name", userName);
+        param.put("account_status", 1);
         List<TAccount> accountList = tAccountMapper.selectByMap(param);
         if (accountList != null && accountList.size() > 0) {
             AccountInfo accountInfo = new AccountInfo();
@@ -149,21 +173,27 @@ public class AccountServiceImpl extends ServiceImpl<TAccountMapper, TAccount> im
         }
     }
 
+    /**
+     * 根据ID获取账号信息
+     *
+     * @param userId 账号ID
+     * @return
+     * */
     @Override
-    public TAccount getAccountInfoById(Integer id) {
-        TAccount tAccount = tAccountMapper.selectById(id);
+    public TAccount getAccountInfoById(Integer userId) {
+        TAccount tAccount = tAccountMapper.selectById(userId);
         return tAccount;
     }
 
     /**
-     * 创建账号信息
+     * 新增后台账户
      *
      * @param tAccount
      * @return
      * */
     @Override
     @OperationServiceLog(description = "新增后台账户")
-    public TAccount createAccountInfo(TAccount tAccount, List<TDuty> duties) {
+    public TAccount createAccountInfo(TAccount tAccount, List<TDuty> duties) throws BusinessCheckException {
         TAccount account = new TAccount();
         account.setAccountKey(tAccount.getAccountKey());
         account.setAccountName(tAccount.getAccountName().toLowerCase());
@@ -171,6 +201,13 @@ public class AccountServiceImpl extends ServiceImpl<TAccountMapper, TAccount> im
         account.setRealName(tAccount.getRealName());
         account.setRoleIds(tAccount.getRoleIds());
         account.setStaffId(tAccount.getStaffId());
+        Integer storeId = tAccount.getStoreId() == null ? 0 : tAccount.getStoreId();
+        if (tAccount.getMerchantId() == null || tAccount.getMerchantId() <= 0) {
+            MtStore mtStore = storeService.queryStoreById(storeId);
+            if (mtStore != null) {
+                tAccount.setMerchantId(mtStore.getMerchantId());
+            }
+        }
         account.setMerchantId(tAccount.getMerchantId());
         account.setStoreId(tAccount.getStoreId());
         account.setCreateDate(new Date());
@@ -270,14 +307,14 @@ public class AccountServiceImpl extends ServiceImpl<TAccountMapper, TAccount> im
     /**
      * 删除账号
      *
-     * @param userId
+     * @param accountId 账号ID
      * @return
      * */
     @Override
     @Transactional(rollbackFor = Exception.class)
     @OperationServiceLog(description = "删除后台账户")
-    public void deleteAccount(Long userId) {
-        TAccount tAccount = tAccountMapper.selectById(userId);
+    public void deleteAccount(Long accountId) {
+        TAccount tAccount = tAccountMapper.selectById(accountId);
         tAccount.setAccountStatus(-1);
         tAccount.setModifyDate(new Date());
         tAccountMapper.updateById(tAccount);
@@ -286,15 +323,15 @@ public class AccountServiceImpl extends ServiceImpl<TAccountMapper, TAccount> im
     /**
      * 设定安全的密码
      *
-     * @param user
+     * @param tAccount 账号信息
      * @return
      */
     @Override
-    public void entryptPassword(TAccount user) {
+    public void entryptPassword(TAccount tAccount) {
         byte[] salt = Digests.generateSalt(8);
-        user.setSalt(Encodes.encodeHex(salt));
-        byte[] hashPassword = Digests.sha1(user.getPassword().getBytes(), salt, 1024);
-        user.setPassword(Encodes.encodeHex(hashPassword));
+        tAccount.setSalt(Encodes.encodeHex(salt));
+        byte[] hashPassword = Digests.sha1(tAccount.getPassword().getBytes(), salt, 1024);
+        tAccount.setPassword(Encodes.encodeHex(hashPassword));
     }
 
     /**
@@ -309,5 +346,66 @@ public class AccountServiceImpl extends ServiceImpl<TAccountMapper, TAccount> im
         byte[] salt1 = Encodes.decodeHex(salt);
         byte[] hashPassword = Digests.sha1(password.getBytes(), salt1, 1024);
         return Encodes.encodeHex(hashPassword);
+    }
+
+    /**
+     * 登录后台系统
+     *
+     * @param loginRequest 登录参数
+     * @param userAgent 登录浏览器
+     * @return
+     * */
+    @Override
+    @OperationServiceLog(description = "登录后台系统")
+    public LoginResponse doLogin(LoginRequest loginRequest, String userAgent) throws BusinessCheckException {
+        String accountName = loginRequest.getUsername();
+        String password = loginRequest.getPassword();
+        String captchaCode = loginRequest.getCaptchaCode();
+        String uuid = loginRequest.getUuid();
+
+        Boolean captchaVerify = captchaService.checkCodeByUuid(captchaCode, uuid);
+        if (!captchaVerify) {
+            throw new BusinessCheckException("图形验证码有误");
+        }
+
+        if (StringUtil.isEmpty(accountName)|| StringUtil.isEmpty(password) || StringUtil.isEmpty(captchaCode)) {
+            throw new BusinessCheckException("登录参数有误");
+        } else {
+            AccountInfo accountInfo = getAccountByName(loginRequest.getUsername());
+            if (accountInfo == null) {
+                throw new BusinessCheckException("登录账号或密码有误");
+            }
+
+            TAccount tAccount = getAccountInfoById(accountInfo.getId());
+            String myPassword = tAccount.getPassword();
+            String inputPassword = getEntryptPassword(password, tAccount.getSalt());
+            if (!myPassword.equals(inputPassword) || !tAccount.getAccountStatus().toString().equals("1")) {
+                throw new BusinessCheckException("登录账号或密码有误");
+            }
+
+            // 商户已禁用
+            if (tAccount.getMerchantId() != null && tAccount.getMerchantId() > 0) {
+                MtMerchant mtMerchant = mtMerchantMapper.selectById(tAccount.getMerchantId());
+                if (mtMerchant != null && !mtMerchant.getStatus().equals(StatusEnum.ENABLED.getKey())) {
+                    throw new BusinessCheckException("您的商户已被禁用，请联系平台方");
+                }
+            }
+
+            // 店铺已禁用
+            if (tAccount.getStoreId() != null && tAccount.getStoreId() > 0) {
+                MtStore mtStore = mtStoreMapper.selectById(tAccount.getStoreId());
+                if (mtStore != null && !mtStore.getStatus().equals(StatusEnum.ENABLED.getKey())) {
+                    throw new BusinessCheckException("您的店铺已被禁用，请联系平台方");
+                }
+            }
+
+            String token = TokenUtil.generateToken(userAgent, accountInfo);
+            LoginResponse response = new LoginResponse();
+            response.setLogin(true);
+            response.setToken(token);
+            response.setTokenCreatedTime(new Date());
+
+            return response;
+        }
     }
 }

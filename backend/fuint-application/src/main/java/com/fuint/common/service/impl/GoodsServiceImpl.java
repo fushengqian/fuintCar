@@ -10,10 +10,7 @@ import com.fuint.common.dto.GoodsTopDto;
 import com.fuint.common.enums.GoodsTypeEnum;
 import com.fuint.common.enums.StatusEnum;
 import com.fuint.common.enums.YesOrNoEnum;
-import com.fuint.common.service.CateService;
-import com.fuint.common.service.GoodsService;
-import com.fuint.common.service.SettingService;
-import com.fuint.common.service.StoreService;
+import com.fuint.common.service.*;
 import com.fuint.framework.annoation.OperationServiceLog;
 import com.fuint.framework.exception.BusinessCheckException;
 import com.fuint.framework.pagination.PaginationRequest;
@@ -69,6 +66,11 @@ public class GoodsServiceImpl extends ServiceImpl<MtGoodsMapper, MtGoods> implem
     private StoreService storeService;
 
     /**
+     * 卡券服务接口
+     * */
+    private CouponService couponService;
+
+    /**
      * 分页查询商品列表
      *
      * @param paginationRequest
@@ -111,7 +113,24 @@ public class GoodsServiceImpl extends ServiceImpl<MtGoodsMapper, MtGoods> implem
         if (StringUtils.isNotBlank(type)) {
             lambdaQueryWrapper.eq(MtGoods::getType, type);
         }
-
+        String cateId = paginationRequest.getSearchParams().get("cateId") == null ? "" : paginationRequest.getSearchParams().get("cateId").toString();
+        if (StringUtils.isNotBlank(cateId)) {
+            lambdaQueryWrapper.eq(MtGoods::getCateId, cateId);
+        }
+        String hasStock = paginationRequest.getSearchParams().get("stock") == null ? "" : paginationRequest.getSearchParams().get("stock").toString();
+        if (StringUtils.isNotBlank(hasStock)) {
+            if (hasStock.equals(YesOrNoEnum.YES.getKey())) {
+                lambdaQueryWrapper.gt(MtGoods::getStock, 0);
+            } else {
+                lambdaQueryWrapper.lt(MtGoods::getStock, 1);
+            }
+        }
+        String hasPrice = paginationRequest.getSearchParams().get("hasPrice") == null ? "" : paginationRequest.getSearchParams().get("hasPrice").toString();
+        if (StringUtils.isNotBlank(hasPrice)) {
+            if (hasPrice.equals(YesOrNoEnum.YES.getKey())) {
+                lambdaQueryWrapper.gt(MtGoods::getPrice, 0);
+            }
+        }
         lambdaQueryWrapper.orderByAsc(MtGoods::getSort);
         List<MtGoods> goodsList = mtGoodsMapper.selectList(lambdaQueryWrapper);
         List<GoodsDto> dataList = new ArrayList<>();
@@ -135,7 +154,9 @@ public class GoodsServiceImpl extends ServiceImpl<MtGoodsMapper, MtGoods> implem
             item.setName(mtGoods.getName());
             item.setGoodsNo(mtGoods.getGoodsNo());
             item.setCateId(mtGoods.getCateId());
+            item.setStock(mtGoods.getStock());
             item.setCateInfo(cateInfo);
+            item.setType(mtGoods.getType());
             item.setPrice(mtGoods.getPrice());
             item.setLinePrice(mtGoods.getLinePrice());
             item.setSalePoint(mtGoods.getSalePoint());
@@ -160,13 +181,14 @@ public class GoodsServiceImpl extends ServiceImpl<MtGoodsMapper, MtGoods> implem
     /**
      * 保存商品信息
      *
-     * @param  reqDto
+     * @param  reqDto 商品参数
      * @throws BusinessCheckException
+     * @return
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
     @OperationServiceLog(description = "保存商品信息")
-    public MtGoods saveGoods(MtGoods reqDto) {
+    public MtGoods saveGoods(MtGoods reqDto) throws BusinessCheckException {
         MtGoods mtGoods = new MtGoods();
         if (reqDto.getId() > 0) {
             mtGoods = queryGoodsById(reqDto.getId());
@@ -177,6 +199,16 @@ public class GoodsServiceImpl extends ServiceImpl<MtGoodsMapper, MtGoods> implem
         }
         if (reqDto.getStoreId() != null) {
             mtGoods.setStoreId(reqDto.getStoreId() >= 0 ? reqDto.getStoreId() : 0);
+        }
+        Integer storeId = reqDto.getStoreId() == null ? 0 : reqDto.getStoreId();
+        if (reqDto.getMerchantId() == null || reqDto.getMerchantId() <= 0) {
+            MtStore mtStore = storeService.queryStoreById(storeId);
+            if (mtStore != null) {
+                mtGoods.setMerchantId(mtStore.getMerchantId());
+            }
+        }
+        if (mtGoods.getId() == null && (mtGoods.getMerchantId() == null || mtGoods.getMerchantId() < 1)) {
+            throw new BusinessCheckException("平台方帐号无法执行该操作，请使用商户帐号操作");
         }
         if (StringUtil.isNotEmpty(reqDto.getIsSingleSpec())) {
             mtGoods.setIsSingleSpec(reqDto.getIsSingleSpec());
@@ -262,7 +294,17 @@ public class GoodsServiceImpl extends ServiceImpl<MtGoodsMapper, MtGoods> implem
         if (!mtGoods.getType().equals(GoodsTypeEnum.COUPON.getKey())) {
             mtGoods.setCouponIds("");
         }
-
+        if (mtGoods.getCouponIds() != null && StringUtil.isNotEmpty(mtGoods.getCouponIds())) {
+            String couponIds[] = mtGoods.getCouponIds().split(",");
+            if (couponIds.length > 0) {
+                for (int i = 0; i < couponIds.length; i++) {
+                     MtCoupon mtCoupon = couponService.queryCouponById(Integer.parseInt(couponIds[i]));
+                     if (mtCoupon == null) {
+                         throw new BusinessCheckException("卡券ID等于“"+couponIds[i]+"”的虚拟卡券不存在.");
+                     }
+                }
+            }
+        }
         mtGoods.setUpdateTime(new Date());
         if (reqDto.getId() == null || reqDto.getId() <= 0) {
             mtGoods.setCreateTime(new Date());
@@ -279,6 +321,7 @@ public class GoodsServiceImpl extends ServiceImpl<MtGoodsMapper, MtGoods> implem
      *
      * @param  id 商品ID
      * @throws BusinessCheckException
+     * @return
      */
     @Override
     public MtGoods queryGoodsById(Integer id) {
@@ -292,9 +335,10 @@ public class GoodsServiceImpl extends ServiceImpl<MtGoodsMapper, MtGoods> implem
     /**
      * 根据编码获取商品信息
      *
-     * @param  merchantId
-     * @param  goodsNo
+     * @param  merchantId 商户ID
+     * @param  goodsNo 商品编码
      * @throws BusinessCheckException
+     * @return
      */
     @Override
     public MtGoods queryGoodsByGoodsNo(Integer merchantId, String goodsNo) {
@@ -393,12 +437,14 @@ public class GoodsServiceImpl extends ServiceImpl<MtGoodsMapper, MtGoods> implem
     /**
      * 根据ID删除商品信息
      *
-     * @param  id       ID
+     * @param  id ID
      * @param  operator 操作人
      * @throws BusinessCheckException
+     * @return
      */
     @Override
     @OperationServiceLog(description = "删除商品信息")
+    @Transactional(rollbackFor = Exception.class)
     public void deleteGoods(Integer id, String operator) throws BusinessCheckException {
         MtGoods cateInfo = queryGoodsById(id);
         if (null == cateInfo) {
@@ -412,11 +458,12 @@ public class GoodsServiceImpl extends ServiceImpl<MtGoodsMapper, MtGoods> implem
     /**
      * 获取店铺的商品列表
      *
-     * @param storeId
-     * @param keyword
-     * @param cateId
-     * @param page
-     * @param pageSize
+     * @param storeId 店铺ID
+     * @param keyword 关键字
+     * @param cateId 分类ID
+     * @param page 当前页码
+     * @param pageSize 每页页数
+     * @throws BusinessCheckException
      * @return
      * */
     @Override
@@ -429,9 +476,7 @@ public class GoodsServiceImpl extends ServiceImpl<MtGoodsMapper, MtGoods> implem
             return result;
         }
         Integer merchantId = mtStore.getMerchantId() == null ? 0 : mtStore.getMerchantId();
-
         Page<MtGoods> pageHelper = PageHelper.startPage(page, pageSize);
-
         List<MtGoods> goodsList = new ArrayList<>();
         List<MtGoodsSku> skuList = new ArrayList<>();
         if (StringUtil.isNotEmpty(keyword)) {
@@ -441,6 +486,7 @@ public class GoodsServiceImpl extends ServiceImpl<MtGoodsMapper, MtGoods> implem
             MtGoods goods = mtGoodsMapper.selectById(skuList.get(0).getGoodsId());
             goodsList.add(goods);
         } else {
+            pageHelper = PageHelper.startPage(page, pageSize);
             if (keyword != null && StringUtil.isNotEmpty(keyword)) {
                 goodsList = mtGoodsMapper.searchStoreGoodsList(merchantId, storeId, keyword);
             } else {
@@ -451,7 +497,7 @@ public class GoodsServiceImpl extends ServiceImpl<MtGoodsMapper, MtGoods> implem
         if (goodsList.size() > 0) {
             for (MtGoods mtGoods : goodsList) {
                 // 多规格商品价格、库存数量
-                if (mtGoods.getIsSingleSpec().equals(YesOrNoEnum.NO.getKey())) {
+                if (mtGoods != null && mtGoods.getIsSingleSpec().equals(YesOrNoEnum.NO.getKey())) {
                     Map<String, Object> param = new HashMap<>();
                     param.put("goods_id", mtGoods.getId().toString());
                     param.put("status", StatusEnum.ENABLED.getKey());
@@ -482,7 +528,7 @@ public class GoodsServiceImpl extends ServiceImpl<MtGoodsMapper, MtGoods> implem
     /**
      * 通过SKU获取规格列表
      *
-     * @param skuId
+     * @param skuId skuID
      * @return
      * */
     @Override
@@ -514,7 +560,7 @@ public class GoodsServiceImpl extends ServiceImpl<MtGoodsMapper, MtGoods> implem
     /**
      * 获取商品规格详情
      *
-     * @param specId
+     * @param specId 规格ID
      * @return
      * */
     @Override
@@ -526,10 +572,11 @@ public class GoodsServiceImpl extends ServiceImpl<MtGoodsMapper, MtGoods> implem
     /**
      * 更新已售数量
      *
-     * @param goodsId
+     * @param goodsId 商品ID
      * @return
      * */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public Boolean updateInitSale(Integer goodsId) {
         return mtGoodsMapper.updateInitSale(goodsId);
     }
@@ -537,20 +584,20 @@ public class GoodsServiceImpl extends ServiceImpl<MtGoodsMapper, MtGoods> implem
     /**
      * 获取选择商品列表
      *
-     * @param params
+     * @param params 查询参数
      * @return
      */
     @Override
     public PaginationResponse<GoodsDto> selectGoodsList(Map<String, Object> params) throws BusinessCheckException {
         Integer page = params.get("page") == null ? Constants.PAGE_NUMBER : Integer.parseInt(params.get("page").toString());
         Integer pageSize = params.get("pageSize") == null ? Constants.PAGE_SIZE : Integer.parseInt(params.get("pageSize").toString());
-        Integer storeId = (params.get("storeId") == null || StringUtil.isEmpty(params.get("storeId").toString()))? 0 : Integer.parseInt(params.get("storeId").toString());
+        Integer merchantId = (params.get("merchantId") == null || StringUtil.isEmpty(params.get("merchantId").toString())) ? 0 : Integer.parseInt(params.get("merchantId").toString());
+        Integer storeId = (params.get("storeId") == null || StringUtil.isEmpty(params.get("storeId").toString())) ? 0 : Integer.parseInt(params.get("storeId").toString());
         Integer cateId = (params.get("cateId") == null || StringUtil.isEmpty(params.get("cateId").toString())) ? 0 : Integer.parseInt(params.get("cateId").toString());
         String keyword = params.get("keyword") == null ? "" : params.get("keyword").toString();
 
-        Integer merchantId = 0;
         MtStore mtStore = storeService.queryStoreById(storeId);
-        if (mtStore != null) {
+        if (mtStore != null && mtStore.getMerchantId() != null) {
             merchantId = mtStore.getMerchantId();
         }
         Page<MtGoods> pageHelper = PageHelper.startPage(page, pageSize);
@@ -610,10 +657,10 @@ public class GoodsServiceImpl extends ServiceImpl<MtGoodsMapper, MtGoods> implem
     /**
      * 获取商品销售排行榜
      *
-     * @param merchantId
-     * @param storeId
-     * @param startTime
-     * @param endTime
+     * @param merchantId 商户ID
+     * @param storeId 店铺ID
+     * @param startTime 开始时间
+     * @param endTime 结束时间
      * @return
      * */
     @Override
