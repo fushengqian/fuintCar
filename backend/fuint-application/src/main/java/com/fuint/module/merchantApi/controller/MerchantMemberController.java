@@ -97,7 +97,7 @@ public class MerchantMemberController extends BaseController {
             staffInfo = staffService.queryStaffByMobile(mtUser.getMobile());
         }
         if (staffInfo == null) {
-            return getFailureResult(1002, "该账号不是商户");
+            return getFailureResult(201, "该账号不是商户");
         }
 
         PaginationRequest paginationRequest = new PaginationRequest();
@@ -145,30 +145,15 @@ public class MerchantMemberController extends BaseController {
             params.put("memberTime", memberTime);
         }
 
-        // 会员排序方式
-        if (StringUtil.isNotEmpty(orderBy)) {
-            if (orderBy.equals("balance")) {
-                paginationRequest.setSortColumn(new String[]{"balance desc"});
-            } else if (orderBy.equals("point")) {
-                paginationRequest.setSortColumn(new String[]{"point desc"});
-            } else if (orderBy.equals("memberGrade")) {
-                paginationRequest.setSortColumn(new String[]{"gradeId desc"});
-            } else if (orderBy.equals("payAmount")) {
-                paginationRequest.setSortColumn(new String[]{"balance desc"});
-            } else if (orderBy.equals("memberTime")) {
-                paginationRequest.setSortColumn(new String[]{"endTime desc", "gradeId desc"});
-                MtUserGrade defaultGrade = userGradeService.getInitUserGrade(mtUser.getMerchantId());
-                if (defaultGrade != null) {
-                    params.put("gradeId", defaultGrade.getId().toString());
-                }
-            }
-        }
         paginationRequest.setSearchParams(params);
         PaginationResponse<UserDto> paginationResponse = memberService.queryMemberListByPagination(paginationRequest);
 
         // 会员等级列表
         Map<String, Object> param = new HashMap<>();
         param.put("status", StatusEnum.ENABLED.getKey());
+        if (staffInfo.getMerchantId() != null && staffInfo.getMerchantId() > 0) {
+            param.put("MERCHANT_ID", staffInfo.getMerchantId());
+        }
         List<MtUserGrade> userGradeList = memberService.queryMemberGradeByParams(param);
 
         Map<String, Object> result = new HashMap<>();
@@ -198,6 +183,10 @@ public class MerchantMemberController extends BaseController {
         MtUser mtUserInfo = memberService.queryMemberById(id);
 
         Map<String, Object> param = new HashMap<>();
+        if (accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0) {
+            param.put("MERCHANT_ID", accountInfo.getMerchantId());
+        }
+        param.put("STATUS", StatusEnum.ENABLED.getKey());
         List<MtUserGrade> userGradeList = memberService.queryMemberGradeByParams(param);
 
         Map<String, Object> result = new HashMap<>();

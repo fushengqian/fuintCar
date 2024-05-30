@@ -83,6 +83,14 @@ public class BackendSendLogController extends BaseController {
             searchParams.put("status", status);
         }
 
+        if (accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0) {
+            searchParams.put("merchantId", accountInfo.getMerchantId());
+        }
+
+        if (accountInfo.getStoreId() != null && accountInfo.getStoreId() > 0) {
+            searchParams.put("storeId", accountInfo.getStoreId());
+        }
+
         if (StringUtil.isNotEmpty(userId)) {
             searchParams.put("userId", userId);
         }
@@ -100,7 +108,6 @@ public class BackendSendLogController extends BaseController {
             }
         }
 
-        paginationRequest.setSortColumn(new String[]{"updateTime desc", "id desc"});
         paginationRequest.setSearchParams(searchParams);
         PaginationResponse<MtSendLog> paginationResponse = sendLogService.querySendLogListByPagination(paginationRequest);
 
