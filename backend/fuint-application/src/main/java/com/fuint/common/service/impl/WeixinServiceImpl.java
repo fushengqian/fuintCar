@@ -4,20 +4,24 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.JSONArray;
 import com.aliyun.oss.OSS;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fuint.common.Constants;
+import com.fuint.common.bean.H5SceneInfo;
 import com.fuint.common.bean.WxPayBean;
 import com.fuint.common.dto.OrderDto;
 import com.fuint.common.dto.UserOrderDto;
+import com.fuint.common.dto.WxCardDto;
 import com.fuint.common.enums.*;
 import com.fuint.common.http.HttpRESTDataClient;
 import com.fuint.common.service.*;
-import com.fuint.common.util.AliyunOssUtil;
-import com.fuint.common.util.RedisUtil;
+import com.fuint.common.util.*;
 import com.fuint.framework.exception.BusinessCheckException;
 import com.fuint.framework.web.ResponseObject;
 import com.fuint.repository.model.*;
 import com.fuint.utils.QRCodeUtil;
 import com.fuint.utils.StringUtil;
 import com.ijpay.core.enums.SignType;
+import com.ijpay.core.enums.TradeType;
 import com.ijpay.core.kit.HttpKit;
 import com.ijpay.core.kit.WxPayKit;
 import com.ijpay.wxpay.WxPayApi;
@@ -36,7 +40,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.core.env.Environment;
 import weixin.popular.util.JsonUtil;
-
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
@@ -92,7 +95,7 @@ public class WeixinServiceImpl implements WeixinService {
 
     private Environment env;
 
-    WxPayBean wxPayBean;
+    private WxPayBean wxPayBean;
 
     private static final String CALL_BACK_URL = "/clientApi/pay/weixinCallback";
 
@@ -104,14 +107,21 @@ public class WeixinServiceImpl implements WeixinService {
      * 获取微信accessToken
      *
      * @param merchantId 商户ID
+     * @param isMinApp 是否小程序
      * @param useCache 是否读取缓存
+     * @throws BusinessCheckException
      * @return
      * */
     @Override
-    public String getAccessToken(Integer merchantId, boolean useCache) throws BusinessCheckException {
-        String wxAppId = env.getProperty("wxpay.appId");
-        String wxAppSecret = env.getProperty("wxpay.appSecret");
-        String tokenKey = FUINT_ACCESS_TOKEN_PRE;
+    public String getAccessToken(Integer merchantId, boolean isMinApp, boolean useCache) throws BusinessCheckException {
+        String platForm = isMinApp == true ? "minApp" : "mp";
+        String wxAppId = env.getProperty("weixin.official.appId");
+        String wxAppSecret = env.getProperty("weixin.official.appSecret");
+        if (isMinApp) {
+            wxAppId = env.getProperty("wxpay.appId");
+            wxAppSecret = env.getProperty("wxpay.appSecret");
+        }
+        String tokenKey = FUINT_ACCESS_TOKEN_PRE + platForm;
         if (merchantId != null && merchantId > 0) {
             MtMerchant mtMerchant = merchantService.queryMerchantById(merchantId);
             if (mtMerchant != null && StringUtil.isNotEmpty(mtMerchant.getWxAppId()) && StringUtil.isNotEmpty(mtMerchant.getWxAppSecret())) {
@@ -150,18 +160,20 @@ public class WeixinServiceImpl implements WeixinService {
     /**
      * 创建支付订单
      *
-     * @param userInfo
-     * @param orderInfo
-     * @param payAmount
-     * @param authCode
-     * @param giveAmount
-     * @param ip
-     * @param platform
+     * @param userInfo 会员信息
+     * @param orderInfo 订单信息
+     * @param payAmount 支付金额
+     * @param authCode 付款码
+     * @param giveAmount 赠送金额
+     * @param ip 支付IP
+     * @param platform 支付平台
+     * @param isWechat 是否微信客户端
+     * @throws BusinessCheckException
      * @return
      * */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public ResponseObject createPrepayOrder(MtUser userInfo, MtOrder orderInfo, Integer payAmount, String authCode, Integer giveAmount, String ip, String platform) throws BusinessCheckException {
+    public ResponseObject createPrepayOrder(MtUser userInfo, MtOrder orderInfo, Integer payAmount, String authCode, Integer giveAmount, String ip, String platform, String isWechat) throws BusinessCheckException {
         logger.info("WeixinService createPrepayOrder inParams userInfo={} payAmount={} giveAmount={} goodsInfo={}", userInfo, payAmount, giveAmount, orderInfo);
 
         String goodsInfo = orderInfo.getOrderSn();
@@ -201,10 +213,15 @@ public class WeixinServiceImpl implements WeixinService {
         if (reqData.get("auth_code") != null && StringUtil.isNotEmpty(reqData.get("auth_code"))) {
             respData = microPay(orderInfo.getStoreId(), reqData, ip, platform);
         } else {
-            respData = jsapiPay(orderInfo.getStoreId(), reqData, ip, platform);
+            if (platform.equals(PlatformTypeEnum.H5.getCode()) && isWechat.equals(YesOrNoEnum.NO.getKey())) {
+                respData = wapPay(orderInfo.getStoreId(), reqData, ip, platform);
+            } else {
+                respData = jsapiPay(orderInfo.getStoreId(), reqData, ip, platform);
+            }
         }
+        logger.info("微信支付接口调用返回:{}", JsonUtil.toJSONString(respData));
 
-        if (respData == null) {
+        if (respData == null || respData.get("return_code").equals("FAIL")) {
             logger.error("微信支付接口调用异常......");
             return new ResponseObject(3000, "微信支付接口调用异常", null);
         }
@@ -230,6 +247,12 @@ public class WeixinServiceImpl implements WeixinService {
         return responseObject;
     }
 
+    /**
+     * 处理支付回调
+     *
+     * @param request 请求参数
+     * @return
+     * */
     public Map<String, String> processResXml(HttpServletRequest request) {
         try {
             String xmlMsg = HttpKit.readData(request);
@@ -248,6 +271,13 @@ public class WeixinServiceImpl implements WeixinService {
         return null;
     }
 
+    /**
+     * 处理回调xml
+     *
+     * @param response 响应参数
+     * @param flag 标记
+     * @return
+     * */
     public void processRespXml(HttpServletResponse response, boolean flag){
         Map<String,String> respData = new HashMap<>();
         if (flag) {
@@ -265,7 +295,7 @@ public class WeixinServiceImpl implements WeixinService {
             outputStream.flush();
         } catch (Exception e) {
             e.printStackTrace();
-        }finally {
+        } finally {
             if(outputStream!=null){
                 try {
                     outputStream.close();
@@ -279,8 +309,9 @@ public class WeixinServiceImpl implements WeixinService {
     /**
      * 获取微信个人信息
      *
-     * @param merchantId
-     * @param code
+     * @param merchantId 商户ID
+     * @param code 微信返回编码
+     * @throws BusinessCheckException
      * @return
      * */
     @Override
@@ -316,8 +347,9 @@ public class WeixinServiceImpl implements WeixinService {
     /**
      * 获取公众号openId
      *
-     * @param merchantId
-     * @param code
+     * @param merchantId 商户ID
+     * @param code 微信返回编码
+     * @throws BusinessCheckException
      * @return
      * */
     @Override
@@ -353,9 +385,9 @@ public class WeixinServiceImpl implements WeixinService {
     /**
      * 获取微信绑定手机号
      *
-     * @param encryptedData
-     * @param sessionKey
-     * @param iv
+     * @param encryptedData 微信返回加密字符串
+     * @param sessionKey session键值
+     * @param iv 微信IV
      * @return
      * */
     @Override
@@ -399,13 +431,14 @@ public class WeixinServiceImpl implements WeixinService {
     /**
      * 发送小程序订阅消息
      *
-     * @param merchantId
-     * @param userId
-     * @param toUserOpenId
-     * @param key
-     * @param page
-     * @param params
-     * @param sendTime
+     * @param merchantId 商户ID
+     * @param userId 会员ID
+     * @param toUserOpenId 接受者openId
+     * @param key 消息key
+     * @param page 跳转页面
+     * @param params 发送参数
+     * @param sendTime 发送时间
+     * @throws BusinessCheckException
      * @return
      * */
     @Override
@@ -414,7 +447,7 @@ public class WeixinServiceImpl implements WeixinService {
             return false;
         }
 
-        MtSetting mtSetting = settingService.querySettingByName(merchantId, key);
+        MtSetting mtSetting = settingService.querySettingByName(merchantId, SettingTypeEnum.SUB_MESSAGE.getKey(), key);
         if (mtSetting == null) {
             return false;
         }
@@ -483,19 +516,19 @@ public class WeixinServiceImpl implements WeixinService {
     /**
      * 发送订阅消息
      *
-     * @param merchantId
-     * @param reqDataJsonStr
+     * @param merchantId 商户ID
+     * @param reqDataJsonStr 请求参数
      * @return
      * */
     @Override
     public Boolean doSendSubscribeMessage(Integer merchantId, String reqDataJsonStr) {
         try {
-            String url = "https://api.weixin.qq.com/cgi-bin/message/subscribe/send?access_token=" + getAccessToken(merchantId, true);
+            String url = "https://api.weixin.qq.com/cgi-bin/message/subscribe/send?access_token=" + getAccessToken(merchantId, true,true);
             String response = HttpRESTDataClient.requestPost(url, "application/json; charset=utf-8", reqDataJsonStr);
             logger.info("WeixinService sendSubscribeMessage response={}", response);
             JSONObject json = (JSONObject) JSONObject.parse(response);
             if (json.get("errcode").toString().equals("40001")) {
-                getAccessToken(merchantId, false);
+                getAccessToken(merchantId, true,true);
                 logger.error("发送订阅消息出错error1：" + json.get("errcode").toString());
                 return false;
             } else if (!json.get("errcode").toString().equals("0")) {
@@ -514,9 +547,9 @@ public class WeixinServiceImpl implements WeixinService {
     /**
      * 查询支付订单
      *
-     * @param storeId
-     * @param transactionId
-     * @param orderSn
+     * @param storeId 店铺ID
+     * @param transactionId 支付流水ID
+     * @param orderSn 订单号
      * @return
      * */
     @Override
@@ -547,12 +580,337 @@ public class WeixinServiceImpl implements WeixinService {
     }
 
     /**
+     * 发起售后
+     *
+     * @param storeId 店铺ID
+     * @param orderSn 订单号
+     * @param totalAmount 支付总金额
+     * @param refundAmount 退款金额
+     * @param platform 支付平台
+     * @throws BusinessCheckException
+     * @return
+     * */
+    @Override
+    public Boolean doRefund(Integer storeId, String orderSn, BigDecimal totalAmount, BigDecimal refundAmount, String platform) throws BusinessCheckException {
+        try {
+            logger.info("WeixinService.doRefund orderSn = {}, totalFee = {}, refundFee = {}", orderSn, totalAmount, refundAmount);
+            if (StringUtil.isEmpty(orderSn)) {
+                throw new BusinessCheckException("退款订单号不能为空...");
+            }
+
+            BigDecimal totalFee = totalAmount.multiply(new BigDecimal("100"));
+            BigDecimal refundFee = refundAmount.multiply(new BigDecimal("100"));
+            Integer totalFeeInt = totalFee.intValue();
+            Integer refundFeeInt = refundFee.intValue();
+
+            // 支付配置
+            getApiConfig(storeId, platform);
+            WxPayApiConfig wxPayApiConfig = WxPayApiConfigKit.getWxPayApiConfig();
+            Map<String, String> params = RefundModel.builder()
+                    .appid(wxPayApiConfig.getAppId())
+                    .mch_id(wxPayApiConfig.getMchId())
+                    .nonce_str(WxPayKit.generateStr())
+                    .transaction_id("")
+                    .out_trade_no(orderSn)
+                    .out_refund_no(orderSn)
+                    .total_fee(totalFeeInt.toString())
+                    .refund_fee(refundFeeInt.toString())
+                    .notify_url(wxPayApiConfig.getDomain() + REFUND_NOTIFY_URL)
+                    .build()
+                    .createSign(wxPayApiConfig.getPartnerKey(), SignType.MD5);
+            logger.info("WeixinService doRefund params: {}", params);
+            String refundStr = WxPayApi.orderRefundByProtocol(false, params, wxPayApiConfig.getCertPath(), wxPayApiConfig.getMchId(), "");
+            logger.info("WeixinService doRefund return: {}", refundStr);
+            Map<String, String> result = WxPayKit.xmlToMap(refundStr);
+            String returnCode = result.get("return_code");
+            String returnMsg = result.get("return_msg");
+            if (!WxPayKit.codeIsOk(returnCode)) {
+                logger.error(returnMsg);
+                return false;
+            }
+            return true;
+        } catch (Exception e) {
+            throw new BusinessCheckException("WeixinService.doRefund 微信退款失败：" + e.getMessage());
+        }
+    }
+
+    /***
+     * 生成二维码
+     *
+     * @param merchantId 商户ID
+     * @param type 类型
+     * @param id 数据ID
+     * @param page 页面
+     * @param width 宽度
+     * @return
+     * */
+    @Override
+    public String createQrCode(Integer merchantId, String type, Integer id, String page, Integer width) throws BusinessCheckException {
+        try {
+            String accessToken = getAccessToken(merchantId, true,true);
+            String url = "https://api.weixin.qq.com/cgi-bin/wxaapp/createwxaqrcode?access_token=" + accessToken;
+            String reqDataJsonStr = "";
+
+            Map<String, Object> reqData = new HashMap<>();
+            reqData.put("access_token", accessToken);
+            reqData.put("path", page);
+            reqData.put("width", width);
+            reqDataJsonStr = JsonUtil.toJSONString(reqData);
+
+            byte[] bytes = HttpRESTDataClient.requestPost(url, reqDataJsonStr);
+            logger.info("WechatService createStoreQrCode reqData：{}", reqDataJsonStr);
+
+            String pathRoot = env.getProperty("images.root");
+            String baseImage = env.getProperty("images.path");
+
+            String filePath = "Qr" + type + id + ".png";
+            String path = pathRoot + baseImage + filePath;
+            QRCodeUtil.saveQrCodeToLocal(bytes, path);
+
+            // 上传阿里云oss
+            String mode = env.getProperty("aliyun.oss.mode");
+            if (mode.equals("1")) { // 检查是否开启上传
+                String endpoint = env.getProperty("aliyun.oss.endpoint");
+                String accessKeyId = env.getProperty("aliyun.oss.accessKeyId");
+                String accessKeySecret = env.getProperty("aliyun.oss.accessKeySecret");
+                String bucketName = env.getProperty("aliyun.oss.bucketName");
+                String folder = env.getProperty("aliyun.oss.folder");
+                OSS ossClient = AliyunOssUtil.getOSSClient(accessKeyId, accessKeySecret, endpoint);
+                File ossFile = new File(path);
+                return AliyunOssUtil.upload(ossClient, ossFile, bucketName, folder);
+            } else {
+                return baseImage + filePath;
+            }
+        } catch (Exception e) {
+            logger.error("生成店铺二维码出错啦：{}", e.getMessage());
+            throw new BusinessCheckException("生成店铺二维码出错，请检查小程序配置");
+        }
+    }
+
+    /**
+     * 开通微信卡券
+     *
+     * @param merchantId 商户ID
+     * @param wxCardId 微信会员卡ID
+     * @return
+     * */
+    @Override
+    public String createWxCard(Integer merchantId, String wxCardId) throws BusinessCheckException {
+        String cardId = "";
+        try {
+            MtSetting mtSetting = settingService.querySettingByName(merchantId, SettingTypeEnum.USER.getKey(), UserSettingEnum.WX_MEMBER_CARD.getKey());
+            if (mtSetting == null) {
+                return cardId;
+            }
+            WxCardDto wxCardDto = JsonUtil.parseObject(mtSetting.getValue(), WxCardDto.class);
+
+            String accessToken = getAccessToken(merchantId, false,true);
+            String createUrl = "https://api.weixin.qq.com/card/create?access_token=" + accessToken;
+            String updateUrl = "https://api.weixin.qq.com/card/update?access_token=" + accessToken;
+
+            Map<String, Object> params = new HashMap<>();
+            Map<String, Object> card = new HashMap<>();
+            if (StringUtil.isEmpty(wxCardId)) {
+                card.put("card_type", "MEMBER_CARD");
+            }
+            Map<String, Object> memberCard = new HashMap<>();
+            String baseImage = settingService.getUploadBasePath();
+            if (StringUtil.isNotEmpty(wxCardDto.getBackgroundUrl())) {
+                // memberCard.put("background_pic_url", baseImage + wxCardDto.getBackgroundUrl());
+            }
+
+            // baseInfo
+            Map<String, Object> baseInfo = new HashMap<>();
+            if (StringUtil.isNotEmpty(wxCardDto.getLogoUrl())) {
+                baseInfo.put("logo_url", baseImage + wxCardDto.getLogoUrl());
+            }
+            if (StringUtil.isEmpty(wxCardId)) {
+                baseInfo.put("brand_name", wxCardDto.getBrandName());
+            }
+            baseInfo.put("code_type", "CODE_TYPE_TEXT");
+            baseInfo.put("title", wxCardDto.getTitle());
+            baseInfo.put("color", wxCardDto.getColor());
+            baseInfo.put("notice", wxCardDto.getNotice());
+            if (StringUtil.isNotEmpty(wxCardDto.getServicePhone())) {
+                baseInfo.put("service_phone", wxCardDto.getServicePhone());
+            }
+            baseInfo.put("description", wxCardDto.getDescription());
+            Map<String, Object> dateInfo = new HashMap<>();
+            dateInfo.put("type", "DATE_TYPE_PERMANENT");
+            if (StringUtil.isEmpty(wxCardId)) {
+                baseInfo.put("date_info", dateInfo);
+            }
+            Map<String, Object> sku = new HashMap<>();
+            sku.put("quantity", Constants.ALL_ROWS);
+            if (StringUtil.isEmpty(wxCardId)) {
+                baseInfo.put("sku", sku);
+                baseInfo.put("get_limit", 1);
+            }
+            if (StringUtil.isEmpty(wxCardId)) {
+                baseInfo.put("use_custom_code", false);
+                baseInfo.put("bind_openid", false);
+            }
+            baseInfo.put("can_give_friend", false);
+            if (StringUtil.isEmpty(wxCardId)) {
+                baseInfo.put("location_id_list", null);
+            }
+            if (StringUtil.isNotEmpty(wxCardDto.getCustomUrlName())) {
+                baseInfo.put("custom_url_name", wxCardDto.getCustomUrlName());
+            }
+            if (StringUtil.isNotEmpty(wxCardDto.getCustomUrl())) {
+                baseInfo.put("custom_url", wxCardDto.getCustomUrl());
+            }
+            if (StringUtil.isNotEmpty(wxCardDto.getCustomUrlSubTitle())) {
+                baseInfo.put("custom_url_sub_title", wxCardDto.getCustomUrlSubTitle());
+            }
+            baseInfo.put("need_push_on_view", true);
+            memberCard.put("base_info", baseInfo);
+
+            // 特权说明
+            if (StringUtil.isNotEmpty(wxCardDto.getPrerogative())) {
+                memberCard.put("prerogative", wxCardDto.getPrerogative());
+            }
+            // 自动激活
+            memberCard.put("auto_activate", true);
+            memberCard.put("supply_bonus", wxCardDto.getSupplyBonus());
+            if (StringUtil.isNotEmpty(wxCardDto.getBonusUrl())) {
+                memberCard.put("bonus_url", wxCardDto.getBonusUrl());
+            }
+            if (StringUtil.isEmpty(wxCardId)) {
+                memberCard.put("supply_balance", wxCardDto.getSupplyBalance());
+            }
+            if (StringUtil.isNotEmpty(wxCardDto.getBalanceUrl())) {
+                memberCard.put("balance_url", wxCardDto.getBalanceUrl());
+            }
+            card.put("member_card", memberCard);
+            if (StringUtil.isEmpty(wxCardId)) {
+                params.put("card", card);
+            } else {
+                card.put("card_id", wxCardId);
+                params = card;
+            }
+
+            ObjectMapper mapper = new ObjectMapper();
+            String reqDataJson = mapper.writeValueAsString(params);
+            String url = createUrl;
+            if (StringUtil.isNotEmpty(wxCardId)) {
+                url = updateUrl;
+            }
+            logger.info("开通微信卡券接口url：{}，请求参数：{}", url, reqDataJson);
+            String response = HttpRESTDataClient.requestPost(url, "application/json; charset=utf-8", reqDataJson);
+            logger.info("开通微信卡券接口返回：{}", response);
+            JSONObject data = (JSONObject) JSONObject.parse(response);
+            if (data.get("errcode").toString().equals("0")) {
+                if (StringUtil.isEmpty(wxCardId)) {
+                    cardId = data.get("card_id").toString();
+                } else {
+                    cardId = wxCardId;
+                }
+            } else {
+                logger.error("开通微信卡券出错啦{}", data.get("errmsg").toString());
+                throw new BusinessCheckException("开通微信卡券出错啦：" + data.get("errmsg").toString());
+            }
+        } catch (Exception e) {
+            logger.error("开通微信卡券出错啦：{}", e.getMessage());
+            throw new BusinessCheckException("开通微信卡券出错啦：" + e.getMessage());
+        }
+
+        return cardId;
+    }
+
+    /**
+     * 创建微信卡券领取的二维码
+     *
+     * @param merchantId 商户ID
+     * @param cardId 微信卡券ID
+     * @param code 会员卡编码
+     * @return
+     * */
+    @Override
+    public String createCardQrCode(Integer merchantId, String cardId, String code) {
+        try {
+            String accessToken = getAccessToken(merchantId, false, true);
+            String url = "https://api.weixin.qq.com/card/qrcode/create?access_token="+accessToken;
+
+            Map<String, Object> param = new HashMap<>();
+            Map<String, Object> actionInfo = new HashMap<>();
+            Map<String, Object> card = new HashMap<>();
+            card.put("card_id", cardId);
+            card.put("code", code);
+            card.put("is_unique_code", false);
+            card.put("outer_str", "12b");
+            actionInfo.put("card", card);
+            param.put("action_name", "QR_CARD");
+            param.put("action_info", actionInfo);
+
+            String reqDataJsonStr = JsonUtil.toJSONString(param);
+            String response = HttpRESTDataClient.requestPostBody(url, reqDataJsonStr);
+            logger.info("微信卡券createCardQrCode接口返回：{}", response);
+            JSONObject data = (JSONObject) JSONObject.parse(response);
+            String qrCode = "";
+            if (data.get("errcode").toString().equals("0")) {
+                String content = data.get("url").toString();
+                try {
+                    // 生成并输出二维码
+                    ByteArrayOutputStream out = new ByteArrayOutputStream();
+                    com.fuint.common.util.QRCodeUtil.createQrCode(out, content, 800, 800, "png", "");
+                    // 对数据进行Base64编码
+                    qrCode = new String(Base64Util.baseEncode(out.toByteArray()), "UTF-8");
+                    return "data:image/jpg;base64," + qrCode;
+                } catch (Exception e) {
+                    logger.error("生成并输出二维码出错：{}", e.getMessage());
+                }
+            }
+        } catch (Exception e) {
+            logger.error("创建微信卡券领取二维码出错：{}", e.getMessage());
+            return "";
+        }
+        return "";
+    }
+
+    /**
+     * 是否已领取卡券
+     *
+     * @param merchantId 商户ID
+     * @param cardId 微信卡券ID
+     * @param openId openId
+     * @return
+     * */
+    @Override
+    public Boolean isOpenCard(Integer merchantId, String cardId, String openId) {
+        try {
+            String accessToken = getAccessToken(merchantId, false,true);
+            String url = "https://api.weixin.qq.com/card/user/getcardlist?access_token="+accessToken;
+
+            Map<String, Object> param = new HashMap<>();
+            param.put("openid", openId);
+            param.put("card_id", cardId);
+
+            String reqDataJsonStr = JsonUtil.toJSONString(param);
+            String response = HttpRESTDataClient.requestPostBody(url, reqDataJsonStr);
+            logger.info("微信卡券getCardList接口返回：{}", response);
+            JSONObject data = (JSONObject) JSONObject.parse(response);
+            if (data.get("errcode").toString().equals("0")) {
+                Object cards = data.get("card_list");
+                if (cards != null && StringUtil.isNotEmpty(cards.toString())) {
+                    return true;
+                }
+                return false;
+            }
+        } catch (Exception e) {
+            logger.error("微信卡券getCardList接口出错：{}", e.getMessage());
+            return true;
+        }
+        return true;
+    }
+
+    /**
      * 刷卡支付
      *
-     * @param storeId
-     * @param reqData
-     * @param ip
-     * @param platform
+     * @param storeId 店铺ID
+     * @param reqData 请求参数
+     * @param ip 支付IP
+     * @param platform 支付平台
      * @return
      * */
     private Map<String, String> microPay(Integer storeId, Map<String, String> reqData, String ip, String platform) {
@@ -635,17 +993,16 @@ public class WeixinServiceImpl implements WeixinService {
     /**
      * 小程序、公众号支付
      *
-     * @param storeId
-     * @param reqData
-     * @param ip
-     * @param platform
+     * @param storeId 店铺ID
+     * @param reqData 请求参数
+     * @param ip 支付IP
+     * @param platform 支付平台
      * @return
      * */
     private Map<String, String> jsapiPay(Integer storeId, Map<String, String> reqData, String ip, String platform) {
         try {
-            logger.info("调用微信支付下单接口入参{}", JsonUtil.toJSONString(reqData));
-            logger.info("请求平台：{}", platform);
-            // 支付配置
+            logger.info("调用微信支付下单接口入参：{}，请求平台：{}", JsonUtil.toJSONString(reqData), platform);
+            // 获取支付配置
             getApiConfig(storeId, platform);
             WxPayApiConfig wxPayApiConfig = WxPayApiConfigKit.getWxPayApiConfig();
             Map<String, String> params = UnifiedOrderModel
@@ -665,7 +1022,7 @@ public class WeixinServiceImpl implements WeixinService {
                     .createSign(wxPayApiConfig.getPartnerKey(), SignType.MD5);
             String xmlResult = WxPayApi.pushOrder(false, params);
 
-            logger.info(xmlResult);
+            logger.info("调用微信支付下单接口返回xml：{}", xmlResult);
             Map<String, String> result = WxPayKit.xmlToMap(xmlResult);
 
             String returnCode = result.get("return_code");
@@ -678,7 +1035,7 @@ public class WeixinServiceImpl implements WeixinService {
                 logger.error(returnMsg);
             }
 
-            logger.info("调用微信支付下单接口返回{}", JsonUtil.toJSONString(result));
+            logger.info("调用微信支付下单接口返回数据：{}", JsonUtil.toJSONString(result));
             return result;
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
@@ -687,111 +1044,72 @@ public class WeixinServiceImpl implements WeixinService {
     }
 
     /**
-     * 发起退款
-     * @param storeId
-     * @param orderSn
-     * @param totalAmount
-     * @param refundAmount
-     * @param platform
+     * h5支付
+     *
+     * @param storeId 店铺ID
+     * @param reqData 请求参数
+     * @param ip 支付IP
+     * @param platform 支付平台
      * @return
      * */
-    public Boolean doRefund(Integer storeId, String orderSn, BigDecimal totalAmount, BigDecimal refundAmount, String platform) throws BusinessCheckException {
+    private Map<String, String> wapPay(Integer storeId, Map<String, String> reqData, String ip, String platform) {
         try {
-            logger.info("WeixinService.doRefund orderSn = {}, totalFee = {}, refundFee = {}", orderSn, totalAmount, refundAmount);
-            if (StringUtil.isEmpty(orderSn)) {
-                throw new BusinessCheckException("退款订单号不能为空...");
-            }
-
-            BigDecimal totalFee = totalAmount.multiply(new BigDecimal("100"));
-            BigDecimal refundFee = refundAmount.multiply(new BigDecimal("100"));
-            Integer totalFeeInt = totalFee.intValue();
-            Integer refundFeeInt = refundFee.intValue();
-
+            logger.info("调用微信h5支付下单接口入参{}，请求平台：{}", JsonUtil.toJSONString(reqData), platform);
             // 支付配置
             getApiConfig(storeId, platform);
             WxPayApiConfig wxPayApiConfig = WxPayApiConfigKit.getWxPayApiConfig();
-            Map<String, String> params = RefundModel.builder()
+            H5SceneInfo sceneInfo = new H5SceneInfo();
+            H5SceneInfo.H5 h5Info = new H5SceneInfo.H5();
+            h5Info.setType("Wap");
+            // 支付域名必须在商户平台->"产品中心"->"开发配置"中添加
+            h5Info.setWap_url(wxPayApiConfig.getDomain());
+            h5Info.setWap_name("WEB");
+            sceneInfo.setH5Info(h5Info);
+            Map<String, String> params = UnifiedOrderModel
+                    .builder()
                     .appid(wxPayApiConfig.getAppId())
                     .mch_id(wxPayApiConfig.getMchId())
                     .nonce_str(WxPayKit.generateStr())
-                    .transaction_id("")
-                    .out_trade_no(orderSn)
-                    .out_refund_no(orderSn)
-                    .total_fee(totalFeeInt.toString())
-                    .refund_fee(refundFeeInt.toString())
-                    .notify_url(wxPayApiConfig.getDomain() + REFUND_NOTIFY_URL)
+                    .body(reqData.get("body"))
+                    .attach(reqData.get("body"))
+                    .out_trade_no(WxPayKit.generateStr())
+                    .total_fee(reqData.get("total_fee"))
+                    .spbill_create_ip(ip)
+                    .notify_url(wxPayApiConfig.getDomain() + CALL_BACK_URL)
+                    .trade_type(TradeType.MWEB.getTradeType())
+                    .scene_info(JSON.toJSONString(sceneInfo))
                     .build()
-                    .createSign(wxPayApiConfig.getPartnerKey(), SignType.MD5);
-            String refundStr = WxPayApi.orderRefund(false, params, wxPayApiConfig.getCertPath(), wxPayApiConfig.getMchId());
-            logger.info("WeixinService doRefund params: {}", params);
-            logger.info("WeixinService doRefund return: {}", refundStr);
-            Map<String, String> result = WxPayKit.xmlToMap(refundStr);
-            String returnCode = result.get("return_code");
-            String returnMsg = result.get("return_msg");
-            if (!WxPayKit.codeIsOk(returnCode)) {
-                logger.error(returnMsg);
-                return false;
+                    .createSign(wxPayApiConfig.getPartnerKey(), SignType.HMACSHA256);
+
+            String xmlResult = WxPayApi.pushOrder(false, params);
+            logger.info("调用微信h5支付接口返回xml：{}", xmlResult);
+
+            Map<String, String> result = WxPayKit.xmlToMap(xmlResult);
+
+            String return_code = result.get("return_code");
+            String return_msg = result.get("return_msg");
+            if (!WxPayKit.codeIsOk(return_code)) {
+                throw new RuntimeException(return_msg);
             }
-            return true;
-        } catch (Exception e) {
-            throw new BusinessCheckException("WeixinService.doRefund 微信退款失败：" + e.getMessage());
-        }
-    }
-
-    /***
-     * 生成店铺二维码
-     *
-     * @param merchantId
-     * @param storeId
-     * @param width
-     * @return
-     * */
-    public String createStoreQrCode(Integer merchantId, Integer storeId, Integer width) {
-        try {
-            String accessToken = getAccessToken(merchantId, true);
-            String url = "https://api.weixin.qq.com/cgi-bin/wxaapp/createwxaqrcode?access_token=" + accessToken;
-            String reqDataJsonStr = "";
-
-            Map<String, Object> reqData = new HashMap<>();
-            reqData.put("access_token", accessToken);
-            reqData.put("path", "pages/index/index?storeId=" + storeId);
-            reqData.put("width", width);
-            reqDataJsonStr = JsonUtil.toJSONString(reqData);
-
-            byte[] bytes = HttpRESTDataClient.requestPost(url, reqDataJsonStr);
-            logger.info("WechatService createStoreQrCode response success");
-
-            String pathRoot = env.getProperty("images.root");
-            String baseImage = env.getProperty("images.path");
-            String filePath = "storeQr" + storeId + ".png";
-            String path = pathRoot + baseImage + filePath;
-            QRCodeUtil.saveQrCodeToLocal(bytes, path);
-
-            // 上传阿里云oss
-            String mode = env.getProperty("aliyun.oss.mode");
-            if (mode.equals("1")) { // 检查是否开启上传
-                String endpoint = env.getProperty("aliyun.oss.endpoint");
-                String accessKeyId = env.getProperty("aliyun.oss.accessKeyId");
-                String accessKeySecret = env.getProperty("aliyun.oss.accessKeySecret");
-                String bucketName = env.getProperty("aliyun.oss.bucketName");
-                String folder = env.getProperty("aliyun.oss.folder");
-                OSS ossClient = AliyunOssUtil.getOSSClient(accessKeyId, accessKeySecret, endpoint);
-                File ossFile = new File(path);
-                return AliyunOssUtil.upload(ossClient, ossFile, bucketName, folder);
-            } else {
-                return baseImage + filePath;
+            String result_code = result.get("result_code");
+            if (!WxPayKit.codeIsOk(result_code)) {
+                throw new RuntimeException(return_msg);
             }
+            result.put("backUrl", env.getProperty("website.url"));
+            logger.info("调用微信h5支付接口返回数据：{}", JsonUtil.toJSONString(result));
+            return result;
         } catch (Exception e) {
-            logger.error("生成店铺二维码出错：" + e.getMessage());
+            logger.error(e.getMessage(), e);
         }
-        return "";
+        return null;
     }
 
     /**
      * 获取支付配置
      *
-     * @param storeId
-     * @param platform
+     * @param storeId 店铺ID
+     * @param platform 支付平台
+     * @throws BusinessCheckException
      * @return
      * */
     private WxPayApiConfig getApiConfig(Integer storeId, String platform) throws BusinessCheckException {
@@ -800,13 +1118,20 @@ public class WeixinServiceImpl implements WeixinService {
         String mchId = wxPayBean.getMchId();
         String apiV2 = wxPayBean.getApiV2();
         String certPath = wxPayBean.getCertPath();
+        String appId = wxPayBean.getAppId();
+        logger.info("微信支付店铺信息：{}", JsonUtil.toJSONString(mtStore));
         if (mtStore != null && StringUtil.isNotEmpty(mtStore.getWxApiV2()) && StringUtil.isNotEmpty(mtStore.getWxMchId())) {
             mchId = mtStore.getWxMchId();
             apiV2 = mtStore.getWxApiV2();
-            certPath = mtStore.getWxCertPath();
+            String basePath = env.getProperty("images.root");
+            certPath = basePath + mtStore.getWxCertPath();
+            MtMerchant mtMerchant = merchantService.queryMerchantById(mtStore.getMerchantId());
+            if (mtMerchant != null && StringUtil.isNotEmpty(mtMerchant.getWxAppId())) {
+                appId = mtMerchant.getWxAppId();
+            }
         }
         apiConfig = WxPayApiConfig.builder()
-                   .appId(wxPayBean.getAppId())
+                   .appId(appId)
                    .mchId(mchId)
                    .partnerKey(apiV2)
                    .certPath(certPath)

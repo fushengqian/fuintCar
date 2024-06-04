@@ -6,10 +6,7 @@ import com.fuint.common.dto.UserDto;
 import com.fuint.common.dto.UserInfo;
 import com.fuint.common.enums.*;
 import com.fuint.common.service.*;
-import com.fuint.common.util.Base64Util;
-import com.fuint.common.util.DateUtil;
-import com.fuint.common.util.QRCodeUtil;
-import com.fuint.common.util.TokenUtil;
+import com.fuint.common.util.*;
 import com.fuint.framework.exception.BusinessCheckException;
 import com.fuint.framework.web.BaseController;
 import com.fuint.framework.web.ResponseObject;
@@ -92,6 +89,8 @@ public class ClientUserController extends BaseController {
     public ResponseObject info(HttpServletRequest request) throws BusinessCheckException {
         String token = request.getHeader("Access-Token");
         String merchantNo = request.getHeader("merchantNo") == null ? "" : request.getHeader("merchantNo");
+        String isWechat = request.getHeader("isWechat") == null ? YesOrNoEnum.NO.getKey() : request.getHeader("isWechat");
+        String platform = request.getHeader("platform") == null ? "" : request.getHeader("platform");
         String userNo = request.getParameter("code") == null ? "" : request.getParameter("code");
         UserInfo loginInfo = TokenUtil.getUserInfoByToken(token);
 
@@ -146,7 +145,25 @@ public class ClientUserController extends BaseController {
                 }
             }
         }
+
+        // 是否开通微信会员卡
+        boolean openWxCard = false;
+        if (platform.equals(PlatformTypeEnum.H5.getCode()) && isWechat.equals(YesOrNoEnum.YES.getKey()) && mtUser != null && StringUtil.isNotEmpty(mtUser.getOpenId())) {
+            MtSetting cardSetting = settingService.querySettingByName(mtUser.getMerchantId(), SettingTypeEnum.USER.getKey(), UserSettingEnum.OPEN_WX_CARD.getKey());
+            if (cardSetting != null && cardSetting.getValue().equals(YesOrNoEnum.TRUE.getKey())) {
+                MtSetting cardIdSetting = settingService.querySettingByName(mtUser.getMerchantId(), SettingTypeEnum.USER.getKey(), UserSettingEnum.WX_MEMBER_CARD_ID.getKey());
+                if (cardIdSetting != null) {
+                    Boolean isOpen = weixinService.isOpenCard(mtUser.getMerchantId(), cardIdSetting.getValue(), mtUser.getOpenId());
+                    logger.info("weixinService.isOpenCard userId = {}，isOpen = {}", mtUser.getId(), isOpen);
+                    if (!isOpen) {
+                        openWxCard = true;
+                    }
+                }
+            }
+        }
+
         outParams.put("isMerchant", isMerchant);
+        outParams.put("openWxCard", openWxCard);
 
         return getSuccessResult(outParams);
     }
@@ -211,12 +228,12 @@ public class ClientUserController extends BaseController {
         List<MtSetting> settingList = settingService.getSettingList(merchantId, SettingTypeEnum.USER.getKey());
 
         for (MtSetting setting : settingList) {
-            if (setting.getName().equals("getCouponNeedPhone")) {
-                outParams.put("getCouponNeedPhone", setting.getValue());
-            } else if (setting.getName().equals("submitOrderNeedPhone")) {
-                outParams.put("submitOrderNeedPhone", setting.getValue());
-            } else if (setting.getName().equals("loginNeedPhone")) {
-                outParams.put("loginNeedPhone", setting.getValue());
+            if (setting.getName().equals(UserSettingEnum.GET_COUPON_NEED_PHONE.getKey())) {
+                outParams.put(UserSettingEnum.GET_COUPON_NEED_PHONE.getKey(), setting.getValue());
+            } else if (setting.getName().equals(UserSettingEnum.SUBMIT_ORDER_NEED_PHONE.getKey())) {
+                outParams.put(UserSettingEnum.SUBMIT_ORDER_NEED_PHONE.getKey(), setting.getValue());
+            } else if (setting.getName().equals(UserSettingEnum.LOGIN_NEED_PHONE.getKey())) {
+                outParams.put(UserSettingEnum.LOGIN_NEED_PHONE.getKey(), setting.getValue());
             }
         }
 
@@ -242,6 +259,7 @@ public class ClientUserController extends BaseController {
         String mobile = "";
         Integer merchantId = merchantService.getMerchantId(merchantNo);
         UserInfo userInfo = TokenUtil.getUserInfoByToken(token);
+        boolean modifyPassword = false;
         if (userInfo == null) {
             return getFailureResult(1001);
         }
@@ -265,6 +283,7 @@ public class ClientUserController extends BaseController {
                 }
             }
             mtUser.setPassword(password);
+            modifyPassword = true;
         }
         if (sex.equals(1) || sex.equals(0) || sex.equals(2)) {
             mtUser.setSex(sex);
@@ -279,7 +298,7 @@ public class ClientUserController extends BaseController {
             mtUser.setAvatar(avatar);
         }
 
-        MtUser result = memberService.updateMember(mtUser);
+        MtUser result = memberService.updateMember(mtUser, modifyPassword);
         return getSuccessResult(result);
     }
 
@@ -296,7 +315,7 @@ public class ClientUserController extends BaseController {
         UserInfo userInfo = TokenUtil.getUserInfoByToken(token);
         if (userInfo != null && storeId > 0) {
             MtUser mtUser = memberService.queryMemberById(userInfo.getId());
-            memberService.updateMember(mtUser);
+            memberService.updateMember(mtUser, false);
         }
 
         Map<String, Object> outParams = new HashMap<>();
@@ -334,9 +353,17 @@ public class ClientUserController extends BaseController {
             logger.error(e.getMessage(), e);
         }
 
+        // 微信会员卡领取二维码
+        String wxCardQrCode = "";
+        MtSetting cardIdSetting = settingService.querySettingByName(mtUser.getMerchantId(), SettingTypeEnum.USER.getKey(), UserSettingEnum.WX_MEMBER_CARD_ID.getKey());
+        if (cardIdSetting != null) {
+            wxCardQrCode = weixinService.createCardQrCode(mtUser.getMerchantId(), cardIdSetting.getValue(), mtUser.getUserNo());
+        }
+
         Map<String, Object> outParams = new HashMap<>();
         outParams.put("qrCode", qrCode);
         outParams.put("userInfo", mtUser);
+        outParams.put("wxCardQrCode", wxCardQrCode);
 
         return getSuccessResult(outParams);
     }

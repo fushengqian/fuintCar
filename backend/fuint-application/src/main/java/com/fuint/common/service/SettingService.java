@@ -17,24 +17,26 @@ public interface SettingService extends IService<MtSetting> {
     /**
      * 删除配置
      *
-     * @param  merchantId
-     * @param  name
+     * @param  merchantId 商户ID
+     * @param  type 类型
+     * @param  name 配置名称
      * @throws BusinessCheckException
      */
-    void removeSetting(Integer merchantId, String name) throws BusinessCheckException;
+    void removeSetting(Integer merchantId, String type, String name) throws BusinessCheckException;
 
     /**
      * 保存配置
      *
-     * @param  reqDto
+     * @param  mtSetting
      * @throws BusinessCheckException
      */
-    MtSetting saveSetting(MtSetting reqDto) throws BusinessCheckException;
+    MtSetting saveSetting(MtSetting mtSetting) throws BusinessCheckException;
 
     /**
      * 获取配置列表
      *
-     * @param  type
+     * @param merchantId 商户ID
+     * @param type 类型
      * @throws BusinessCheckException
      */
     List<MtSetting> getSettingList(Integer merchantId, String type) throws BusinessCheckException;
@@ -42,22 +44,26 @@ public interface SettingService extends IService<MtSetting> {
     /**
      * 根据配置名称获取配置信息
      *
-     * @param  merchantId
-     * @param  name name
+     * @param  merchantId 商户ID
+     * @param  type 类型
+     * @param  name 配置名称
      * @throws BusinessCheckException
      */
-    MtSetting querySettingByName(Integer merchantId, String name) throws BusinessCheckException;
+    MtSetting querySettingByName(Integer merchantId, String type, String name) throws BusinessCheckException;
 
     /**
      * 获取系统上传文件的根路径
+     *
      * @return 本地配置或阿里云的oss域名
      * */
     String getUploadBasePath();
 
     /**
      * 获取支付方式列表
+     *
      * @param platform 平台
      * @return
      * */
     List<ParamDto> getPayTypeList(String platform);
+
 }

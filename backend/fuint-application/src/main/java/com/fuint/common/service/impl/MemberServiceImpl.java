@@ -135,8 +135,8 @@ public class MemberServiceImpl extends ServiceImpl<MtUserMapper, MtUser> impleme
 
     /**
      * 获取当前操作会员信息
-     * @param userId
-     * @param token
+     * @param userId 会员ID
+     * @param token 登录token
      * @return
      * */
     @Override
@@ -312,8 +312,9 @@ public class MemberServiceImpl extends ServiceImpl<MtUserMapper, MtUser> impleme
     /**
      * 添加会员
      *
-     * @param  mtUser
+     * @param  mtUser 会员信息
      * @throws BusinessCheckException
+     * @return
      */
     @Override
     @OperationServiceLog(description = "新增会员信息")
@@ -327,6 +328,9 @@ public class MemberServiceImpl extends ServiceImpl<MtUserMapper, MtUser> impleme
         }
 
         String userNo = CommonUtil.createUserNo();
+        if (StringUtil.isNotEmpty(mtUser.getUserNo())) {
+            userNo = mtUser.getUserNo();
+        }
         // 会员名称已存在
         List<MtUser> userList = mtUserMapper.queryMemberByName(mtUser.getMerchantId(), mtUser.getName());
         if (userList.size() > 0) {
@@ -401,13 +405,15 @@ public class MemberServiceImpl extends ServiceImpl<MtUserMapper, MtUser> impleme
     /**
      * 更新会员信息
      *
-     * @param  mtUser
+     * @param  mtUser 会员信息
+     * @param  modifyPassword 修改密码
      * @throws BusinessCheckException
+     * @return
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
     @OperationServiceLog(description = "修改会员信息")
-    public MtUser updateMember(MtUser mtUser) throws BusinessCheckException {
+    public MtUser updateMember(MtUser mtUser, boolean modifyPassword) throws BusinessCheckException {
         mtUser.setUpdateTime(new Date());
 
         MtUser oldUserInfo = mtUserMapper.selectById(mtUser.getId());
@@ -433,7 +439,7 @@ public class MemberServiceImpl extends ServiceImpl<MtUserMapper, MtUser> impleme
                 }
             }
         }
-        if (mtUser.getPassword() != null) {
+        if (mtUser.getPassword() != null && modifyPassword) {
             String salt = SeqUtil.getRandomLetter(4);
             mtUser.setSalt(salt);
             mtUser.setPassword(enCodePassword(mtUser.getPassword(), salt));
@@ -455,8 +461,9 @@ public class MemberServiceImpl extends ServiceImpl<MtUserMapper, MtUser> impleme
     /**
      * 通过手机号新增会员
      *
-     * @param  mobile
+     * @param  mobile 手机号
      * @throws BusinessCheckException
+     * @return
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -493,9 +500,10 @@ public class MemberServiceImpl extends ServiceImpl<MtUserMapper, MtUser> impleme
     /**
      * 根据手机号获取会员信息
      *
-     * @param  merchantId
+     * @param  merchantId 商户ID
      * @param  mobile 手机号
      * @throws BusinessCheckException
+     * @return
      */
     @Override
     public MtUser queryMemberByMobile(Integer merchantId, String mobile) {
@@ -515,7 +523,7 @@ public class MemberServiceImpl extends ServiceImpl<MtUserMapper, MtUser> impleme
      *
      * @param  merchantId 商户ID
      * @param  userNo     会员号
-     * @throws BusinessCheckException
+     * @return
      */
     @Override
     public MtUser queryMemberByUserNo(Integer merchantId, String userNo) {
@@ -534,8 +542,8 @@ public class MemberServiceImpl extends ServiceImpl<MtUserMapper, MtUser> impleme
      * 根据会员ID获取会员信息
      *
      * @param  id 会员ID
-     * @return
      * @throws BusinessCheckException
+     * @return
      */
     @Override
     public MtUser queryMemberById(Integer id) throws BusinessCheckException {
@@ -580,6 +588,7 @@ public class MemberServiceImpl extends ServiceImpl<MtUserMapper, MtUser> impleme
      * @param  merchantId 商户ID
      * @param  name 会员名称
      * @throws BusinessCheckException
+     * @return
      */
     @Override
     public MtUser queryMemberByName(Integer merchantId, String name) {
@@ -595,13 +604,17 @@ public class MemberServiceImpl extends ServiceImpl<MtUserMapper, MtUser> impleme
     /**
      * 根据openId获取会员信息(为空就注册)
      *
-     * @param  merchantId
-     * @param  openId
+     * @param  merchantId 商户ID
+     * @param  openId 微信openId
      * @throws BusinessCheckException
+     * @return
      */
     @Override
     public MtUser queryMemberByOpenId(Integer merchantId, String openId, JSONObject userInfo) throws BusinessCheckException {
         MtUser user = mtUserMapper.queryMemberByOpenId(merchantId, openId);
+        if (user != null && !user.getStatus().equals(StatusEnum.ENABLED.getKey())) {
+            return null;
+        }
 
         String avatar = StringUtil.isNotEmpty(userInfo.getString("avatarUrl")) ? userInfo.getString("avatarUrl") : "";
         String gender = StringUtil.isNotEmpty(userInfo.getString("gender")) ? userInfo.getString("gender") : GenderEnum.MAN.getKey().toString();
@@ -615,9 +628,9 @@ public class MemberServiceImpl extends ServiceImpl<MtUserMapper, MtUser> impleme
 
         // 需要手机号登录
         if (StringUtil.isEmpty(mobile) && user == null) {
-            MtSetting mtSetting = settingService.querySettingByName(merchantId, UserSettingEnum.LOGIN_NEED_PHONE.getKey());
+            MtSetting mtSetting = settingService.querySettingByName(merchantId, SettingTypeEnum.USER.getKey(), UserSettingEnum.LOGIN_NEED_PHONE.getKey());
             if (mtSetting != null) {
-                if (mtSetting.getValue().equals("true")) {
+                if (mtSetting.getValue().equals(YesOrNoEnum.TRUE.getKey())) {
                     MtUser tempUser = new MtUser();
                     tempUser.setOpenId(openId);
                     tempUser.setId(0);
@@ -629,7 +642,9 @@ public class MemberServiceImpl extends ServiceImpl<MtUserMapper, MtUser> impleme
         // 手机号已经存在
         if (StringUtil.isNotEmpty(mobile) && user == null) {
             user = queryMemberByMobile(merchantId, mobile);
-            user.setOpenId(openId);
+            if (user != null) {
+                user.setOpenId(openId);
+            }
         }
 
         if (user == null) {
@@ -715,6 +730,7 @@ public class MemberServiceImpl extends ServiceImpl<MtUserMapper, MtUser> impleme
      *
      * @param  id 等级ID
      * @throws BusinessCheckException
+     * @return
      */
     @Override
     public MtUserGrade queryMemberGradeByGradeId(Integer id) {
@@ -728,6 +744,7 @@ public class MemberServiceImpl extends ServiceImpl<MtUserMapper, MtUser> impleme
      * @param  id 会员ID
      * @param  operator 操作人
      * @throws BusinessCheckException
+     * @return
      */
     @Override
     @OperationServiceLog(description = "删除会员信息")
@@ -751,7 +768,7 @@ public class MemberServiceImpl extends ServiceImpl<MtUserMapper, MtUser> impleme
     /**
      * 根据条件搜索会员分组
      *
-     * @param params
+     * @param params 查询参数
      * @return
      * */
     @Override
@@ -766,8 +783,8 @@ public class MemberServiceImpl extends ServiceImpl<MtUserMapper, MtUser> impleme
     /**
      * 获取会员数量
      *
-     * @param merchantId
-     * @param storeId
+     * @param merchantId 商户ID
+     * @param storeId 店铺ID
      * @return
      * */
     @Override
@@ -782,10 +799,10 @@ public class MemberServiceImpl extends ServiceImpl<MtUserMapper, MtUser> impleme
     /**
      * 获取会员数量
      *
-     * @param merchantId
-     * @param storeId
-     * @param beginTime
-     * @param endTime
+     * @param merchantId 商户ID
+     * @param storeId 店铺ID
+     * @param beginTime 开始时间
+     * @param endTime 结束时间
      * @return
      * */
     @Override
@@ -800,10 +817,10 @@ public class MemberServiceImpl extends ServiceImpl<MtUserMapper, MtUser> impleme
     /**
      * 获取会员数量
      *
-     * @param merchantId
-     * @param storeId
-     * @param beginTime
-     * @param endTime
+     * @param merchantId 商户ID
+     * @param storeId 店铺ID
+     * @param beginTime 开始时间
+     * @param endTime 结束时间
      * @return
      * */
     @Override
@@ -818,8 +835,8 @@ public class MemberServiceImpl extends ServiceImpl<MtUserMapper, MtUser> impleme
     /**
      * 重置手机号
      *
-     * @param  mobile 手机号码
-     * @param  userId 会员ID
+     * @param mobile 手机号码
+     * @param userId 会员ID
      * @return
      */
     @Override
@@ -833,10 +850,10 @@ public class MemberServiceImpl extends ServiceImpl<MtUserMapper, MtUser> impleme
     /**
      * 获取会员消费排行榜
      *
-     * @param merchantId
-     * @param storeId
-     * @param startTime
-     * @param endTime
+     * @param merchantId 商户ID
+     * @param storeId 店铺ID
+     * @param startTime 开始时间
+     * @param endTime 结束时间
      * @return
      * */
     @Override
@@ -856,11 +873,11 @@ public class MemberServiceImpl extends ServiceImpl<MtUserMapper, MtUser> impleme
     /**
      * 查找会员列表
      *
-     * @param merchantId
-     * @param keyword
-     * @param groupIds
-     * @param page
-     * @param pageSize
+     * @param merchantId 商户ID
+     * @param keyword 关键字
+     * @param groupIds 分组ID
+     * @param page 当前页码
+     * @param pageSize 每页数量
      * @return
      * */
     @Override
@@ -905,10 +922,22 @@ public class MemberServiceImpl extends ServiceImpl<MtUserMapper, MtUser> impleme
     }
 
     /**
+     * 查找会员列表
+     *
+     * @param merchantId 商户ID
+     * @param keyword 关键字
+     * @return
+     * */
+    @Override
+    public List<MtUser> searchMembers(Integer merchantId, String keyword) {
+       return mtUserMapper.searchMembers(merchantId, keyword);
+    }
+
+    /**
      * 设定安全的密码
      *
-     * @param password
-     * @param salt
+     * @param password 密码明文
+     * @param salt 加密因子
      * @return
      */
     @Override
@@ -919,8 +948,8 @@ public class MemberServiceImpl extends ServiceImpl<MtUserMapper, MtUser> impleme
     /**
      * 获取加密密码
      *
-     * @param password
-     * @param salt
+     * @param password 密码密文
+     * @param salt 加密因子
      * @return
      * */
     @Override
@@ -931,8 +960,8 @@ public class MemberServiceImpl extends ServiceImpl<MtUserMapper, MtUser> impleme
     /**
      * 获取会员ID列表
      *
-     * @param merchantId
-     * @param storeId
+     * @param merchantId 商户号
+     * @param storeId 店铺ID
      * @return
      * */
     @Override

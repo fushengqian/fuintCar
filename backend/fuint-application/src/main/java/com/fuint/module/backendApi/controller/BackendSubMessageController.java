@@ -70,7 +70,7 @@ public class BackendSubMessageController extends BaseController {
         List<SubMessageDto> dataList = new ArrayList<>();
         for (WxMessageEnum wxMessageEnum : WxMessageEnum.values()) {
             SubMessageDto e = new SubMessageDto();
-            MtSetting setting = settingService.querySettingByName(accountInfo.getMerchantId(), wxMessageEnum.getKey());
+            MtSetting setting = settingService.querySettingByName(accountInfo.getMerchantId(), SettingTypeEnum.SUB_MESSAGE.getKey(), wxMessageEnum.getKey());
             e.setKey(wxMessageEnum.getKey());
             e.setTitle(wxMessageEnum.getValue());
             JSONObject jsonObject = null;
@@ -136,7 +136,7 @@ public class BackendSubMessageController extends BaseController {
 
         String name = WxMessageEnum.getValue(key);
         if (StringUtil.isNotEmpty(name)) {
-            MtSetting mtSetting = settingService.querySettingByName(accountInfo.getMerchantId(), key);
+            MtSetting mtSetting = settingService.querySettingByName(accountInfo.getMerchantId(), SettingTypeEnum.SUB_MESSAGE.getKey(), key);
             JSONObject jsonObject = null;
             try {
                 if (mtSetting != null && mtSetting.getValue().indexOf('}') > 0) {
@@ -216,6 +216,9 @@ public class BackendSubMessageController extends BaseController {
         if (accountInfo == null) {
             return getFailureResult(1001, "请先登录");
         }
+        if (accountInfo.getMerchantId() == null || accountInfo.getMerchantId() <= 0) {
+            return getFailureResult(201, "请使用商户账号操作");
+        }
 
         SubMessageDto subMessageDto = new SubMessageDto();
         subMessageDto.setKey(key);
@@ -254,7 +257,7 @@ public class BackendSubMessageController extends BaseController {
             String json = JSONObject.toJSONString(subMessageDto);
 
             // 保存配置
-            settingService.removeSetting(accountInfo.getMerchantId(), key);
+            settingService.removeSetting(accountInfo.getMerchantId(), SettingTypeEnum.SUB_MESSAGE.getKey(), key);
             MtSetting info = new MtSetting();
             info.setMerchantId(accountInfo.getMerchantId());
             info.setType(SettingTypeEnum.SUB_MESSAGE.getKey());

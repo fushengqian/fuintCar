@@ -39,14 +39,16 @@ public class SettingServiceImpl extends ServiceImpl<MtSettingMapper, MtSetting> 
     /**
      * 删除配置
      *
-     * @param  merchantId
-     * @param  name
+     * @param merchantId 商户ID
+     * @param type 类型
+     * @param name 配置名称
      * @throws BusinessCheckException
+     * @return
      */
     @Override
     @OperationServiceLog(description = "删除配置信息")
-    public void removeSetting(Integer merchantId, String name) {
-        MtSetting info = querySettingByName(merchantId, name);
+    public void removeSetting(Integer merchantId, String type, String name) {
+        MtSetting info = querySettingByName(merchantId, type, name);
         if (info != null) {
             mtSettingMapper.deleteById(info.getId());
         }
@@ -56,39 +58,42 @@ public class SettingServiceImpl extends ServiceImpl<MtSettingMapper, MtSetting> 
     /**
      * 保存配置
      *
-     * @param  mtSetting
+     * @param  mtSetting 配置参数
      * @throws BusinessCheckException
+     * @return
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
     @OperationServiceLog(description = "保存配置信息")
     public MtSetting saveSetting(MtSetting mtSetting) {
-        MtSetting info = querySettingByName(mtSetting.getMerchantId(), mtSetting.getName());
-        if (null != info) {
+        MtSetting settingInfo = querySettingByName(mtSetting.getMerchantId(), mtSetting.getType(), mtSetting.getName());
+        if (null != settingInfo) {
             if (mtSetting.getValue() != null) {
-                info.setValue(mtSetting.getValue());
+                settingInfo.setValue(mtSetting.getValue());
             }
             if (mtSetting.getDescription() != null) {
-                info.setDescription(mtSetting.getDescription());
+                settingInfo.setDescription(mtSetting.getDescription());
             }
             if (StringUtil.isNotEmpty(mtSetting.getOperator())) {
-                info.setOperator(mtSetting.getOperator());
+                settingInfo.setOperator(mtSetting.getOperator());
             }
             if (mtSetting.getUpdateTime() != null) {
-                info.setUpdateTime(mtSetting.getUpdateTime());
+                settingInfo.setUpdateTime(mtSetting.getUpdateTime());
             }
             if (mtSetting.getStatus() != null) {
-                info.setStatus(mtSetting.getStatus());
+                settingInfo.setStatus(mtSetting.getStatus());
             }
             if (mtSetting.getType() != null) {
-                info.setType(mtSetting.getType());
+                settingInfo.setType(mtSetting.getType());
             }
-            mtSettingMapper.updateById(info);
+            mtSettingMapper.updateById(settingInfo);
         } else {
             // 创建配置
-            mtSetting.setCreateTime(new Date());
-            mtSetting.setStatus(StatusEnum.ENABLED.getKey());
-            mtSettingMapper.insert(mtSetting);
+            if (mtSetting.getName() != null && mtSetting.getValue() != null) {
+                mtSetting.setCreateTime(new Date());
+                mtSetting.setStatus(StatusEnum.ENABLED.getKey());
+                mtSettingMapper.insert(mtSetting);
+            }
         }
 
         return mtSetting;
@@ -97,30 +102,33 @@ public class SettingServiceImpl extends ServiceImpl<MtSettingMapper, MtSetting> 
     /**
      * 获取配置列表
      *
-     * @param  merchantId
-     * @param  type
+     * @param  merchantId 商户ID
+     * @param  type 配置类型
      * @throws BusinessCheckException
+     * @return
      */
     @Override
     public List<MtSetting> getSettingList(Integer merchantId, String type) {
-        List<MtSetting> dataList = mtSettingMapper.querySettingByType(merchantId, type);
-        return dataList;
+        return mtSettingMapper.querySettingByType(merchantId, type);
     }
 
     /**
      * 根据ID获取配置信息
      *
-     * @param  merchantId
-     * @param  name
+     * @param  merchantId 商户ID
+     * @param  type 类型
+     * @param  name 配置名称
      * @throws BusinessCheckException
+     * @return
      */
     @Override
-    public MtSetting querySettingByName(Integer merchantId, String name) {
-        return mtSettingMapper.querySettingByName(merchantId, name);
+    public MtSetting querySettingByName(Integer merchantId, String type, String name) {
+        return mtSettingMapper.querySettingByName(merchantId, type, name);
     }
 
     /**
      * 获取系统上传的根路径
+     *
      * @return
      * */
     @Override
@@ -144,7 +152,8 @@ public class SettingServiceImpl extends ServiceImpl<MtSettingMapper, MtSetting> 
 
     /**
      * 获取支付方式列表
-     * @param platform
+     *
+     * @param platform 平台
      * @return
      * */
     @Override

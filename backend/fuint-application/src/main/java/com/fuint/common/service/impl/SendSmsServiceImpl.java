@@ -1,16 +1,21 @@
 package com.fuint.common.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.fuint.common.dto.MessageResDto;
+import com.fuint.common.enums.SettingTypeEnum;
+import com.fuint.common.enums.SmsSettingEnum;
 import com.fuint.common.enums.StatusEnum;
 import com.fuint.common.service.SendSmsService;
+import com.fuint.common.service.SettingService;
 import com.fuint.common.service.SmsTemplateService;
 import com.fuint.common.util.CommonUtil;
 import com.fuint.framework.exception.BusinessCheckException;
 import com.fuint.framework.pagination.PaginationRequest;
 import com.fuint.framework.pagination.PaginationResponse;
 import com.fuint.repository.mapper.MtSmsSendedLogMapper;
+import com.fuint.repository.model.MtSetting;
 import com.fuint.repository.model.MtSmsSendedLog;
 import com.fuint.repository.model.MtSmsTemplate;
 import com.fuint.utils.StringUtil;
@@ -47,30 +52,49 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public class SendSmsServiceImpl implements SendSmsService {
 
-     private static final Logger logger = LoggerFactory.getLogger(SendSmsServiceImpl.class);
+    private static final Logger logger = LoggerFactory.getLogger(SendSmsServiceImpl.class);
 
-     /**
-      * 系统环境变量
-      * */
-     private Environment env;
+    /**
+     * 系统环境变量
+     * */
+    private Environment env;
 
-     private MtSmsSendedLogMapper mtSmsSendedLogMapper;
+    private MtSmsSendedLogMapper mtSmsSendedLogMapper;
 
-     /**
-      * 短信模板服务接口
-      * */
-     private SmsTemplateService smsTemplateService;
+    /**
+     * 短信模板服务接口
+     * */
+    private SmsTemplateService smsTemplateService;
 
+    /**
+     * 配置服务接口
+     * */
+    private SettingService settingService;
+
+    /**
+     * 发送短信
+     *
+     * @param merchantId 商户ID
+     * @param templateUname 模板名
+     * @param phones 发送手机号
+     * @param contentParams 发送参数
+     * @return
+     * */
     @Override
     public Map<Boolean,List<String>> sendSms(Integer merchantId, String templateUname, List<String> phones, Map<String, String> contentParams) throws BusinessCheckException {
         logger.info("使用短信平台发送短信.....");
+        Map<Boolean, List<String>> result = new HashMap<>();
         Integer mode = Integer.parseInt(env.getProperty("aliyun.sms.mode"));
-        if (mode.intValue() != 1) {
-            throw new BusinessCheckException("未开启短信发送开关，请联系管理员！");
+        MtSetting mtSetting = settingService.querySettingByName(merchantId, SettingTypeEnum.SMS_CONFIG.getKey(), SmsSettingEnum.IS_CLOSE.getKey());
+        if (mtSetting != null && StringUtil.isNotEmpty(mtSetting.getValue())) {
+            mode = Integer.parseInt(mtSetting.getValue());
+            logger.info("商户短信设置 mtSetting = {}", JSON.toJSONString(mtSetting));
         }
-
+        if (mode.intValue() != 1) {
+            logger.info("短信平台未开启 mode = {}", mode);
+            return result;
+        }
         if (templateUname != null && !CollectionUtils.isEmpty(phones)) {
-            Map<Boolean, List<String>> result = new HashMap<>();
             try {
                 if (mode != null && mode.intValue() == 1) {
                     // 手机号以","分隔拼接
@@ -83,13 +107,13 @@ public class SendSmsServiceImpl implements SendSmsService {
                 }
             } catch (Exception e) {
                 result.put(Boolean.FALSE,phones);
-                logger.error("推送至短信平台出错...参数[smscontent={},phones={}]", templateUname, phones);
+                logger.error("推送至短信平台出错，参数[templateUname={}，phones={}]", templateUname, phones);
                 logger.error(e.getMessage(),e);
             }
-            return result;
         } else {
-            throw new BusinessCheckException("手机号码和短信内容不能为空，请确认！");
+            logger.error("手机号码和短信内容不能为空，请确认！");
         }
+        return result;
     }
 
     /**
@@ -99,7 +123,7 @@ public class SendSmsServiceImpl implements SendSmsService {
      * @param templateUname   短信模板英文名称
      * @return
      */
-    public MessageResDto sendMessage(Integer merchantId, String phoneNo, String templateUname, Map<String, String> contentParams) {
+    public MessageResDto sendMessage(Integer merchantId, String phoneNo, String templateUname, Map<String, String> contentParams) throws BusinessCheckException {
         MessageResDto resInfo = new MessageResDto();
         logger.info("sendMessage inParams:phoneNo={}, message={}", phoneNo, templateUname);
         if (StringUtil.isBlank(phoneNo) || phoneNo.split(",").length > 200) {
@@ -111,6 +135,30 @@ public class SendSmsServiceImpl implements SendSmsService {
         String accessKeyId = env.getProperty("aliyun.sms.accessKeyId");
         String secret = env.getProperty("aliyun.sms.accessKeySecret");
         String signName = env.getProperty("aliyun.sms.signName");
+
+        List<MtSetting> settings = settingService.getSettingList(merchantId, SettingTypeEnum.SMS_CONFIG.getKey());
+        if (settings != null && settings.size() > 0) {
+            logger.info("商户短信设置 mtSetting = {}", JSON.toJSONString(settings.get(0)));
+            String accessKeyId1 = "";
+            String secret1 = "";
+            String signName1 = "";
+            for (MtSetting mtSetting : settings) {
+                if (mtSetting.getName().equals(SmsSettingEnum.ACCESS_KEY_ID.getKey()) && StringUtil.isNotEmpty(mtSetting.getValue())) {
+                    accessKeyId1 = mtSetting.getValue();
+                }
+                if (mtSetting.getName().equals(SmsSettingEnum.ACCESS_KEY_SECRET.getKey()) && StringUtil.isNotEmpty(mtSetting.getValue())) {
+                    secret1 = mtSetting.getValue();
+                }
+                if (mtSetting.getName().equals(SmsSettingEnum.SIGN_NAME.getKey()) && StringUtil.isNotEmpty(mtSetting.getValue())) {
+                    signName1 = mtSetting.getValue();
+                }
+            }
+            if (StringUtil.isNotEmpty(accessKeyId1) && StringUtil.isNotEmpty(secret1) && StringUtil.isNotEmpty(signName1)) {
+                accessKeyId = accessKeyId1;
+                secret = secret1;
+                signName = signName1;
+            }
+        }
 
         MtSmsTemplate templateInfo = new MtSmsTemplate();
         try {
@@ -175,6 +223,7 @@ public class SendSmsServiceImpl implements SendSmsService {
             String res = "";
             try {
                 CommonResponse response = client.getCommonResponse(request);
+                logger.info("sendMessage response:{}", response.toString());
                 res = response.getData();
                 System.out.println(response.getData());
             } catch (ServerException e) {
@@ -197,7 +246,7 @@ public class SendSmsServiceImpl implements SendSmsService {
     /**
      * 发送短信日志记录
      *
-     * @param merchantId 商户号
+     * @param merchantId 商户ID
      * @param phoneNo    短信发送手机号
      * @param message    短信内容
      * @return

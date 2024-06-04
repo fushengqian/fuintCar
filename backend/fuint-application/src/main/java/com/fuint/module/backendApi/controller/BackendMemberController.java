@@ -1,13 +1,11 @@
 package com.fuint.module.backendApi.controller;
 
 import com.fuint.common.Constants;
-import com.fuint.common.dto.AccountInfo;
-import com.fuint.common.dto.GroupMemberDto;
-import com.fuint.common.dto.UserDto;
-import com.fuint.common.dto.UserGroupDto;
+import com.fuint.common.dto.*;
 import com.fuint.common.enums.SettingTypeEnum;
 import com.fuint.common.enums.StatusEnum;
 import com.fuint.common.enums.UserSettingEnum;
+import com.fuint.common.enums.YesOrNoEnum;
 import com.fuint.common.service.*;
 import com.fuint.common.util.DateUtil;
 import com.fuint.common.util.PhoneFormatCheckUtils;
@@ -25,6 +23,8 @@ import lombok.AllArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import weixin.popular.util.JsonUtil;
+
 import javax.servlet.http.HttpServletRequest;
 import java.text.ParseException;
 import java.util.*;
@@ -65,6 +65,11 @@ public class BackendMemberController extends BaseController {
      * 会员分组服务接口
      */
     private MemberGroupService memberGroupService;
+
+    /**
+     * 微信相关接口
+     * */
+    private WeixinService weixinService;
 
     /**
      * 查询会员列表
@@ -143,7 +148,7 @@ public class BackendMemberController extends BaseController {
 
         // 会员等级列表
         Map<String, Object> param = new HashMap<>();
-        param.put("status", StatusEnum.ENABLED.getKey());
+        param.put("STATUS", StatusEnum.ENABLED.getKey());
         if (account.getMerchantId() != null && account.getMerchantId() > 0) {
             param.put("MERCHANT_ID", account.getMerchantId());
         }
@@ -163,6 +168,7 @@ public class BackendMemberController extends BaseController {
         if (accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0) {
             searchParams.put("merchantId", accountInfo.getMerchantId());
         }
+        searchParams.put("status", StatusEnum.ENABLED.getKey());
         PaginationRequest groupRequest = new PaginationRequest();
         groupRequest.setCurrentPage(1);
         groupRequest.setPageSize(Constants.MAX_ROWS);
@@ -206,7 +212,7 @@ public class BackendMemberController extends BaseController {
         }
 
         userInfo.setStatus(status);
-        memberService.updateMember(userInfo);
+        memberService.updateMember(userInfo, false);
 
         return getSuccessResult(true);
     }
@@ -240,7 +246,6 @@ public class BackendMemberController extends BaseController {
      * @param request HttpServletRequest对象
      * @return
      */
-    @ApiOperation(value = "保存会员信息")
     @RequestMapping(value = "/save", method = RequestMethod.POST)
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('member:add')")
@@ -255,6 +260,7 @@ public class BackendMemberController extends BaseController {
         String name = param.get("name") == null ? "" : param.get("name").toString();
         String gradeId = param.get("gradeId") == null ? "0" :param.get("gradeId").toString();
         String groupId = param.get("groupId") == null ? "0" :param.get("groupId").toString();
+        String storeId = param.get("storeId") == null ? "0" :param.get("storeId").toString();
         String userNo = param.get("userNo") == null ? "" : param.get("userNo").toString();
         String mobile = param.get("mobile") == null ? "" : param.get("mobile").toString();
         String sex = param.get("sex") == null ? "0" : param.get("sex").toString();
@@ -296,13 +302,18 @@ public class BackendMemberController extends BaseController {
         memberInfo.setDescription(description);
         memberInfo.setStartTime(DateUtil.parseDate(startTime));
         memberInfo.setEndTime(DateUtil.parseDate(endTime));
+        if (StringUtil.isNotEmpty(storeId)) {
+            memberInfo.setStoreId(Integer.parseInt(storeId));
+        }
+        TAccount account = accountService.getAccountInfoById(accountInfo.getId());
+        Integer myStoreId = account.getStoreId();
+        if (myStoreId != null && myStoreId > 0) {
+            memberInfo.setStoreId(myStoreId);
+        }
         if (StringUtil.isEmpty(id)) {
-            TAccount account = accountService.getAccountInfoById(accountInfo.getId());
-            Integer storeId = account.getStoreId();
-            memberInfo.setStoreId(storeId);
             memberService.addMember(memberInfo);
         } else {
-            memberService.updateMember(memberInfo);
+            memberService.updateMember(memberInfo, false);
         }
         return getSuccessResult(true);
     }
@@ -346,6 +357,10 @@ public class BackendMemberController extends BaseController {
         }
 
         Map<String, Object> param = new HashMap<>();
+        if (accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0) {
+            param.put("MERCHANT_ID", accountInfo.getMerchantId());
+        }
+        param.put("STATUS", StatusEnum.ENABLED.getKey());
         List<MtUserGrade> userGradeList = memberService.queryMemberGradeByParams(param);
 
         Map<String, Object> result = new HashMap<>();
@@ -374,73 +389,147 @@ public class BackendMemberController extends BaseController {
 
         List<MtSetting> settingList = settingService.getSettingList(accountInfo.getMerchantId(), SettingTypeEnum.USER.getKey());
 
-        String getCouponNeedPhone = "false";
-        String submitOrderNeedPhone = "false";
-        String loginNeedPhone = "false";
-
+        String getCouponNeedPhone = YesOrNoEnum.FALSE.getKey();
+        String submitOrderNeedPhone = YesOrNoEnum.FALSE.getKey();
+        String loginNeedPhone = YesOrNoEnum.FALSE.getKey();
+        String openWxCard = YesOrNoEnum.FALSE.getKey();
+        WxCardDto wxMemberCard = null;
         for (MtSetting setting : settingList) {
-             if (setting.getName().equals("getCouponNeedPhone")) {
-                 getCouponNeedPhone = setting.getValue();
-             } else if (setting.getName().equals("submitOrderNeedPhone")) {
-                 submitOrderNeedPhone = setting.getValue();
-             } else if (setting.getName().equals("loginNeedPhone")) {
-                 loginNeedPhone = setting.getValue();
-             }
+            if (StringUtil.isNotEmpty(setting.getValue())) {
+                if (setting.getName().equals(UserSettingEnum.GET_COUPON_NEED_PHONE.getKey())) {
+                    getCouponNeedPhone = setting.getValue();
+                } else if (setting.getName().equals(UserSettingEnum.GET_COUPON_NEED_PHONE.getKey())) {
+                    submitOrderNeedPhone = setting.getValue();
+                } else if (setting.getName().equals(UserSettingEnum.LOGIN_NEED_PHONE.getKey())) {
+                    loginNeedPhone = setting.getValue();
+                } else if (setting.getName().equals(UserSettingEnum.OPEN_WX_CARD.getKey())) {
+                    openWxCard = setting.getValue();
+                } else if (setting.getName().equals(UserSettingEnum.WX_MEMBER_CARD.getKey())) {
+                    wxMemberCard = JsonUtil.parseObject(setting.getValue(), WxCardDto.class);
+                }
+            }
         }
 
+        String imagePath = settingService.getUploadBasePath();
         Map<String, Object> result = new HashMap<>();
         result.put("getCouponNeedPhone", getCouponNeedPhone);
         result.put("submitOrderNeedPhone", submitOrderNeedPhone);
         result.put("loginNeedPhone", loginNeedPhone);
+        result.put("openWxCard", openWxCard);
+        result.put("wxMemberCard", wxMemberCard);
+        result.put("imagePath", imagePath);
 
         return getSuccessResult(result);
     }
 
     /**
-     * 保存设置
+     * 保存会员设置
      *
      * @param request HttpServletRequest对象
      * @return
      */
-    @ApiOperation(value = "保存设置")
+    @ApiOperation(value = "保存会员设置")
     @RequestMapping(value = "/saveSetting", method = RequestMethod.POST)
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('member:setting')")
     public ResponseObject saveSetting(HttpServletRequest request, @RequestBody Map<String, Object> param) throws BusinessCheckException {
         String token = request.getHeader("Access-Token");
-        String getCouponNeedPhone = param.get("getCouponNeedPhone") != null ? param.get("getCouponNeedPhone").toString() : "false";
-        String submitOrderNeedPhone = param.get("submitOrderNeedPhone") != null ? param.get("submitOrderNeedPhone").toString() : "false";
-        String loginNeedPhone = param.get("loginNeedPhone") != null ? param.get("loginNeedPhone").toString() : "false";
+        String getCouponNeedPhone = param.get("getCouponNeedPhone") != null ? param.get("getCouponNeedPhone").toString() : null;
+        String submitOrderNeedPhone = param.get("submitOrderNeedPhone") != null ? param.get("submitOrderNeedPhone").toString() : null;
+        String loginNeedPhone = param.get("loginNeedPhone") != null ? param.get("loginNeedPhone").toString() : null;
+        String openWxCard = param.get("openWxCard") != null ? param.get("openWxCard").toString() : null;
+        String wxMemberCard = param.get("wxMemberCard") != null ? param.get("wxMemberCard").toString() : null;
 
         AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
         if (accountInfo == null) {
             return getFailureResult(1001, "请先登录");
         }
 
-        String operator = accountInfo.getAccountName();
-
         UserSettingEnum[] settingList = UserSettingEnum.values();
         for (UserSettingEnum setting : settingList) {
-            MtSetting info = new MtSetting();
-            info.setType(SettingTypeEnum.USER.getKey());
-            info.setName(setting.getKey());
-
-            if (setting.getKey().equals("getCouponNeedPhone")) {
-                info.setValue(getCouponNeedPhone);
-            } else if (setting.getKey().equals("submitOrderNeedPhone")) {
-                info.setValue(submitOrderNeedPhone);
-            } else if (setting.getKey().equals("loginNeedPhone")) {
-                info.setValue(loginNeedPhone);
+            MtSetting mtSetting = new MtSetting();
+            mtSetting.setType(SettingTypeEnum.USER.getKey());
+            mtSetting.setName(setting.getKey());
+            if (setting.getKey().equals(UserSettingEnum.GET_COUPON_NEED_PHONE.getKey())) {
+                mtSetting.setValue(getCouponNeedPhone);
+            } else if (setting.getKey().equals(UserSettingEnum.SUBMIT_ORDER_NEED_PHONE.getKey())) {
+                mtSetting.setValue(submitOrderNeedPhone);
+            } else if (setting.getKey().equals(UserSettingEnum.LOGIN_NEED_PHONE.getKey())) {
+                mtSetting.setValue(loginNeedPhone);
+            } else if (setting.getKey().equals(UserSettingEnum.OPEN_WX_CARD.getKey())) {
+                mtSetting.setValue(openWxCard);
+            } else if (setting.getKey().equals(UserSettingEnum.WX_MEMBER_CARD.getKey())) {
+                mtSetting.setValue(wxMemberCard);
             }
-
-            info.setDescription(setting.getValue());
-            info.setOperator(operator);
-            info.setUpdateTime(new Date());
-            info.setMerchantId(accountInfo.getMerchantId());
-            info.setStoreId(0);
-
-            settingService.saveSetting(info);
+            mtSetting.setDescription(setting.getValue());
+            mtSetting.setOperator(accountInfo.getAccountName());
+            mtSetting.setUpdateTime(new Date());
+            mtSetting.setMerchantId(accountInfo.getMerchantId());
+            mtSetting.setStoreId(0);
+            settingService.saveSetting(mtSetting);
         }
+
+        MtSetting openCardSetting = settingService.querySettingByName(accountInfo.getMerchantId(), SettingTypeEnum.USER.getKey(), UserSettingEnum.OPEN_WX_CARD.getKey());
+        MtSetting cardSetting = settingService.querySettingByName(accountInfo.getMerchantId(), SettingTypeEnum.USER.getKey(), UserSettingEnum.WX_MEMBER_CARD.getKey());
+        MtSetting cardIdSetting = settingService.querySettingByName(accountInfo.getMerchantId(), SettingTypeEnum.USER.getKey(), UserSettingEnum.WX_MEMBER_CARD_ID.getKey());
+        if (openCardSetting != null && openCardSetting.getValue().equals(YesOrNoEnum.TRUE.getKey()) && cardSetting != null && accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0) {
+            String wxCardId = "";
+            if (cardIdSetting != null) {
+                wxCardId = cardIdSetting.getValue();
+            }
+            String cardId = weixinService.createWxCard(accountInfo.getMerchantId(), wxCardId);
+            if (StringUtil.isNotEmpty(cardId)) {
+                MtSetting mtSetting = new MtSetting();
+                mtSetting.setType(SettingTypeEnum.USER.getKey());
+                mtSetting.setName(UserSettingEnum.WX_MEMBER_CARD_ID.getKey());
+                mtSetting.setValue(cardId);
+                mtSetting.setOperator(accountInfo.getAccountName());
+                mtSetting.setUpdateTime(new Date());
+                mtSetting.setMerchantId(accountInfo.getMerchantId());
+                mtSetting.setStoreId(0);
+                settingService.saveSetting(mtSetting);
+            }
+        }
+
+        return getSuccessResult(true);
+    }
+
+    /**
+     * 重置会员密码
+     *
+     * @return
+     */
+    @ApiOperation(value = "重置会员密码")
+    @RequestMapping(value = "/resetPwd", method = RequestMethod.POST)
+    @CrossOrigin
+    @PreAuthorize("@pms.hasPermission('member:add')")
+    public ResponseObject resetPwd(HttpServletRequest request, @RequestBody Map<String, Object> param) throws BusinessCheckException {
+        String token = request.getHeader("Access-Token");
+        Integer userId = param.get("userId") == null ? 0 : Integer.parseInt(param.get("userId").toString());
+        String password = param.get("password") == null ? "" : param.get("password").toString();
+
+        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
+        if (accountInfo == null) {
+            return getFailureResult(1001, "请先登录");
+        }
+
+        if (StringUtil.isEmpty(password)) {
+            return getFailureResult(1001, "密码格式有误");
+        }
+
+        MtUser userInfo = memberService.queryMemberById(userId);
+        if (userInfo == null) {
+            return getFailureResult(201, "会员不存在");
+        }
+        if (accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0 && !accountInfo.getMerchantId().equals(userInfo.getMerchantId())) {
+            return getFailureResult(201, "您没有操作权限");
+        }
+        if (accountInfo.getStoreId() != null && accountInfo.getStoreId() > 0 && !accountInfo.getStoreId().equals(userInfo.getStoreId())) {
+            return getFailureResult(201, "您没有操作权限");
+        }
+
+        userInfo.setPassword(password);
+        memberService.updateMember(userInfo, true);
 
         return getSuccessResult(true);
     }
@@ -470,7 +559,7 @@ public class BackendMemberController extends BaseController {
         }
         PaginationRequest groupRequest = new PaginationRequest();
         groupRequest.setCurrentPage(1);
-        groupRequest.setPageSize(Constants.MAX_ROWS);
+        groupRequest.setPageSize(Constants.ALL_ROWS);
         groupRequest.setSearchParams(searchParams);
         PaginationResponse<UserGroupDto> groupResponse = memberGroupService.queryMemberGroupListByPagination(groupRequest);
         if (groupResponse != null && groupResponse.getContent() != null) {
