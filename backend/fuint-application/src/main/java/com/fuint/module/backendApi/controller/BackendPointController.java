@@ -6,6 +6,7 @@ import com.fuint.common.dto.PointDto;
 import com.fuint.common.enums.PointSettingEnum;
 import com.fuint.common.enums.SettingTypeEnum;
 import com.fuint.common.enums.StatusEnum;
+import com.fuint.common.enums.YesOrNoEnum;
 import com.fuint.common.service.MemberService;
 import com.fuint.common.service.PointService;
 import com.fuint.common.service.SettingService;
@@ -75,6 +76,7 @@ public class BackendPointController extends BaseController {
         Integer pageSize = request.getParameter("pageSize") == null ? Constants.PAGE_SIZE : Integer.parseInt(request.getParameter("pageSize"));
         String mobile = request.getParameter("mobile") == null ? "" : request.getParameter("mobile");
         String userId = request.getParameter("userId") == null ? "" : request.getParameter("userId");
+        String userNo = request.getParameter("userNo") == null ? "" : request.getParameter("userNo");
         String status = request.getParameter("status") == null ? StatusEnum.ENABLED.getKey() : request.getParameter("status");
 
         AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
@@ -93,25 +95,23 @@ public class BackendPointController extends BaseController {
                 searchParams.put("userId", userInfo.getId());
             }
         }
-
         if (StringUtil.isNotEmpty(userId)) {
             searchParams.put("userId", userId);
         }
-
+        if (StringUtil.isNotEmpty(userNo)) {
+            searchParams.put("userNo", userNo);
+        }
         if (StringUtil.isNotEmpty(status)) {
             searchParams.put("status", status);
         }
-
         Integer merchantId = accountInfo.getMerchantId();
         if (merchantId != null && merchantId > 0) {
             searchParams.put("merchantId", merchantId);
         }
-
         Integer storeId = accountInfo.getStoreId();
         if (storeId != null && storeId > 0) {
             searchParams.put("storeId", storeId);
         }
-
         paginationRequest.setSearchParams(searchParams);
         PaginationResponse<PointDto> paginationResponse = pointService.queryPointListByPagination(paginationRequest);
 
@@ -147,13 +147,13 @@ public class BackendPointController extends BaseController {
         String status = "";
 
         for (MtSetting setting : settingList) {
-            if (setting.getName().equals("pointNeedConsume")) {
+            if (setting.getName().equals(PointSettingEnum.POINT_NEED_CONSUME.getKey())) {
                 pointNeedConsume = setting.getValue();
-            } else if (setting.getName().equals("canUsedAsMoney")) {
+            } else if (setting.getName().equals(PointSettingEnum.CAN_USE_AS_MONEY.getKey())) {
                 canUsedAsMoney = setting.getValue();
-            } else if (setting.getName().equals("exchangeNeedPoint")) {
+            } else if (setting.getName().equals(PointSettingEnum.EXCHANGE_NEED_POINT.getKey())) {
                 exchangeNeedPoint = setting.getValue();
-            } else if (setting.getName().equals("rechargePointSpeed")) {
+            } else if (setting.getName().equals(PointSettingEnum.RECHARGE_POINT_SPEED.getKey())) {
                 rechargePointSpeed = setting.getValue();
             }
             status = setting.getStatus();
@@ -178,10 +178,10 @@ public class BackendPointController extends BaseController {
     @RequestMapping(value = "/saveSetting", method = RequestMethod.POST)
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('point:setting')")
-    public ResponseObject saveSettingHandler(HttpServletRequest request, @RequestBody Map<String, Object> param) throws BusinessCheckException {
+    public ResponseObject saveSetting(HttpServletRequest request, @RequestBody Map<String, Object> param) throws BusinessCheckException {
         String token = request.getHeader("Access-Token");
         String pointNeedConsume = param.get("pointNeedConsume") != null ? param.get("pointNeedConsume").toString() : "1";
-        String canUsedAsMoney = param.get("canUsedAsMoney") != null ? param.get("canUsedAsMoney").toString() : "false";
+        String canUsedAsMoney = param.get("canUsedAsMoney") != null ? param.get("canUsedAsMoney").toString() : YesOrNoEnum.FALSE.getKey();
         String exchangeNeedPoint = param.get("exchangeNeedPoint") != null ? param.get("exchangeNeedPoint").toString() : "0";
         String rechargePointSpeed = param.get("rechargePointSpeed") != null ? param.get("rechargePointSpeed").toString() : "1";
         String status = request.getParameter("status");
@@ -194,9 +194,11 @@ public class BackendPointController extends BaseController {
         if (accountInfo == null) {
             return getFailureResult(1001, "请先登录");
         }
+        if (accountInfo.getMerchantId() == null || accountInfo.getMerchantId() < 0) {
+            return getFailureResult(201, "平台方帐号无法执行该操作，请使用商户帐号操作");
+        }
 
         String operator = accountInfo.getAccountName();
-
         PointSettingEnum[] settingList = PointSettingEnum.values();
         for (PointSettingEnum setting : settingList) {
             MtSetting info = new MtSetting();
@@ -205,13 +207,13 @@ public class BackendPointController extends BaseController {
             info.setType(SettingTypeEnum.POINT.getKey());
             info.setName(setting.getKey());
 
-            if (setting.getKey().equals("pointNeedConsume")) {
+            if (setting.getKey().equals(PointSettingEnum.POINT_NEED_CONSUME.getKey())) {
                 info.setValue(pointNeedConsume);
-            } else if (setting.getKey().equals("canUsedAsMoney")) {
+            } else if (setting.getKey().equals(PointSettingEnum.CAN_USE_AS_MONEY.getKey())) {
                 info.setValue(canUsedAsMoney);
-            } else if (setting.getKey().equals("exchangeNeedPoint")) {
+            } else if (setting.getKey().equals(PointSettingEnum.EXCHANGE_NEED_POINT.getKey())) {
                 info.setValue(exchangeNeedPoint);
-            } else if (setting.getKey().equals("rechargePointSpeed")) {
+            } else if (setting.getKey().equals(PointSettingEnum.RECHARGE_POINT_SPEED.getKey())) {
                 info.setValue(rechargePointSpeed);
             }
 

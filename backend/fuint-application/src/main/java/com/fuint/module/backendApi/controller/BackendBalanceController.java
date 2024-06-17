@@ -73,6 +73,7 @@ public class BackendBalanceController extends BaseController {
         Integer pageSize = request.getParameter("pageSize") == null ? Constants.PAGE_SIZE : Integer.parseInt(request.getParameter("pageSize"));
         String mobile = request.getParameter("mobile") == null ? "" : request.getParameter("mobile");
         String userId = request.getParameter("userId") == null ? "" : request.getParameter("userId");
+        String userNo = request.getParameter("userNo") == null ? "" : request.getParameter("userNo");
         String orderSn = request.getParameter("orderSn") == null ? "" : request.getParameter("orderSn");
         String status = request.getParameter("status") == null ? StatusEnum.ENABLED.getKey() : request.getParameter("status");
 
@@ -86,6 +87,9 @@ public class BackendBalanceController extends BaseController {
         }
         if (StringUtil.isNotEmpty(userId)) {
             searchParams.put("userId", userId);
+        }
+        if (StringUtil.isNotEmpty(userNo)) {
+            searchParams.put("userNo", userNo);
         }
         if (StringUtil.isNotEmpty(orderSn)) {
             searchParams.put("orderSn", orderSn);
@@ -254,7 +258,7 @@ public class BackendBalanceController extends BaseController {
     @RequestMapping(value = "/saveSetting", method = RequestMethod.POST)
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('balance:setting')")
-    public ResponseObject saveSettingHandler(HttpServletRequest request, @RequestBody Map<String, Object> param) throws BusinessCheckException {
+    public ResponseObject saveSetting(HttpServletRequest request, @RequestBody Map<String, Object> param) throws BusinessCheckException {
         String token = request.getHeader("Access-Token");
         String status = param.get("status") == null ? StatusEnum.ENABLED.getKey() : param.get("status").toString();
         String remark = param.get("remark") == null ? "" : param.get("remark").toString();
@@ -267,6 +271,9 @@ public class BackendBalanceController extends BaseController {
 
         if (rechargeItems.size() < 0) {
             return getFailureResult(201, "充值规则设置不能为空");
+        }
+        if (accountInfo.getMerchantId() == null || accountInfo.getMerchantId() < 0) {
+            return getFailureResult(201, "平台方帐号无法执行该操作，请使用商户帐号操作");
         }
 
         String rechargeRule = "";
