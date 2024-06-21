@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fuint.common.dto.ArticleDto;
 import com.fuint.common.service.ArticleService;
 import com.fuint.common.service.MerchantService;
+import com.fuint.common.service.StoreService;
 import com.fuint.framework.annoation.OperationServiceLog;
 import com.fuint.framework.exception.BusinessCheckException;
 import com.fuint.framework.pagination.PaginationRequest;
@@ -14,6 +15,7 @@ import com.fuint.repository.mapper.MtArticleMapper;
 import com.fuint.repository.model.MtArticle;
 import com.fuint.common.service.SettingService;
 import com.fuint.common.enums.StatusEnum;
+import com.fuint.repository.model.MtStore;
 import com.github.pagehelper.PageHelper;
 import lombok.AllArgsConstructor;
 import org.apache.commons.lang.StringUtils;
@@ -46,6 +48,11 @@ public class ArticleServiceImpl extends ServiceImpl<MtArticleMapper, MtArticle> 
      * 商户服务接口
      * */
     private MerchantService merchantService;
+
+    /**
+     * 店铺接口
+     */
+    private StoreService storeService;
 
     /**
      * 分页查询文章列表
@@ -108,17 +115,25 @@ public class ArticleServiceImpl extends ServiceImpl<MtArticleMapper, MtArticle> 
     /**
      * 添加文章
      *
-     * @param articleDto
+     * @param articleDto 文章参数
+     * @return
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
     @OperationServiceLog(description = "新增文章")
-    public MtArticle addArticle(ArticleDto articleDto) {
+    public MtArticle addArticle(ArticleDto articleDto) throws BusinessCheckException {
         MtArticle mtArticle = new MtArticle();
         mtArticle.setTitle(articleDto.getTitle());
         mtArticle.setBrief(articleDto.getBrief());
+        Integer storeId = articleDto.getStoreId() == null ? 0 : articleDto.getStoreId();
+        if (articleDto.getMerchantId() == null || articleDto.getMerchantId() <= 0) {
+            MtStore mtStore = storeService.queryStoreById(storeId);
+            if (mtStore != null) {
+                articleDto.setMerchantId(mtStore.getMerchantId());
+            }
+        }
         mtArticle.setMerchantId(articleDto.getMerchantId());
-        mtArticle.setStoreId(articleDto.getStoreId() == null ? 0 : articleDto.getStoreId());
+        mtArticle.setStoreId(storeId);
         mtArticle.setUrl(articleDto.getUrl());
         mtArticle.setClick(0l);
         mtArticle.setStatus(StatusEnum.ENABLED.getKey());
@@ -140,23 +155,23 @@ public class ArticleServiceImpl extends ServiceImpl<MtArticleMapper, MtArticle> 
     /**
      * 根据ID获取文章
      *
-     * @param id 文章ID
+     * @param articleId 文章ID
      * @return
      */
     @Override
-    public MtArticle queryArticleById(Integer id) {
-        return mtArticleMapper.selectById(id);
+    public MtArticle queryArticleById(Integer articleId) {
+        return mtArticleMapper.selectById(articleId);
     }
 
     /**
      * 根据ID获取文章详情
      *
-     * @param id 文章ID
+     * @param articleId 文章ID
      * @return
      */
     @Override
-    public ArticleDto getArticleDetail(Integer id) {
-        MtArticle mtArticle = mtArticleMapper.selectById(id);
+    public ArticleDto getArticleDetail(Integer articleId) {
+        MtArticle mtArticle = mtArticleMapper.selectById(articleId);
         ArticleDto articleDto = new ArticleDto();
         BeanUtils.copyProperties(mtArticle, articleDto);
         String baseImage = settingService.getUploadBasePath();
@@ -167,7 +182,7 @@ public class ArticleServiceImpl extends ServiceImpl<MtArticleMapper, MtArticle> 
     /**
      * 编辑文章
      *
-     * @param  articleDto
+     * @param  articleDto 文章参数
      * @throws BusinessCheckException
      */
     @Override
@@ -220,7 +235,7 @@ public class ArticleServiceImpl extends ServiceImpl<MtArticleMapper, MtArticle> 
     /**
      * 根据条件搜索文章
      *
-     * @param params
+     * @param params 搜索条件
      * @return
      * */
     @Override

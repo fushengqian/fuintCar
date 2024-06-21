@@ -9,6 +9,7 @@ import com.fuint.common.enums.StatusEnum;
 import com.fuint.common.enums.WxMessageEnum;
 import com.fuint.common.service.BalanceService;
 import com.fuint.common.service.MemberService;
+import com.fuint.common.service.SendSmsService;
 import com.fuint.common.service.WeixinService;
 import com.fuint.common.util.CommonUtil;
 import com.fuint.common.util.DateUtil;
@@ -27,6 +28,8 @@ import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import lombok.AllArgsConstructor;
 import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -44,6 +47,8 @@ import java.util.*;
 @AllArgsConstructor
 public class BalanceServiceImpl extends ServiceImpl<MtBalanceMapper, MtBalance> implements BalanceService {
 
+    private static final Logger logger = LoggerFactory.getLogger(BalanceServiceImpl.class);
+
     private MtBalanceMapper mtBalanceMapper;
 
     private MtUserMapper mtUserMapper;
@@ -59,6 +64,11 @@ public class BalanceServiceImpl extends ServiceImpl<MtBalanceMapper, MtBalance> 
     private MemberService memberService;
 
     /**
+     * 短信发送服务接口
+     * */
+    private SendSmsService sendSmsService;
+
+    /**
      * 分页查询余额列表
      *
      * @param paginationRequest
@@ -66,7 +76,6 @@ public class BalanceServiceImpl extends ServiceImpl<MtBalanceMapper, MtBalance> 
      */
     @Override
     public PaginationResponse<BalanceDto> queryBalanceListByPagination(PaginationRequest paginationRequest) throws BusinessCheckException {
-        Page<MtBanner> pageHelper = PageHelper.startPage(paginationRequest.getCurrentPage(), paginationRequest.getPageSize());
         LambdaQueryWrapper<MtBalance> lambdaQueryWrapper = Wrappers.lambdaQuery();
         lambdaQueryWrapper.ne(MtBalance::getStatus, StatusEnum.DISABLE.getKey());
 
@@ -94,11 +103,22 @@ public class BalanceServiceImpl extends ServiceImpl<MtBalanceMapper, MtBalance> 
         if (StringUtils.isNotBlank(merchantId)) {
             lambdaQueryWrapper.eq(MtBalance::getMerchantId, merchantId);
         }
+        String userNo = paginationRequest.getSearchParams().get("userNo") == null ? "" : paginationRequest.getSearchParams().get("userNo").toString();
+        if (StringUtil.isNotEmpty(userNo)) {
+            if (StringUtil.isEmpty(merchantId)) {
+                merchantId = "0";
+            }
+            MtUser userInfo = memberService.queryMemberByUserNo(Integer.parseInt(merchantId), userNo);
+            if (userInfo != null) {
+                lambdaQueryWrapper.eq(MtBalance::getUserId, userInfo.getId());
+            }
+        }
         String storeId = paginationRequest.getSearchParams().get("storeId") == null ? "" : paginationRequest.getSearchParams().get("storeId").toString();
         if (StringUtils.isNotBlank(storeId)) {
             lambdaQueryWrapper.eq(MtBalance::getStoreId, storeId);
         }
         lambdaQueryWrapper.orderByDesc(MtBalance::getId);
+        Page<MtBanner> pageHelper = PageHelper.startPage(paginationRequest.getCurrentPage(), paginationRequest.getPageSize());
         List<MtBalance> balanceList = mtBalanceMapper.selectList(lambdaQueryWrapper);
 
         List<BalanceDto> dataList = new ArrayList<>();
@@ -165,6 +185,21 @@ public class BalanceServiceImpl extends ServiceImpl<MtBalanceMapper, MtBalance> 
         }
         mtBalanceMapper.insert(mtBalance);
 
+        try {
+            List<String> mobileList = new ArrayList<>();
+            mobileList.add(mtUser.getMobile());
+            Map<String, String> params = new HashMap<>();
+            String action = "";
+            if (mtBalance.getAmount().compareTo(new BigDecimal("0")) > 0) {
+                action = "+";
+            }
+            params.put("amount", action + String.format("%.2f", mtBalance.getAmount()));
+            params.put("balance", String.format("%.2f", mtUser.getBalance()));
+            sendSmsService.sendSms(mtUser.getMerchantId(), "balance-change", mobileList, params);
+        } catch (Exception e) {
+            logger.error("余额变动短信发送失败:{}", e.getMessage());
+        }
+
         // 发送小程序订阅消息
         Date nowTime = new Date();
         Date sendTime = new Date(nowTime.getTime() + 60000);
@@ -181,10 +216,11 @@ public class BalanceServiceImpl extends ServiceImpl<MtBalanceMapper, MtBalance> 
     /**
      * 发放余额
      *
-     * @param accountInfo
-     * @param userIds
-     * @param amount
-     * @param remark
+     * @param accountInfo 账号信息
+     * @param object 发放对象，all全部
+     * @param userIds 会员ID
+     * @param amount 发放金额
+     * @param remark 备注
      * @return
      */
     @Override
@@ -201,6 +237,9 @@ public class BalanceServiceImpl extends ServiceImpl<MtBalanceMapper, MtBalance> 
             throw new BusinessCheckException("平台账号不能执行该操作");
         }
         BigDecimal balanceAmount = new BigDecimal(amount);
+        if (balanceAmount.compareTo(new BigDecimal(20000)) > 0) {
+            throw new BusinessCheckException("单次充值金额不能大于20000");
+        }
 
         List<Integer> userIdArr = new ArrayList<>();
         List<String> userIdList = Arrays.asList(userIds.split(","));
@@ -211,11 +250,14 @@ public class BalanceServiceImpl extends ServiceImpl<MtBalanceMapper, MtBalance> 
                 }
             }
         }
-
+        // 最多不能超过5000人
+        if (userIdArr.size() > 5000) {
+            throw new BusinessCheckException("最多不能超过5000人");
+        }
         mtUserMapper.updateUserBalance(accountInfo.getMerchantId(), userIdArr, balanceAmount);
 
         if (userIdArr.size() > 0) {
-            for(Integer userId : userIdArr) {
+            for (Integer userId : userIdArr) {
                 MtBalance mtBalance = new MtBalance();
                 mtBalance.setAmount(new BigDecimal(amount));
                 mtBalance.setUserId(userId);
@@ -224,6 +266,17 @@ public class BalanceServiceImpl extends ServiceImpl<MtBalanceMapper, MtBalance> 
                 mtBalance.setOperator(accountInfo.getAccountName());
                 addBalance(mtBalance, false);
             }
+        } else {
+            MtBalance mtBalance = new MtBalance();
+            mtBalance.setAmount(new BigDecimal(amount));
+            mtBalance.setUserId(0); // userId为0表示全体会员
+            mtBalance.setMerchantId(accountInfo.getMerchantId());
+            mtBalance.setDescription(remark);
+            mtBalance.setOperator(accountInfo.getAccountName());
+            mtBalance.setStatus(StatusEnum.ENABLED.getKey());
+            mtBalance.setCreateTime(new Date());
+            mtBalance.setUpdateTime(new Date());
+            mtBalanceMapper.insert(mtBalance);
         }
     }
 

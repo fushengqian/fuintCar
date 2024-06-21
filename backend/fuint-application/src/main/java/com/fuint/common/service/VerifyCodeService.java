@@ -5,19 +5,21 @@ import com.fuint.framework.exception.BusinessCheckException;
 import com.fuint.repository.model.MtVerifyCode;
 
 /**
- * 验证码接口
+ * 图形验证码接口
  *
  * Created by FSQ
  * CopyRight https://www.fuint.cn
  */
 public interface VerifyCodeService extends IService<MtVerifyCode> {
+
     /**
-     * 添加验证码
+     * 新增验证码
      *
-     * @param mobile
-     * @param verifyCode
+     * @param mobile 手机号
+     * @param verifyCode 验证码
      * @param expireSecond 间隔秒数
      * @throws BusinessCheckException
+     * @return
      */
     MtVerifyCode addVerifyCode(String mobile, String verifyCode, Integer expireSecond) throws BusinessCheckException;
 
@@ -27,14 +29,17 @@ public interface VerifyCodeService extends IService<MtVerifyCode> {
      * @param mobile 电话号码
      * @param verifyCode 验证码
      * @throws BusinessCheckException
+     * @return
      */
     MtVerifyCode checkVerifyCode(String mobile, String verifyCode) throws BusinessCheckException;
 
     /**
      * 更改验证码状态
      *
-     * @param id
+     * @param id 验证码ID
+     * @param validFlag 是否验证
      * @throws BusinessCheckException
+     * @return
      */
     MtVerifyCode updateValidFlag(Long id, String validFlag) throws BusinessCheckException;
-   }
+}

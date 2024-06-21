@@ -73,6 +73,7 @@ public class OpenGiftServiceImpl extends ServiceImpl<MtOpenGiftMapper, MtOpenGif
      * 获取开卡赠礼列表
      * @param  paramMap
      * @throws BusinessCheckException
+     * @return
      * */
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -121,8 +122,9 @@ public class OpenGiftServiceImpl extends ServiceImpl<MtOpenGiftMapper, MtOpenGif
     /**
      * 新增开卡赠礼
      *
-     * @param  mtOpenGift
+     * @param  mtOpenGift 赠礼信息
      * @throws BusinessCheckException
+     * @return
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -139,6 +141,7 @@ public class OpenGiftServiceImpl extends ServiceImpl<MtOpenGiftMapper, MtOpenGif
      *
      * @param  id 开卡赠礼ID
      * @throws BusinessCheckException
+     * @return
      */
     @Override
     public OpenGiftDto getOpenGiftDetail(Integer id) throws BusinessCheckException {
@@ -149,9 +152,10 @@ public class OpenGiftServiceImpl extends ServiceImpl<MtOpenGiftMapper, MtOpenGif
     /**
      * 根据ID删除数据
      *
-     * @param  id       开卡赠礼ID
+     * @param  id 开卡赠礼ID
      * @param  operator 操作人
      * @throws BusinessCheckException
+     * @return
      */
     @Override
     @OperationServiceLog(description = "删除开卡赠礼")
@@ -170,8 +174,9 @@ public class OpenGiftServiceImpl extends ServiceImpl<MtOpenGiftMapper, MtOpenGif
     /**
      * 更新开卡赠礼
      *
-     * @param  reqDto
+     * @param  reqDto 实体参数
      * @throws BusinessCheckException
+     * @return
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -215,19 +220,16 @@ public class OpenGiftServiceImpl extends ServiceImpl<MtOpenGiftMapper, MtOpenGif
 
     /**
      * 开卡赠礼
-     * @param userId
-     * @param gradeId
+     *
+     * @param userId 会员ID
+     * @param gradeId 等级ID
      * @return
      * */
     @Override
-    public boolean openGift(Integer userId, Integer gradeId, boolean isNewMember) throws BusinessCheckException {
+    public Boolean openGift(Integer userId, Integer gradeId, boolean isNewMember) throws BusinessCheckException {
         if (gradeId == null || gradeId.compareTo(0) <= 0) {
             return false;
         }
-        Map<String, Object> params = new HashMap<>();
-        params.put("grade_id", gradeId.toString());
-        params.put("status", StatusEnum.ENABLED.getKey());
-
         MtUser user = mtUserMapper.selectById(userId);
         if (user == null) {
             throw new BusinessCheckException("会员状态异常");
@@ -238,7 +240,7 @@ public class OpenGiftServiceImpl extends ServiceImpl<MtOpenGiftMapper, MtOpenGif
         MtUserGrade oldGrade = userGradeService.queryUserGradeById(user.getMerchantId(), Integer.parseInt(user.getGradeId()), user.getId());
         MtUserGrade gradeInfo = userGradeService.queryUserGradeById(user.getMerchantId(), gradeId, user.getId());
         // 设置有效期
-        if (gradeInfo.getValidDay() > 0) {
+        if (gradeInfo.getValidDay() >= 0) {
             user.setStartTime(new Date());
             Date endDate = new Date();
             Calendar calendar = new GregorianCalendar();
@@ -246,6 +248,10 @@ public class OpenGiftServiceImpl extends ServiceImpl<MtOpenGiftMapper, MtOpenGif
             calendar.add(calendar.DATE, gradeInfo.getValidDay());
             endDate = calendar.getTime();
             user.setEndTime(endDate);
+            if (gradeInfo.getValidDay() == 0) {
+                user.setStartTime(null);
+                user.setEndTime(null);
+            }
         }
         user.setGradeId(gradeId.toString());
         user.setUpdateTime(new Date());
@@ -254,6 +260,10 @@ public class OpenGiftServiceImpl extends ServiceImpl<MtOpenGiftMapper, MtOpenGif
         if (!isNewMember && oldGrade != null && oldGrade.getGrade() >= gradeInfo.getGrade()) {
             return false;
         }
+        Map<String, Object> params = new HashMap<>();
+        params.put("grade_id", gradeId.toString());
+        params.put("status", StatusEnum.ENABLED.getKey());
+        params.put("merchant_id", user.getMerchantId());
         List<MtOpenGift> openGiftList = mtOpenGiftMapper.selectByMap(params);
         if (openGiftList.size() > 0) {
             Integer totalPoint = 0;
@@ -278,11 +288,12 @@ public class OpenGiftServiceImpl extends ServiceImpl<MtOpenGiftMapper, MtOpenGif
                            param.setCouponId(item.getCouponId());
                            param.setUserId(userId);
                            param.setNum(item.getCouponNum() == null ? 1 : item.getCouponNum());
-                           userCouponService.receiveCoupon(param);
+                           String uuid = UUID.randomUUID().toString().replaceAll("-", "");
+                           couponService.sendCoupon(item.getCouponId(), userId, param.getNum(), true, uuid, "");
                            totalAmount = totalAmount.add(mtCoupon.getAmount());
                        }
-                   } catch (BusinessCheckException e) {
-                       // empty
+                   } catch (Exception e) {
+                       throw new BusinessCheckException(e.getMessage());
                    }
                }
             }
@@ -310,8 +321,10 @@ public class OpenGiftServiceImpl extends ServiceImpl<MtOpenGiftMapper, MtOpenGif
     }
 
     /**
-     * 处理详情
-     * @param  openGiftInfo
+     * 赠礼详情
+     *
+     * @param  openGiftInfo 赠礼详情
+     * @throws BusinessCheckException
      * @return OpenGiftDto
      * */
     private OpenGiftDto dealDetail(MtOpenGift openGiftInfo) throws BusinessCheckException {

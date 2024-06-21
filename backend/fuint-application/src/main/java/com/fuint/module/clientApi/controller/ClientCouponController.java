@@ -6,10 +6,7 @@ import com.fuint.common.enums.CouponExpireTypeEnum;
 import com.fuint.common.param.CouponInfoParam;
 import com.fuint.common.param.CouponListParam;
 import com.fuint.common.param.CouponReceiveParam;
-import com.fuint.common.service.CouponService;
-import com.fuint.common.service.MerchantService;
-import com.fuint.common.service.SettingService;
-import com.fuint.common.service.UserCouponService;
+import com.fuint.common.service.*;
 import com.fuint.common.util.DateUtil;
 import com.fuint.common.util.TokenUtil;
 import com.fuint.framework.exception.BusinessCheckException;
@@ -63,6 +60,11 @@ public class ClientCouponController extends BaseController {
      * 商户服务接口
      */
     private MerchantService merchantService;
+
+    /**
+     * 店铺接口
+     */
+    private StoreService storeService;
 
     /**
      * 获取卡券列表数据
@@ -120,17 +122,17 @@ public class ClientCouponController extends BaseController {
     /**
      * 查询卡券详情
      *
-     * @param couponInfoParam Request对象
+     * @param params Request对象
      */
     @ApiOperation(value = "查询卡券详情")
     @RequestMapping(value = "/detail", method = RequestMethod.POST)
     @CrossOrigin
-    public ResponseObject detail(HttpServletRequest request, @RequestBody CouponInfoParam couponInfoParam) throws BusinessCheckException, InvocationTargetException, IllegalAccessException {
+    public ResponseObject detail(HttpServletRequest request, @RequestBody CouponInfoParam params) throws BusinessCheckException, InvocationTargetException, IllegalAccessException {
         String token = request.getHeader("Access-Token");
         UserInfo mtUser = TokenUtil.getUserInfoByToken(token);
 
-        Integer couponId = couponInfoParam.getCouponId() == null ? 0 : couponInfoParam.getCouponId();
-        String userCouponCode = couponInfoParam.getUserCouponCode() == null ? "" : couponInfoParam.getUserCouponCode();
+        Integer couponId = params.getCouponId() == null ? 0 : params.getCouponId();
+        String userCouponCode = params.getUserCouponCode() == null ? "" : params.getUserCouponCode();
 
         MtCoupon couponInfo = new MtCoupon();
         if (StringUtil.isNotEmpty(userCouponCode)) {
@@ -164,6 +166,10 @@ public class ClientCouponController extends BaseController {
                 couponDto.setUserCouponId(userCoupon.get(0).getId());
             }
         }
+
+        // 适用店铺
+        String storeNames = storeService.getStoreNames(couponInfo.getStoreIds());
+        couponDto.setStoreNames(storeNames);
 
         String baseImage = settingService.getUploadBasePath();
         couponDto.setImage(baseImage + couponInfo.getImage());

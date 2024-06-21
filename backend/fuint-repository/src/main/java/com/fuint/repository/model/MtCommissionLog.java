@@ -29,7 +29,10 @@ public class MtCommissionLog implements Serializable {
     @TableId(value = "ID", type = IdType.AUTO)
     private Integer id;
 
-    @ApiModelProperty("分佣类型,distribution:会员分销；staff：员工提成")
+    @ApiModelProperty("分佣对象,member:会员分销；staff：员工提成")
+    private String target;
+
+    @ApiModelProperty("分佣类型")
     private String type;
 
     @ApiModelProperty("分佣等级")
@@ -53,11 +56,17 @@ public class MtCommissionLog implements Serializable {
     @ApiModelProperty("分佣金额")
     private BigDecimal amount;
 
-    @ApiModelProperty("分佣规则ID")
+    @ApiModelProperty("规则ID")
     private Integer ruleId;
+
+    @ApiModelProperty("规则项ID")
+    private Integer ruleItemId;
 
     @ApiModelProperty("备注")
     private String description;
+
+    @ApiModelProperty("结算uuid")
+    private String settleUuid;
 
     @ApiModelProperty("提现记录ID")
     private Integer cashId;
@@ -77,7 +86,7 @@ public class MtCommissionLog implements Serializable {
     @ApiModelProperty("最后操作人")
     private String operator;
 
-    @ApiModelProperty("状态")
+    @ApiModelProperty("状态，A：待结算；B：已结算；C：已作废")
     private String status;
 
 }

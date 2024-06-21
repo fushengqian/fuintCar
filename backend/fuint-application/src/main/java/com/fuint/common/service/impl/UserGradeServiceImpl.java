@@ -16,6 +16,7 @@ import com.fuint.repository.model.MtBanner;
 import com.fuint.repository.model.MtStaff;
 import com.fuint.repository.model.MtUser;
 import com.fuint.repository.model.MtUserGrade;
+import com.fuint.utils.StringUtil;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import lombok.AllArgsConstructor;
@@ -88,7 +89,8 @@ public class UserGradeServiceImpl extends ServiceImpl<MtUserGradeMapper, MtUserG
     /**
      * 添加会员等级信息
      *
-     * @param mtUserGrade
+     * @param mtUserGrade 会员等级
+     * @return
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -107,7 +109,7 @@ public class UserGradeServiceImpl extends ServiceImpl<MtUserGradeMapper, MtUserG
     /**
      * 根据ID获取会员等级信息
      *
-     * @param merchantId
+     * @param merchantId 商户ID
      * @param gradeId 会员等级ID
      * @param userId 会员ID
      * @return
@@ -130,7 +132,8 @@ public class UserGradeServiceImpl extends ServiceImpl<MtUserGradeMapper, MtUserG
     /**
      * 修改会员等级
      *
-     * @param mtUserGrade
+     * @param mtUserGrade 会员等级
+     * @return
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -155,6 +158,7 @@ public class UserGradeServiceImpl extends ServiceImpl<MtUserGradeMapper, MtUserG
      *
      * @param id ID
      * @param operator 操作人
+     * @return
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -172,7 +176,7 @@ public class UserGradeServiceImpl extends ServiceImpl<MtUserGradeMapper, MtUserG
     /**
      * 获取默认的会员等级
      *
-     * @param merchantId
+     * @param merchantId 商户ID
      * @return
      */
     @Override
@@ -201,8 +205,9 @@ public class UserGradeServiceImpl extends ServiceImpl<MtUserGradeMapper, MtUserG
     /**
      * 获取付费会员等级列表
      *
-     * @param merchantId
-     * @param userInfo
+     * @param merchantId 商户ID
+     * @param userInfo 会员信息
+     * @return
      * */
     @Override
     public List<MtUserGrade> getPayUserGradeList(Integer merchantId, MtUser userInfo) {
@@ -212,10 +217,14 @@ public class UserGradeServiceImpl extends ServiceImpl<MtUserGradeMapper, MtUserG
         param.put("merchant_id", merchantId);
         List<MtUserGrade> userGrades = mtUserGradeMapper.selectByMap(param);
         List<MtUserGrade> dataList = new ArrayList<>();
-        if (userGrades.size() > 0 && userInfo != null) {
-            for (MtUserGrade grade : userGrades) {
-                if (!userInfo.getGradeId().equals(grade.getId().toString()) && (grade.getGrade() > Integer.parseInt(userInfo.getGradeId()))) {
-                    dataList.add(grade);
+        if (userGrades.size() > 0 && userInfo != null && StringUtil.isNotEmpty(userInfo.getGradeId())) {
+            MtUserGrade myGradeInfo = mtUserGradeMapper.selectById(userInfo.getGradeId());
+            if (myGradeInfo != null) {
+                Integer myGrade = myGradeInfo.getGrade();
+                for (MtUserGrade grade : userGrades) {
+                    if (!myGrade.equals(grade.getGrade().toString()) && (grade.getGrade() > myGrade)) {
+                        dataList.add(grade);
+                    }
                 }
             }
         }

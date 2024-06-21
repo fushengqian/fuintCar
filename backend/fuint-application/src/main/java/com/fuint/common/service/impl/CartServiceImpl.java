@@ -15,7 +15,12 @@ import com.fuint.repository.model.MtGoodsSku;
 import com.fuint.utils.StringUtil;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
-import java.util.*;
+import org.springframework.transaction.annotation.Transactional;
+import java.util.Date;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * 购物车业务实现类
@@ -34,13 +39,50 @@ public class CartServiceImpl extends ServiceImpl<MtCartMapper, MtCart> implement
     private MtGoodsSkuMapper mtGoodsSkuMapper;
 
     /**
+     * 切换购物车给会员
+     *
+     * @param userId 会员ID
+     * @param cartIds 购物车ID
+     * @return
+     * */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Boolean switchCartIds(Integer userId, String cartIds) {
+       if (userId == null || userId < 1 || StringUtil.isEmpty(cartIds)) {
+           return false;
+       }
+       List<String> cartIdList = Arrays.asList(cartIds.split(","));
+       if (cartIdList != null && cartIdList.size() > 0) {
+           for (String cartId : cartIdList) {
+               if (StringUtil.isNotEmpty(cartId)) {
+                   MtCart mtCart = mtCartMapper.selectById(Integer.parseInt(cartId));
+                   if (mtCart != null) {
+                       mtCart.setUserId(userId);
+                       this.updateById(mtCart);
+                   }
+               }
+           }
+       }
+       return true;
+    }
+
+    /**
      * 保存购物车
      *
-     * @param  reqDto
+     * @param  reqDto 购物车参数
      * @throws BusinessCheckException
+     * @return
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public Integer saveCart(MtCart reqDto, String action) throws BusinessCheckException {
+        if (reqDto.getId() == null && (reqDto.getMerchantId() == null || reqDto.getMerchantId() < 1)) {
+            throw new BusinessCheckException("商户不能为空");
+        }
+        if (reqDto.getId() == null && (reqDto.getStoreId() == null || reqDto.getStoreId() < 1)) {
+            throw new BusinessCheckException("店铺不能为空");
+        }
+
         MtCart mtCart = new MtCart();
         Integer cartId = 1;
 
@@ -51,6 +93,7 @@ public class CartServiceImpl extends ServiceImpl<MtCartMapper, MtCart> implement
             param.put("status", StatusEnum.ENABLED.getKey());
             param.put("USER_ID", reqDto.getUserId());
             param.put("GOODS_ID", reqDto.getGoodsId());
+            param.put("MERCHANT_ID", reqDto.getMerchantId());
             if (reqDto.getSkuId() != null && reqDto.getSkuId() > 0) {
                 param.put("SKU_ID", reqDto.getSkuId());
             }
@@ -130,6 +173,7 @@ public class CartServiceImpl extends ServiceImpl<MtCartMapper, MtCart> implement
         // 已存在，仅操作数量增加或减少
         if (cartList.size() > 0 && (mtCart.getId() == null || mtCart.getId() < 1)) {
             mtCart = cartList.get(0);
+            mtCart.setMerchantId(reqDto.getMerchantId());
             if (action.equals("+")) {
                 mtCart.setNum(mtCart.getNum() + reqDto.getNum());
             } else if (action.equals("=")) {
@@ -155,10 +199,12 @@ public class CartServiceImpl extends ServiceImpl<MtCartMapper, MtCart> implement
     /**
      * 删除购物车
      *
-     * @param cartIds
+     * @param  cartIds 购物车ID
      * @throws BusinessCheckException
+     * @return
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void removeCart(String cartIds) {
         String[] ids = cartIds.split(",");
         if (ids.length < 1) {
@@ -177,9 +223,11 @@ public class CartServiceImpl extends ServiceImpl<MtCartMapper, MtCart> implement
      *
      * @param  hangNo 挂单序号
      * @throws BusinessCheckException
+     * @return
      */
     @Override
     @OperationServiceLog(description = "删除挂单")
+    @Transactional(rollbackFor = Exception.class)
     public void removeCartByHangNo(String hangNo) {
         if (hangNo != null && StringUtil.isNotEmpty(hangNo)) {
             mtCartMapper.deleteCartByHangNo(hangNo);
@@ -189,14 +237,22 @@ public class CartServiceImpl extends ServiceImpl<MtCartMapper, MtCart> implement
     /**
      * 清空会员购物车
      *
-     * @param userId
+     * @param userId 会员ID
      * @throws BusinessCheckException
+     * @return
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void clearCart(Integer userId) {
        mtCartMapper.clearCart(userId);
     }
 
+    /**
+     * 根据条件查找
+     *
+     * @param params 查询参数
+     * @return
+     * */
     @Override
     public List<MtCart> queryCartListByParams(Map<String, Object> params) {
         String status =  params.get("status") == null ? StatusEnum.ENABLED.getKey() : params.get("status").toString();
@@ -250,6 +306,7 @@ public class CartServiceImpl extends ServiceImpl<MtCartMapper, MtCart> implement
      */
     @Override
     @OperationServiceLog(description = "执行挂单")
+    @Transactional(rollbackFor = Exception.class)
     public MtCart setHangNo(Integer cartId, String hangNo, String isVisitor) {
         MtCart mtCart = mtCartMapper.selectById(cartId);
         if (mtCart != null) {

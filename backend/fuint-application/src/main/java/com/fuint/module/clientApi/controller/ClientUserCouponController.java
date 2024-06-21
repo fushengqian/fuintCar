@@ -74,6 +74,11 @@ public class ClientUserCouponController extends BaseController {
     private MemberService memberService;
 
     /**
+     * 店铺接口
+     */
+    private StoreService storeService;
+
+    /**
      * 查询会员卡券详情
      *
      * @param param Request对象
@@ -120,7 +125,7 @@ public class ClientUserCouponController extends BaseController {
 
         MtCoupon couponInfo = couponService.queryCouponById(userCoupon.getCouponId());
         if (null == couponInfo) {
-            return getFailureResult(1002);
+            return getFailureResult(201);
         }
 
         ByteArrayOutputStream out = null;
@@ -159,18 +164,22 @@ public class ClientUserCouponController extends BaseController {
             result.setCouponId(couponInfo.getId());
             result.setType(couponInfo.getType());
             result.setUseRule(couponInfo.getOutRule());
+            String effectiveDate;
             if (couponInfo.getExpireType().equals(CouponExpireTypeEnum.FIX.getKey())) {
-                String effectiveDate = DateUtil.formatDate(couponInfo.getBeginTime(), "yyyy.MM.dd HH:mm") + " - " + DateUtil.formatDate(couponInfo.getEndTime(), "yyyy.MM.dd HH:mm");
-                result.setEffectiveDate(effectiveDate);
+                effectiveDate = DateUtil.formatDate(couponInfo.getEndTime(), "yyyy.MM.dd HH:mm");
             } else {
-                String effectiveDate = DateUtil.formatDate(userCoupon.getCreateTime(), "yyyy.MM.dd HH:mm") + " - " + DateUtil.formatDate(userCoupon.getExpireTime(), "yyyy.MM.dd HH:mm");
-                result.setEffectiveDate(effectiveDate);
+                effectiveDate = DateUtil.formatDate(userCoupon.getExpireTime(), "yyyy.MM.dd HH:mm");
             }
+            result.setEffectiveDate(effectiveDate);
             result.setCode(userCoupon.getCode());
             result.setAmount(userCoupon.getAmount());
             result.setBalance(userCoupon.getBalance());
             result.setStatus(userCoupon.getStatus());
             result.setIsGive(couponInfo.getIsGive());
+
+            // 适用店铺
+            String storeNames = storeService.getStoreNames(couponInfo.getStoreIds());
+            result.setStoreNames(storeNames);
 
             // 如果是计次卡，获取核销列表
             if (couponInfo.getType().equals(CouponTypeEnum.TIMER.getKey())) {

@@ -1,14 +1,15 @@
 package com.fuint.common.enums;
 
 /**
- * 分佣类型枚举
+ * 分佣提成类型
  *
  * Created by FSQ
  * CopyRight https://www.fuint.cn
  */
 public enum CommissionTypeEnum {
-    DISTRIBUTION("distribution", "会员分销"),
-    STAFF("staff", "员工提成");
+    GOOGS("goods", "商品订单"),
+    PAYMENT("payment", "付款订单"),
+    RECHARGE("recharge", "充值订单");
 
     private String key;
 
@@ -33,5 +34,21 @@ public enum CommissionTypeEnum {
 
     public void setValue(String value) {
         this.value = value;
+    }
+
+    /**
+     * 根据key获取value
+     *
+     * @param key
+     * @return
+     */
+    public static String getName(String key) {
+        final CommissionTypeEnum[] values = CommissionTypeEnum.values();
+        for (CommissionTypeEnum value : values) {
+            if (key.equals(value.getKey())) {
+                return value.getValue();
+            }
+        }
+        return null;
     }
 }

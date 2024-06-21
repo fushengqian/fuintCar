@@ -6,6 +6,8 @@ import com.fuint.common.dto.AccountInfo;
 import com.fuint.framework.exception.BusinessCheckException;
 import com.fuint.framework.pagination.PaginationRequest;
 import com.fuint.framework.pagination.PaginationResponse;
+import com.fuint.module.backendApi.request.LoginRequest;
+import com.fuint.module.backendApi.response.LoginResponse;
 import com.fuint.repository.model.TAccount;
 import com.fuint.repository.model.TDuty;
 import java.util.List;
@@ -27,17 +29,17 @@ public interface AccountService extends IService<TAccount> {
     PaginationResponse<AccountDto> getAccountListByPagination(PaginationRequest paginationRequest) throws BusinessCheckException;
 
     /**
-     * 根据用户名获取用户对象
+     * 根据账号名称获取账号信息
      *
-     * @param userName
+     * @param userName 账号名称
      * @return
-     */
+     * */
     AccountInfo getAccountByName(String userName);
 
     /**
      * 获取用户信息
      *
-     * @param id
+     * @param id 账号ID
      * @return
      */
     TAccount getAccountInfoById(Integer id);
@@ -45,16 +47,16 @@ public interface AccountService extends IService<TAccount> {
     /**
      * 创建账号信息
      *
-     * @param  accountInfo
-     * @param  duties
+     * @param accountInfo 账号信息
+     * @param duties 角色
      * @return
      * */
-    TAccount createAccountInfo(TAccount accountInfo, List<TDuty> duties);
+    TAccount createAccountInfo(TAccount accountInfo, List<TDuty> duties) throws BusinessCheckException;
 
     /**
      * 获取账号角色ID
      *
-     * @param accountId
+     * @param accountId 账号ID
      * @return
      * */
     List<Long> getRoleIdsByAccountId(Integer accountId);
@@ -64,6 +66,7 @@ public interface AccountService extends IService<TAccount> {
      *
      * @param tAccount 账户实体
      * @throws BusinessCheckException
+     * @return
      */
     void editAccount(TAccount tAccount, List<TDuty> duties) throws BusinessCheckException;
 
@@ -86,18 +89,18 @@ public interface AccountService extends IService<TAccount> {
     /**
      * 删除后台账号
      *
-     * @param userId
+     * @param accountId 账号ID
      * @return
      * */
-    void deleteAccount(Long userId);
+    void deleteAccount(Long accountId);
 
     /**
      * 密码加密
      *
-     * @param user
+     * @param tAccount 账号信息
      * @return
      * */
-    void entryptPassword(TAccount user);
+    void entryptPassword(TAccount tAccount);
 
     /**
      * 获取加密密码
@@ -107,4 +110,13 @@ public interface AccountService extends IService<TAccount> {
      * @return
      * */
     String getEntryptPassword(String password, String salt);
+
+    /**
+     * 登录后台系统
+     *
+     * @param loginRequest 登录参数
+     * @param userAgent 登录浏览器
+     * @return
+     * */
+    LoginResponse doLogin(LoginRequest loginRequest, String userAgent) throws BusinessCheckException;
 }

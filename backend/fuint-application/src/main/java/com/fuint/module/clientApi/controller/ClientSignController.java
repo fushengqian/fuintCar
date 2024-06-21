@@ -6,6 +6,7 @@ import com.fuint.common.dto.UserInfo;
 import com.fuint.common.enums.GenderEnum;
 import com.fuint.common.enums.MemberSourceEnum;
 import com.fuint.common.enums.StatusEnum;
+import com.fuint.common.enums.YesOrNoEnum;
 import com.fuint.common.service.*;
 import com.fuint.common.util.TokenUtil;
 import com.fuint.framework.exception.BusinessCheckException;
@@ -118,11 +119,6 @@ public class ClientSignController extends BaseController {
 
         String userAgent = request.getHeader("user-agent");
         String token = TokenUtil.generateToken(userAgent, mtUser.getId());
-        UserInfo userLoginInfo = new UserInfo();
-        userLoginInfo.setId(mtUser.getId());
-        userLoginInfo.setToken(token);
-        TokenUtil.saveToken(userLoginInfo);
-
         Map<String, Object> result = new HashMap<>();
         result.put("token", token);
         result.put("userId", mtUser.getId());
@@ -162,7 +158,7 @@ public class ClientSignController extends BaseController {
         MtUser userInfo = memberService.queryMemberById(loginInfo.getId());
         userInfo.setOpenId(mpUserInfo.get("openid").toString());
         userInfo.setStoreId(Integer.parseInt(storeId));
-        MtUser mtUser = memberService.updateMember(userInfo);
+        MtUser mtUser = memberService.updateMember(userInfo, false);
 
         if (mtUser == null) {
             return getFailureResult(0, "用户状态异常");
@@ -192,22 +188,22 @@ public class ClientSignController extends BaseController {
         String userAgent = request.getHeader("user-agent") == null ? "" : request.getHeader("user-agent");
 
         if (StringUtil.isEmpty(account)) {
-            return getFailureResult(1002,"用户名不能为空");
+            return getFailureResult(201,"用户名不能为空");
         }
         if (StringUtil.isEmpty(password)) {
-            return getFailureResult(1002,"密码不能为空");
+            return getFailureResult(201,"密码不能为空");
         }
         if (StringUtil.isEmpty(captchaCode)) {
-            return getFailureResult(1002,"图形验证码不能为空");
+            return getFailureResult(201,"图形验证码不能为空");
         }
         boolean captchaVerify = captchaService.checkCodeByUuid(captchaCode, uuid);
         if (!captchaVerify) {
-            return getFailureResult(1002,"图形验证码有误");
+            return getFailureResult(201,"图形验证码有误");
         }
         Integer merchantId = merchantService.getMerchantId(merchantNo);
         MtUser userData = memberService.queryMemberByName(merchantId, account);
         if (userData != null) {
-            return getFailureResult(1002,"该用户名已存在");
+            return getFailureResult(201,"该用户名已存在");
         }
 
         MtUser mtUser = new MtUser();
@@ -222,10 +218,6 @@ public class ClientSignController extends BaseController {
 
         if (userInfo != null) {
             String token = TokenUtil.generateToken(userAgent, userInfo.getId());
-            UserInfo loginInfo = new UserInfo();
-            loginInfo.setId(userInfo.getId());
-            loginInfo.setToken(token);
-            TokenUtil.saveToken(loginInfo);
             Map<String, Object> outParams = new HashMap<>();
             outParams.put("userId", userInfo.getId());
             outParams.put("userName", userInfo.getName());
@@ -263,16 +255,16 @@ public class ClientSignController extends BaseController {
         String password = param.get("password") == null ? "" : param.get("password").toString();
         String captchaCode = param.get("captchaCode") == null ? "" : param.get("captchaCode").toString();
         String uuid = param.get("uuid") == null ? "" : param.get("uuid").toString();
-        TokenDto dto = new TokenDto();
+        TokenDto tokenDto = new TokenDto();
         MtUser mtUser = null;
         Integer merchantId = merchantService.getMerchantId(merchantNo);
         // 方式1：通过短信验证码登录
         if (StringUtil.isNotEmpty(mobile) && StringUtil.isNotEmpty(verifyCode)) {
             // 如果已经登录，免输入验证码
             if (StringUtil.isNotEmpty(token) && TokenUtil.checkTokenLogin(token)) {
-                dto.setIsLogin("true");
-                dto.setToken(token);
-                return getSuccessResult(JSONObject.toJSONString(dto));
+                tokenDto.setIsLogin(YesOrNoEnum.TRUE.getKey());
+                tokenDto.setToken(token);
+                return getSuccessResult(JSONObject.toJSONString(tokenDto));
             }
 
             // 1、验证码验证
@@ -292,23 +284,19 @@ public class ClientSignController extends BaseController {
                 }
 
                 if (!mtUser.getStatus().equals(StatusEnum.ENABLED.getKey())) {
-                    return getFailureResult(1002, "账号异常，登录失败");
+                    return getFailureResult(201, "账号异常，登录失败");
                 }
 
                 // 更新验证码
                 verifyCodeService.updateValidFlag(mtVerifyCode.getId(), "1");
                 String userToken = TokenUtil.generateToken(userAgent, mtUser.getId());
-                UserInfo loginInfo = new UserInfo();
-                loginInfo.setId(mtUser.getId());
-                loginInfo.setToken(userToken);
-                TokenUtil.saveToken(loginInfo);
 
-                dto.setIsLogin("true");
-                dto.setToken(userToken);
-                dto.setTokenCreatedTime(System.currentTimeMillis());
+                tokenDto.setIsLogin(YesOrNoEnum.TRUE.getKey());
+                tokenDto.setToken(userToken);
+                tokenDto.setTokenCreatedTime(System.currentTimeMillis());
             } else {
-                dto.setIsLogin("false");
-                return getFailureResult(1002, "验证码错误或已过期，登录失败");
+                tokenDto.setIsLogin(YesOrNoEnum.FALSE.getKey());
+                return getFailureResult(201, "验证码错误或已过期，登录失败");
             }
         }
 
@@ -316,7 +304,7 @@ public class ClientSignController extends BaseController {
         if (StringUtil.isNotEmpty(account) && StringUtil.isNotEmpty(password) && StringUtil.isNotEmpty(captchaCode)) {
             Boolean captchaVerify = captchaService.checkCodeByUuid(captchaCode, uuid);
             if (!captchaVerify) {
-                return getFailureResult(1002,"图形验证码有误");
+                return getFailureResult(201,"图形验证码有误");
             }
 
             MtUser userInfo = memberService.queryMemberByName(merchantId, account);
@@ -324,11 +312,7 @@ public class ClientSignController extends BaseController {
                 String myPassword = userInfo.getPassword();
                 String inputPassword = memberService.deCodePassword(password, userInfo.getSalt());
                 if (myPassword.equals(inputPassword)) {
-                    UserInfo loginInfo = new UserInfo();
-                    loginInfo.setToken(TokenUtil.generateToken(userAgent, userInfo.getId()));
-                    loginInfo.setId(userInfo.getId());
-                    TokenUtil.saveToken(loginInfo);
-                    dto.setToken(loginInfo.getToken());
+                    tokenDto.setToken(TokenUtil.generateToken(userAgent, userInfo.getId()));
                     mtUser = userInfo;
                 } else {
                     return getFailureResult(201, "账号或密码有误");
@@ -340,7 +324,7 @@ public class ClientSignController extends BaseController {
 
         if (mtUser != null) {
             Map<String, Object> outParams = new HashMap<>();
-            outParams.put("token", dto.getToken());
+            outParams.put("token", tokenDto.getToken());
             outParams.put("userId", mtUser.getId());
             outParams.put("userName", mtUser.getName());
             outParams.put("openId", mtUser.getOpenId());

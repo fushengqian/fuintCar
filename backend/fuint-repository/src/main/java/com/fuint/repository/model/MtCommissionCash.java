@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.util.Date;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -28,11 +29,26 @@ public class MtCommissionCash implements Serializable {
     @TableId(value = "ID", type = IdType.AUTO)
     private Integer id;
 
+    @ApiModelProperty("结算单号")
+    private String settleNo;
+
+    @ApiModelProperty("结算uuid")
+    private String uuid;
+
+    @ApiModelProperty("商户ID")
+    private Integer merchantId;
+
+    @ApiModelProperty("店铺ID")
+    private Integer storeId;
+
     @ApiModelProperty("会员ID")
     private Integer userId;
 
     @ApiModelProperty("员工ID")
     private Integer staffId;
+
+    @ApiModelProperty("金额")
+    private BigDecimal amount;
 
     @ApiModelProperty("备注")
     private String description;

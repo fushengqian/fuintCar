@@ -61,7 +61,7 @@ public class BackendStaffController extends BaseController {
         Integer pageSize = request.getParameter("pageSize") == null ? Constants.PAGE_SIZE : Integer.parseInt(request.getParameter("pageSize"));
         String mobile = request.getParameter("mobile");
         String realName = request.getParameter("realName");
-        String auditedStatus = request.getParameter("status");
+        String auditedStatus = request.getParameter("auditedStatus");
         String storeId = request.getParameter("storeId");
         String category = request.getParameter("category");
 
@@ -243,6 +243,12 @@ public class BackendStaffController extends BaseController {
         }
 
         Map<String, Object> params = new HashMap<>();
+        if (accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0) {
+            params.put("MERCHANT_ID", accountInfo.getMerchantId());
+        }
+        if (accountInfo.getStoreId() != null && accountInfo.getStoreId() > 0) {
+            storeId = accountInfo.getStoreId();
+        }
         params.put("AUDITED_STATUS", StatusEnum.ENABLED.getKey());
         params.put("STORE_ID", storeId);
         List<MtStaff> staffList = staffService.queryStaffByParams(params);

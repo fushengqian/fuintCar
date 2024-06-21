@@ -20,6 +20,9 @@ public class Constants {
     // 读取数据最多行数
     public static final int MAX_ROWS = 2000;
 
+    // 读取数据全部行数
+    public static final int ALL_ROWS = 1000000;
+
     /**
      * 系统配置, 从setting表中读取
      */
@@ -30,6 +33,6 @@ public class Constants {
     public static final int HTTP_RESPONSE_CODE_USER_LOGIN_ERROR = 403;
     public static final int HTTP_RESPONSE_CODE_NOLOGIN = 1001;
 
-    public static final String SESSION_USER = "USER";
-    public static final String SESSION_ADMIN_USER = "ADMIN_USER";
+    public static final String SESSION_USER = "CAR_USER";
+    public static final String SESSION_ADMIN_USER = "CAR_ADMIN_USER";
 }

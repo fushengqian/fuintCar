@@ -1,13 +1,12 @@
 package com.fuint.common.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.fuint.common.dto.CommissionLogDto;
 import com.fuint.framework.pagination.PaginationRequest;
 import com.fuint.framework.pagination.PaginationResponse;
 import com.fuint.framework.exception.BusinessCheckException;
+import com.fuint.module.backendApi.request.CommissionLogRequest;
 import com.fuint.repository.model.MtCommissionLog;
-
-import java.util.List;
-import java.util.Map;
 
 /**
  * 分销提成记录业务接口
@@ -23,43 +22,32 @@ public interface CommissionLogService extends IService<MtCommissionLog> {
      * @param paginationRequest
      * @return
      */
-    PaginationResponse<MtCommissionLog> queryDataByPagination(PaginationRequest paginationRequest) throws BusinessCheckException;
+    PaginationResponse<CommissionLogDto> queryCommissionLogByPagination(PaginationRequest paginationRequest) throws BusinessCheckException;
 
     /**
-     * 添加分销提成记录
+     * 计算订单分销提成
      *
-     * @param  commissionLog
+     * @param  orderId 订单ID
      * @throws BusinessCheckException
+     * @return
      */
-    MtCommissionLog addCommissionLog(MtCommissionLog commissionLog) throws BusinessCheckException;
+    void calculateCommission(Integer orderId) throws BusinessCheckException;
 
     /**
      * 根据ID获取记录信息
      *
-     * @param  id
+     * @param  id 记录ID
      * @throws BusinessCheckException
+     * @return
      */
-    MtCommissionLog queryCommissionLogById(Integer id) throws BusinessCheckException;
+    CommissionLogDto queryCommissionLogById(Integer id) throws BusinessCheckException;
 
     /**
-     * 根据ID删除分销提成记录
+     * 更新分销提成记录
      *
-     * @param id       ID
-     * @param operator 操作人
+     * @param requestParam 请求参数
      * @throws BusinessCheckException
+     * @return
      */
-    void deleteCommissionLog(Integer id, String operator) throws BusinessCheckException;
-
-    /**
-     * 更新数据
-     * @param  commissionLog
-     * @throws BusinessCheckException
-     * */
-    MtCommissionLog updateCommissionLog(MtCommissionLog commissionLog) throws BusinessCheckException;
-
-    /**
-     * 根据条件搜索分销提成记录
-     * */
-    List<MtCommissionLog> queryDataByParams(Map<String, Object> params) throws BusinessCheckException;
-
+    void updateCommissionLog(CommissionLogRequest requestParam) throws BusinessCheckException;
 }

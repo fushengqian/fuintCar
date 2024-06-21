@@ -75,8 +75,8 @@ public class BackendGoodsController extends BaseController {
      * 分页查询商品列表
      *
      * @param request
-     * @return
      * @throws BusinessCheckException
+     * @return
      */
     @ApiOperation(value = "分页查询商品列表")
     @RequestMapping(value = "/list", method = RequestMethod.GET)
@@ -92,6 +92,8 @@ public class BackendGoodsController extends BaseController {
         String type = request.getParameter("type");
         String status = request.getParameter("status");
         String searchStoreId = request.getParameter("storeId");
+        String stock = request.getParameter("stock");
+        String cateId = request.getParameter("cateId");
 
         AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
         if (accountInfo == null) {
@@ -122,6 +124,9 @@ public class BackendGoodsController extends BaseController {
         if (StringUtil.isNotEmpty(type)) {
             params.put("type", type);
         }
+        if (StringUtil.isNotEmpty(cateId)) {
+            params.put("cateId", cateId);
+        }
         if (StringUtil.isNotEmpty(goodsNo)) {
             params.put("goodsNo", goodsNo);
         }
@@ -130,6 +135,9 @@ public class BackendGoodsController extends BaseController {
         }
         if (StringUtil.isNotEmpty(status)) {
             params.put("status", status);
+        }
+        if (StringUtil.isNotEmpty(stock)) {
+            params.put("stock", stock);
         }
         paginationRequest.setSearchParams(params);
         PaginationResponse<GoodsDto> paginationResponse = goodsService.queryGoodsListByPagination(paginationRequest);
@@ -155,10 +163,21 @@ public class BackendGoodsController extends BaseController {
         }
         List<MtStore> storeList = storeService.queryStoresByParams(paramsStore);
 
+        Map<String, Object> cateParam = new HashMap<>();
+        cateParam.put("status", StatusEnum.ENABLED.getKey());
+        if (accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0) {
+            cateParam.put("merchantId", accountInfo.getMerchantId());
+        }
+        if (storeId != null && storeId > 0) {
+            cateParam.put("storeId", storeId.toString());
+        }
+        List<MtGoodsCate> cateList = cateService.queryCateListByParams(cateParam);
+
         Map<String, Object> result = new HashMap<>();
         result.put("paginationResponse", paginationResponse);
         result.put("typeList", typeList);
         result.put("storeList", storeList);
+        result.put("cateList", cateList);
 
         return getSuccessResult(result);
     }
@@ -167,13 +186,14 @@ public class BackendGoodsController extends BaseController {
      * 删除商品
      *
      * @param request
+     * @param goodsId 商品ID
      * @return
      */
     @ApiOperation(value = "删除商品")
     @RequestMapping(value = "/delete/{id}", method = RequestMethod.GET)
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('goods:goods:edit')")
-    public ResponseObject delete(HttpServletRequest request, @PathVariable("id") Integer id) throws BusinessCheckException {
+    public ResponseObject delete(HttpServletRequest request, @PathVariable("id") Integer goodsId) throws BusinessCheckException {
         String token = request.getHeader("Access-Token");
 
         AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
@@ -181,7 +201,7 @@ public class BackendGoodsController extends BaseController {
             return getFailureResult(1001, "请先登录");
         }
         String operator = accountInfo.getAccountName();
-        goodsService.deleteGoods(id, operator);
+        goodsService.deleteGoods(goodsId, operator);
         return getSuccessResult(true);
     }
 
@@ -273,11 +293,11 @@ public class BackendGoodsController extends BaseController {
                 String name = specNameArr.get(i);
                 for (MtGoodsSpec mtGoodsSpec : goods.getSpecList()) {
                     if (mtGoodsSpec.getName().equals(name)) {
-                        GoodsSpecChildDto e = new GoodsSpecChildDto();
-                        e.setId(mtGoodsSpec.getId());
-                        e.setName(mtGoodsSpec.getValue());
-                        e.setChecked(true);
-                        child.add(e);
+                        GoodsSpecChildDto goodsSpecChildDto = new GoodsSpecChildDto();
+                        goodsSpecChildDto.setId(mtGoodsSpec.getId());
+                        goodsSpecChildDto.setName(mtGoodsSpec.getValue());
+                        goodsSpecChildDto.setChecked(true);
+                        child.add(goodsSpecChildDto);
                     }
                 }
                 item.setId(specId);
@@ -497,70 +517,70 @@ public class BackendGoodsController extends BaseController {
             storeId = myStoreId;
         }
 
-        MtGoods info = new MtGoods();
-        info.setId(Integer.parseInt(goodsId));
+        MtGoods mtGoods = new MtGoods();
+        mtGoods.setId(Integer.parseInt(goodsId));
         if (accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0) {
-            info.setMerchantId(accountInfo.getMerchantId());
+            mtGoods.setMerchantId(accountInfo.getMerchantId());
         }
         if (StringUtil.isNotEmpty(type)) {
-            info.setType(type);
+            mtGoods.setType(type);
         }
-        info.setCateId(cateId);
-        info.setName(name);
-        info.setGoodsNo(goodsNo);
+        mtGoods.setCateId(cateId);
+        mtGoods.setName(name);
+        mtGoods.setGoodsNo(goodsNo);
         if (StringUtil.isNotEmpty(serviceTime)) {
-            info.setServiceTime(Integer.parseInt(serviceTime));
+            mtGoods.setServiceTime(Integer.parseInt(serviceTime));
         }
         if (StringUtil.isNotEmpty(couponIds)) {
-            info.setCouponIds(couponIds);
+            mtGoods.setCouponIds(couponIds);
         }
-        info.setIsSingleSpec(isSingleSpec);
+        mtGoods.setIsSingleSpec(isSingleSpec);
         if (StringUtil.isNotEmpty(stock)) {
-            info.setStock(Integer.parseInt(stock));
+            mtGoods.setStock(Integer.parseInt(stock));
         }
         if (StringUtil.isNotEmpty(description)) {
-            info.setDescription(description);
+            mtGoods.setDescription(description);
         }
-        if (storeId != null && storeId > 0) {
-            info.setStoreId(storeId);
+        if (storeId != null) {
+            mtGoods.setStoreId(storeId);
         }
         if (images.size() > 0) {
-            info.setLogo(images.get(0));
+            mtGoods.setLogo(images.get(0));
         }
         if (StringUtil.isNotEmpty(sort)) {
-            info.setSort(Integer.parseInt(sort));
+            mtGoods.setSort(Integer.parseInt(sort));
         }
         if (StringUtil.isNotEmpty(status)) {
-            info.setStatus(status);
+            mtGoods.setStatus(status);
         }
         if (StringUtil.isNotEmpty(price)) {
-            info.setPrice(new BigDecimal(price));
+            mtGoods.setPrice(new BigDecimal(price));
         }
         if (StringUtil.isNotEmpty(linePrice)) {
-            info.setLinePrice(new BigDecimal(linePrice));
+            mtGoods.setLinePrice(new BigDecimal(linePrice));
         }
         if (StringUtil.isNotEmpty(weight)) {
-            info.setWeight(new BigDecimal(weight));
+            mtGoods.setWeight(new BigDecimal(weight));
         }
         if (initSale > 0) {
-            info.setInitSale(initSale);
+            mtGoods.setInitSale(initSale);
         }
         if (StringUtil.isNotEmpty(salePoint)) {
-            info.setSalePoint(salePoint);
+            mtGoods.setSalePoint(salePoint);
         }
         if (StringUtil.isNotEmpty(canUsePoint)) {
-            info.setCanUsePoint(canUsePoint);
+            mtGoods.setCanUsePoint(canUsePoint);
         }
         if (StringUtil.isNotEmpty(isMemberDiscount)) {
-            info.setIsMemberDiscount(isMemberDiscount);
+            mtGoods.setIsMemberDiscount(isMemberDiscount);
         }
         if (images.size() > 0) {
             String imagesJson = JSONObject.toJSONString(images);
-            info.setImages(imagesJson);
+            mtGoods.setImages(imagesJson);
         }
-        info.setOperator(accountInfo.getAccountName());
+        mtGoods.setOperator(accountInfo.getAccountName());
 
-        MtGoods goodsInfo = goodsService.saveGoods(info);
+        MtGoods goodsInfo = goodsService.saveGoods(mtGoods);
 
         Map<String, Object> result = new HashMap();
         result.put("goodsInfo", goodsInfo);
@@ -571,7 +591,7 @@ public class BackendGoodsController extends BaseController {
     /**
      * 保存商品规格
      *
-     * @param request  HttpServletRequest对象
+     * @param request HttpServletRequest对象
      */
     @ApiOperation(value = "保存商品规格")
     @RequestMapping(value = "/saveSpecName", method = RequestMethod.POST)
@@ -624,7 +644,7 @@ public class BackendGoodsController extends BaseController {
     /**
      * 保存商品规格值
      *
-     * @param request  HttpServletRequest对象
+     * @param request HttpServletRequest对象
      * @return
      */
     @ApiOperation(value = "保存商品规格值")
@@ -797,7 +817,9 @@ public class BackendGoodsController extends BaseController {
         if (accountInfo == null) {
             return getFailureResult(1001, "请先登录");
         }
-
+        if (accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0) {
+            params.put("merchantId", accountInfo.getMerchantId());
+        }
         PaginationResponse<GoodsDto> paginationResponse = goodsService.selectGoodsList(params);
         String imagePath = settingService.getUploadBasePath();
 

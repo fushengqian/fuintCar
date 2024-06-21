@@ -1,5 +1,6 @@
 package com.fuint.common.service;
 
+import com.baomidou.mybatisplus.extension.service.IService;
 import com.fuint.framework.exception.BusinessCheckException;
 import com.fuint.framework.pagination.PaginationRequest;
 import com.fuint.framework.pagination.PaginationResponse;
@@ -13,7 +14,7 @@ import java.util.Map;
  * Created by FSQ
  * CopyRight https://www.fuint.cn
  */
-public interface StaffService {
+public interface StaffService extends IService<MtStaff> {
 
     /**
      * 员工查询列表
@@ -44,11 +45,15 @@ public interface StaffService {
      *
      * @param  id
      * @throws BusinessCheckException
+     * @return
      */
     Integer updateAuditedStatus(Integer id, String statusEnum) throws BusinessCheckException;
 
     /**
      * 根据条件搜索员工
+     *
+     * @param params 请求参数
+     * @return
      * */
     List<MtStaff> queryStaffByParams(Map<String, Object> params) throws BusinessCheckException;
 
@@ -57,6 +62,7 @@ public interface StaffService {
      *
      * @param  mobile 手机
      * @throws BusinessCheckException
+     * @return
      */
     MtStaff queryStaffByMobile(String mobile) throws BusinessCheckException;
 
@@ -65,6 +71,7 @@ public interface StaffService {
      *
      * @param userId 会员ID
      * @throws BusinessCheckException
+     * @return
      */
     MtStaff queryStaffByUserId(Integer userId) throws BusinessCheckException;
 }

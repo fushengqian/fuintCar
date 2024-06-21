@@ -15,11 +15,21 @@ import java.util.Map;
 public interface CartService extends IService<MtCart> {
 
     /**
+     * 切换购物车给会员
+     *
+     * @param userId
+     * @param cartIds
+     * @return
+     * */
+    Boolean switchCartIds(Integer userId, String cartIds) throws BusinessCheckException;
+
+    /**
      * 保存购物车
      *
      * @param reqDto
      * @param action + or - or =
      * @throws BusinessCheckException
+     * @return
      */
     Integer saveCart(MtCart reqDto, String action) throws BusinessCheckException;
 
@@ -28,6 +38,7 @@ public interface CartService extends IService<MtCart> {
      *
      * @param cartIds 购物车ID
      * @throws BusinessCheckException
+     * @return
      */
     void removeCart(String cartIds) throws BusinessCheckException;
 
@@ -36,6 +47,7 @@ public interface CartService extends IService<MtCart> {
      *
      * @param  hangNo 挂单序号
      * @throws BusinessCheckException
+     * @return
      */
     void removeCartByHangNo(String hangNo) throws BusinessCheckException;
 
@@ -44,11 +56,15 @@ public interface CartService extends IService<MtCart> {
      *
      * @param userId 会员ID
      * @throws BusinessCheckException
+     * @return
      */
     void clearCart(Integer userId) throws BusinessCheckException;
 
     /**
      * 根据条件查找
+     *
+     * @param params 查询参数
+     * @return
      * */
     List<MtCart> queryCartListByParams(Map<String, Object> params) throws BusinessCheckException;
 

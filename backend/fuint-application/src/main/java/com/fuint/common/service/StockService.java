@@ -7,7 +7,6 @@ import com.fuint.framework.pagination.PaginationResponse;
 import com.fuint.framework.web.ResponseObject;
 import com.fuint.repository.model.MtStock;
 import com.fuint.repository.model.MtStockItem;
-
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -51,6 +50,7 @@ public interface StockService extends IService<MtStock> {
      *
      * @param  id ID
      * @throws BusinessCheckException
+     * @return
      */
     MtStock queryStockById(Long id) throws BusinessCheckException;
 
@@ -59,6 +59,7 @@ public interface StockService extends IService<MtStock> {
      *
      * @param  params
      * @throws BusinessCheckException
+     * @return
      * */
     List<MtStockItem> queryItemByParams(Map<String, Object> params) throws BusinessCheckException;
 }

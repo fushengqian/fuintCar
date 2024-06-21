@@ -19,6 +19,8 @@ import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import lombok.AllArgsConstructor;
 import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -38,6 +40,8 @@ public class MerchantServiceImpl extends ServiceImpl<MtMerchantMapper, MtMerchan
     private MtMerchantMapper mtMerchantMapper;
 
     private MtStoreMapper mtStoreMapper;
+
+    private static final Logger logger = LoggerFactory.getLogger(MerchantServiceImpl.class);
 
     /**
      * 分页查询商户列表
@@ -80,8 +84,9 @@ public class MerchantServiceImpl extends ServiceImpl<MtMerchantMapper, MtMerchan
     /**
      * 保存商户信息
      *
-     * @param  merchant
+     * @param  merchant 商户信息
      * @throws BusinessCheckException
+     * @return
      */
     @Override
     @Transactional
@@ -135,6 +140,7 @@ public class MerchantServiceImpl extends ServiceImpl<MtMerchantMapper, MtMerchan
      *
      * @param  id 商户ID
      * @throws BusinessCheckException
+     * @return
      */
     @Override
     public MtMerchant queryMerchantById(Integer id) {
@@ -149,6 +155,7 @@ public class MerchantServiceImpl extends ServiceImpl<MtMerchantMapper, MtMerchan
      *
      * @param  name 商户名称
      * @throws BusinessCheckException
+     * @return
      */
     @Override
     public MtMerchant queryMerchantByName(String name) {
@@ -159,7 +166,7 @@ public class MerchantServiceImpl extends ServiceImpl<MtMerchantMapper, MtMerchan
     /**
      * 根据商户号获取商户信息
      *
-     * @param  merchantNo 商户号
+     * @param merchantNo 商户号
      * @return
      */
     @Override
@@ -193,6 +200,7 @@ public class MerchantServiceImpl extends ServiceImpl<MtMerchantMapper, MtMerchan
      * @param  operator 操作人
      * @param  status   状态
      * @throws BusinessCheckException
+     * @return
      */
     @Override
     @Transactional
@@ -210,6 +218,12 @@ public class MerchantServiceImpl extends ServiceImpl<MtMerchantMapper, MtMerchan
         mtMerchantMapper.updateById(mtMerchant);
     }
 
+    /**
+     * 根据条件查询商户列表
+     *
+     * @param params 查询参数
+     * @return
+     * */
     @Override
     public List<MtMerchant> queryMerchantByParams(Map<String, Object> params) {
         LambdaQueryWrapper<MtMerchant> lambdaQueryWrapper = Wrappers.lambdaQuery();

@@ -8,6 +8,7 @@ import com.fuint.common.enums.StatusEnum;
 import com.fuint.common.enums.WxMessageEnum;
 import com.fuint.common.service.MemberService;
 import com.fuint.common.service.PointService;
+import com.fuint.common.service.SendSmsService;
 import com.fuint.common.service.WeixinService;
 import com.fuint.common.util.DateUtil;
 import com.fuint.framework.annoation.OperationServiceLog;
@@ -23,10 +24,14 @@ import com.github.pagehelper.PageHelper;
 import lombok.AllArgsConstructor;
 import org.apache.commons.lang.StringUtils;
 import com.github.pagehelper.Page;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
 import java.util.*;
 
 /**
@@ -39,9 +44,16 @@ import java.util.*;
 @AllArgsConstructor
 public class PointServiceImpl extends ServiceImpl<MtPointMapper, MtPoint> implements PointService {
 
+    private static final Logger logger = LoggerFactory.getLogger(PointServiceImpl.class);
+
     private MtPointMapper mtPointMapper;
 
     private MtUserMapper mtUserMapper;
+
+    /**
+     * 短信发送服务接口
+     * */
+    private SendSmsService sendSmsService;
 
     /**
      * 会员服务接口
@@ -61,7 +73,6 @@ public class PointServiceImpl extends ServiceImpl<MtPointMapper, MtPoint> implem
      */
     @Override
     public PaginationResponse<PointDto> queryPointListByPagination(PaginationRequest paginationRequest) throws BusinessCheckException {
-        Page<MtPoint> pageHelper = PageHelper.startPage(paginationRequest.getCurrentPage(), paginationRequest.getPageSize());
         LambdaQueryWrapper<MtPoint> lambdaQueryWrapper = Wrappers.lambdaQuery();
         lambdaQueryWrapper.ne(MtPoint::getStatus, StatusEnum.DISABLE.getKey());
 
@@ -81,12 +92,23 @@ public class PointServiceImpl extends ServiceImpl<MtPointMapper, MtPoint> implem
         if (StringUtils.isNotBlank(merchantId)) {
             lambdaQueryWrapper.eq(MtPoint::getMerchantId, merchantId);
         }
+        String userNo = paginationRequest.getSearchParams().get("userNo") == null ? "" : paginationRequest.getSearchParams().get("userNo").toString();
+        if (StringUtil.isNotEmpty(userNo)) {
+            if (StringUtil.isEmpty(merchantId)) {
+                merchantId = "0";
+            }
+            MtUser userInfo = memberService.queryMemberByUserNo(Integer.parseInt(merchantId), userNo);
+            if (userInfo != null) {
+                lambdaQueryWrapper.eq(MtPoint::getUserId, userInfo.getId());
+            }
+        }
         String storeId = paginationRequest.getSearchParams().get("storeId") == null ? "" : paginationRequest.getSearchParams().get("storeId").toString();
         if (StringUtils.isNotBlank(storeId)) {
             lambdaQueryWrapper.eq(MtPoint::getStoreId, storeId);
         }
 
         lambdaQueryWrapper.orderByDesc(MtPoint::getId);
+        Page<MtPoint> pageHelper = PageHelper.startPage(paginationRequest.getCurrentPage(), paginationRequest.getPageSize());
         List<MtPoint> pointList = mtPointMapper.selectList(lambdaQueryWrapper);
 
         List<PointDto> dataList = new ArrayList<>();
@@ -105,7 +127,6 @@ public class PointServiceImpl extends ServiceImpl<MtPointMapper, MtPoint> implem
             item.setStatus(point.getStatus());
             dataList.add(item);
         }
-
         PageRequest pageRequest = PageRequest.of(paginationRequest.getCurrentPage(), paginationRequest.getPageSize());
         PageImpl pageImpl = new PageImpl(dataList, pageRequest, pageHelper.getTotal());
         PaginationResponse<PointDto> paginationResponse = new PaginationResponse(pageImpl, PointDto.class);
@@ -119,8 +140,9 @@ public class PointServiceImpl extends ServiceImpl<MtPointMapper, MtPoint> implem
     /**
      * 添加积分记录
      *
-     * @param  mtPoint
+     * @param  mtPoint 积分参数
      * @throws BusinessCheckException
+     * @return
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -153,6 +175,21 @@ public class PointServiceImpl extends ServiceImpl<MtPointMapper, MtPoint> implem
         mtUserMapper.updateById(mtUser);
         mtPointMapper.insert(mtPoint);
 
+        try {
+            List<String> mobileList = new ArrayList<>();
+            mobileList.add(mtUser.getMobile());
+            Map<String, String> params = new HashMap<>();
+            String action = "";
+            if (mtPoint.getAmount() > 0) {
+                action = "+";
+            }
+            params.put("amount", action + mtPoint.getAmount().toString());
+            params.put("balance", mtUser.getPoint().toString());
+            sendSmsService.sendSms(mtUser.getMerchantId(), "points-change", mobileList, params);
+        } catch (Exception e) {
+            logger.error("积分变动短信发送失败:{}", e.getMessage());
+        }
+
         // 发送小程序订阅消息
         Date nowTime = new Date();
         Date sendTime = new Date(nowTime.getTime() + 60000);
@@ -169,10 +206,11 @@ public class PointServiceImpl extends ServiceImpl<MtPointMapper, MtPoint> implem
     /**
      * 转赠积分
      *
-     * @param userId
-     * @param mobile
-     * @param amount
-     * @param remark
+     * @param userId 会员ID
+     * @param mobile 会员手机
+     * @param amount 积分数
+     * @param remark 备注
+     * @throws BusinessCheckException
      * @return boolean
      */
     @Override

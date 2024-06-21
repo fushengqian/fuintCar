@@ -86,7 +86,7 @@ public class SmsTemplateServiceImpl extends ServiceImpl<MtSmsTemplateMapper, MtS
     /**
      * 保存模板信息
      *
-     * @param mtSmsTemplateDto
+     * @param mtSmsTemplateDto 短信模板
      * @return
      */
     @Override
@@ -125,6 +125,7 @@ public class SmsTemplateServiceImpl extends ServiceImpl<MtSmsTemplateMapper, MtS
      *
      * @param id 模板ID
      * @param operator 操作人
+     * @return
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -145,12 +146,19 @@ public class SmsTemplateServiceImpl extends ServiceImpl<MtSmsTemplateMapper, MtS
      * 根据D获取信息
      *
      * @param  id 模板ID
+     * @return
      */
     @Override
     public MtSmsTemplate querySmsTemplateById(Integer id) {
         return mtSmsTemplateMapper.selectById(id);
     }
 
+    /**
+     * 根据参数查询短信模板
+     *
+     * @param params 查询参数
+     * @return
+     * */
     @Override
     public List<MtSmsTemplate> querySmsTemplateByParams(Map<String, Object> params) {
         if (params == null) {

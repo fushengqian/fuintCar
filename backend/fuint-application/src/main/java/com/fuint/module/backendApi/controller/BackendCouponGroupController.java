@@ -326,8 +326,17 @@ public class BackendCouponGroupController extends BaseController {
 
         PaginationRequest paginationRequest = new PaginationRequest();
         paginationRequest.setCurrentPage(Constants.PAGE_NUMBER);
-        paginationRequest.setPageSize(Constants.MAX_ROWS);
-        paginationRequest.setSearchParams(new HashMap<>());
+        paginationRequest.setPageSize(Constants.ALL_ROWS);
+
+        Map<String, Object> param = new HashMap<>();
+        param.put("status", StatusEnum.ENABLED.getKey());
+        if (accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0) {
+            param.put("merchantId", accountInfo.getMerchantId());
+        }
+        if (accountInfo.getStoreId() != null && accountInfo.getStoreId() > 0) {
+            param.put("storeId", accountInfo.getStoreId());
+        }
+        paginationRequest.setSearchParams(param);
         PaginationResponse<MtCouponGroup> paginationResponse = couponGroupService.queryCouponGroupListByPagination(paginationRequest);
 
         List<MtCouponGroup> groupList = paginationResponse.getContent();

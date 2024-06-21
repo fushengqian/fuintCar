@@ -205,7 +205,7 @@ public class BackendAccountController extends BaseController {
     @RequestMapping(value = "/doCreate", method = RequestMethod.POST)
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('system:account:add')")
-    public ResponseObject doCreate(HttpServletRequest request, @RequestBody Map<String, Object> param) {
+    public ResponseObject doCreate(HttpServletRequest request, @RequestBody Map<String, Object> param) throws BusinessCheckException {
         String token = request.getHeader("Access-Token");
         AccountInfo loginAccount = TokenUtil.getAccountInfoByToken(token);
         if (loginAccount == null) {
@@ -222,7 +222,7 @@ public class BackendAccountController extends BaseController {
         String staffId = param.get("staffId") == null ? "0" : param.get("staffId").toString();
 
         AccountInfo accountInfo = tAccountService.getAccountByName(accountName);
-        if (accountInfo != null) {
+        if (accountInfo != null && accountInfo.getAccountStatus() == 1) {
             return getFailureResult(201, "该用户名已存在");
         }
 
@@ -247,9 +247,15 @@ public class BackendAccountController extends BaseController {
         tAccount.setPassword(password);
         tAccount.setIsActive(1);
         tAccount.setLocked(0);
-        tAccount.setStoreId(Integer.parseInt(storeId));
-        tAccount.setMerchantId(Integer.parseInt(merchantId));
-        tAccount.setStaffId(Integer.parseInt(staffId));
+        if (StringUtil.isNotEmpty(storeId)) {
+            tAccount.setStoreId(Integer.parseInt(storeId));
+        }
+        if (StringUtil.isNotEmpty(merchantId)) {
+            tAccount.setMerchantId(Integer.parseInt(merchantId));
+        }
+        if (StringUtil.isNotEmpty(staffId)) {
+            tAccount.setStaffId(Integer.parseInt(staffId));
+        }
 
         tAccountService.createAccountInfo(tAccount, duties);
         return getSuccessResult(true);
@@ -303,7 +309,7 @@ public class BackendAccountController extends BaseController {
         }
 
         AccountInfo accountInfo = tAccountService.getAccountByName(accountName);
-        if (accountInfo != null && accountInfo.getId() != id.intValue()) {
+        if (accountInfo != null && accountInfo.getId() != id.intValue() && accountInfo.getAccountStatus() == 1) {
             return getFailureResult(201, "该用户名已存在");
         }
 
