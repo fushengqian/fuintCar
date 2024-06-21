@@ -35,9 +35,9 @@ public interface SettingService extends IService<MtSetting> {
     /**
      * 获取配置列表
      *
-     * @param merchantId 商户ID
-     * @param type 类型
+     * @param  type 类型
      * @throws BusinessCheckException
+     * @return
      */
     List<MtSetting> getSettingList(Integer merchantId, String type) throws BusinessCheckException;
 

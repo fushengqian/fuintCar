@@ -179,6 +179,16 @@ public class BackendCashierController extends BaseController {
         TAccount accountInfo = accountService.getAccountInfoById(accountDto.getId());
         Integer storeId = accountInfo.getStoreId();
 
+        if (storeId == null || storeId < 1) {
+            MtMerchant mtMerchant = merchantService.queryMerchantById(accountInfo.getMerchantId());
+            if (mtMerchant != null) {
+                MtStore storeInfo = storeService.getDefaultStore(mtMerchant.getNo());
+                if (storeInfo != null) {
+                    storeId = storeInfo.getId();
+                }
+            }
+        }
+
         Map<String, Object> goodsData = goodsService.getStoreGoodsList(storeId, keyword, 0, 1, 100);
         return getSuccessResult(goodsData.get("goodsList"));
     }
@@ -285,13 +295,20 @@ public class BackendCashierController extends BaseController {
             return getFailureResult(201);
         }
 
-        MtUser userInfo;
+        MtUser userInfo = null;
+        // 优先通过手机号、会员号、用户名查询，查不到再进行模糊匹配查找
         if (PhoneFormatCheckUtils.isChinaPhoneLegal(keyword)) {
             userInfo = memberService.queryMemberByMobile(accountInfo.getMerchantId(), keyword);
         } else {
-            userInfo = memberService.queryMemberByName(accountInfo.getMerchantId(), keyword);
+            userInfo = memberService.queryMemberByUserNo(accountInfo.getMerchantId(), keyword);
             if (userInfo == null) {
-                userInfo = memberService.queryMemberByUserNo(accountInfo.getMerchantId(), keyword);
+                userInfo = memberService.queryMemberByName(accountInfo.getMerchantId(), keyword);
+            }
+        }
+        if (userInfo == null) {
+            List<MtUser> userList = memberService.searchMembers(accountInfo.getMerchantId(), keyword);
+            if (userList != null && userList.size() > 0) {
+                userInfo = userList.get(0);
             }
         }
 
@@ -332,7 +349,7 @@ public class BackendCashierController extends BaseController {
     @RequestMapping(value = "/doHangUp", method = RequestMethod.POST)
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('cashier:index')")
-    public ResponseObject doHangUp(HttpServletRequest request, @RequestBody Map<String, Object> param) {
+    public ResponseObject doHangUp(HttpServletRequest request, @RequestBody Map<String, Object> param) throws BusinessCheckException {
         String token = request.getHeader("Access-Token");
         String cartIds = param.get("cartIds") == null ? "" : param.get("cartIds").toString();
         String hangNo = param.get("hangNo") == null ? "" : param.get("hangNo").toString();
@@ -348,17 +365,13 @@ public class BackendCashierController extends BaseController {
             isVisitor = YesOrNoEnum.YES.getKey();
         }
 
-        try {
-            if (StringUtil.isNotEmpty(cartIds)) {
-                String[] ids = cartIds.split(",");
-                if (ids.length > 0) {
-                    for (int i = 0; i < ids.length; i++) {
-                         cartService.setHangNo(Integer.parseInt(ids[i]), hangNo, isVisitor);
-                    }
+        if (StringUtil.isNotEmpty(cartIds)) {
+            String[] ids = cartIds.split(",");
+            if (ids.length > 0) {
+                for (int i = 0; i < ids.length; i++) {
+                     cartService.setHangNo(Integer.parseInt(ids[i]), hangNo, isVisitor);
                 }
             }
-        } catch (BusinessCheckException e) {
-            return getFailureResult(201, "挂单失败");
         }
 
         return getSuccessResult(true);
