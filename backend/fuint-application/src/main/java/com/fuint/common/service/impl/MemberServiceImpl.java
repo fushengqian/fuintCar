@@ -157,16 +157,14 @@ public class MemberServiceImpl extends ServiceImpl<MtUserMapper, MtUser> impleme
                         MtStaff staff = staffService.queryStaffById(account.getStaffId());
                         if (staff != null) {
                             mtUser = queryMemberById(staff.getUserId());
-                            if (mtUser != null) {
-                                if (staff.getStoreId() != null && staff.getStoreId() > 0) {
-                                    mtUser.setStoreId(staff.getStoreId());
-                                }
-                                if (account.getMerchantId() != null && account.getMerchantId() > 0 && !account.getMerchantId().equals(mtUser.getMerchantId())) {
-                                    mtUser.setMerchantId(account.getMerchantId());
-                                }
-                                mtUser.setUpdateTime(new Date());
-                                updateById(mtUser);
+                            if (mtUser != null && (mtUser.getStoreId() == null || mtUser.getStoreId() <= 0)) {
+                                mtUser.setStoreId(staff.getStoreId());
                             }
+                            if (account.getMerchantId() != null && account.getMerchantId() > 0 && !account.getMerchantId().equals(mtUser.getMerchantId())) {
+                                mtUser.setMerchantId(account.getMerchantId());
+                            }
+                            mtUser.setUpdateTime(new Date());
+                            updateById(mtUser);
                         }
                     }
                 }
@@ -186,6 +184,7 @@ public class MemberServiceImpl extends ServiceImpl<MtUserMapper, MtUser> impleme
         Page<MtUser> pageHelper = PageHelper.startPage(paginationRequest.getCurrentPage(), paginationRequest.getPageSize());
         LambdaQueryWrapper<MtUser> wrapper = Wrappers.lambdaQuery();
         wrapper.ne(MtUser::getStatus, StatusEnum.DISABLE.getKey());
+        wrapper.eq(MtUser::getIsStaff, YesOrNoEnum.NO.getKey());
 
         String name = paginationRequest.getSearchParams().get("name") == null ? "" : paginationRequest.getSearchParams().get("name").toString();
         if (StringUtils.isNotBlank(name)) {
@@ -368,6 +367,9 @@ public class MemberServiceImpl extends ServiceImpl<MtUserMapper, MtUser> impleme
             mtUser.setStoreId(mtUser.getStoreId());
         } else {
             mtUser.setStoreId(0);
+        }
+        if (mtUser.getIsStaff() == null) {
+            mtUser.setIsStaff(YesOrNoEnum.NO.getKey());
         }
         // 密码加密
         if (mtUser.getPassword() != null && StringUtil.isNotEmpty(mtUser.getPassword())) {
@@ -674,7 +676,11 @@ public class MemberServiceImpl extends ServiceImpl<MtUserMapper, MtUser> impleme
             mtUser.setUserNo(userNo);
             mtUser.setMobile(mobile);
             mtUser.setAvatar(avatar);
-            mtUser.setName(nickName);
+            if (StringUtil.isNotEmpty(nickName)) {
+                mtUser.setName(nickName);
+            } else {
+                mtUser.setName(userNo);
+            }
             mtUser.setOpenId(openId);
             MtUserGrade grade = userGradeService.getInitUserGrade(merchantId);
             if (grade != null) {

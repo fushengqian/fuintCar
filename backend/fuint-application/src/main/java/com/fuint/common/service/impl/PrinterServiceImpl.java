@@ -3,15 +3,14 @@ package com.fuint.common.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fuint.common.dto.UserOrderDto;
 import com.fuint.common.enums.PrinterSettingEnum;
 import com.fuint.common.enums.SettingTypeEnum;
+import com.fuint.common.enums.YesOrNoEnum;
 import com.fuint.common.service.SettingService;
 import com.fuint.common.util.HashSignUtil;
 import com.fuint.common.util.PrinterUtil;
-import com.fuint.common.vo.printer.AddPrinterRequest;
-import com.fuint.common.vo.printer.AddPrinterRequestItem;
-import com.fuint.common.vo.printer.DelPrinterRequest;
-import com.fuint.common.vo.printer.RestRequest;
+import com.fuint.common.vo.printer.*;
 import com.fuint.framework.annoation.OperationServiceLog;
 import com.fuint.framework.exception.BusinessCheckException;
 import com.fuint.framework.pagination.PaginationRequest;
@@ -21,6 +20,7 @@ import com.fuint.common.service.PrinterService;
 import com.fuint.common.enums.StatusEnum;
 import com.fuint.repository.mapper.MtPrinterMapper;
 import com.fuint.repository.model.MtSetting;
+import com.fuint.repository.model.MtStore;
 import com.fuint.utils.StringUtil;
 import com.github.pagehelper.PageHelper;
 import lombok.AllArgsConstructor;
@@ -141,6 +141,52 @@ public class PrinterServiceImpl extends ServiceImpl<MtPrinterMapper, MtPrinter> 
     }
 
     /**
+     * 打印订单
+     *
+     * @param orderInfo 订单信息
+     * @return
+     * */
+    @Override
+    public Boolean printOrder(UserOrderDto orderInfo) throws BusinessCheckException {
+        PrintRequest printRequest = new PrintRequest();
+        createRequestHeader(0, printRequest);
+        if (orderInfo.getStoreInfo() == null) {
+            return false;
+        }
+
+        // 获取打印机列表
+        Map<String, Object> params = new HashMap<>();
+        params.put("storeId", orderInfo.getStoreInfo().getId());
+        params.put("status", StatusEnum.ENABLED.getKey());
+        params.put("autoPrint", YesOrNoEnum.YES.getKey());
+        List<MtPrinter> printers = queryPrinterListByParams(params);
+        if (printers == null || printers.size() < 1) {
+            return false;
+        }
+
+        MtStore storeInfo = orderInfo.getStoreInfo();
+        for (MtPrinter mtPrinter : printers) {
+            printRequest.setSn(mtPrinter.getSn());
+            StringBuilder printContent = new StringBuilder();
+            printContent.append("<C>下单店铺：").append("<BOLD>"+storeInfo.getName()+"</BOLD>").append("<BR></C>");
+            printContent.append("<BR>");
+            printContent.append("订单号：").append("<BOLD>" + orderInfo.getOrderSn()+ "<BR></BOLD>");
+            printContent.append("订单金额：").append("<BOLD>" + orderInfo.getPayAmount()+ "<BR></BOLD>");
+            // 订单号条形码
+            printContent.append("<BR>");
+            printContent.append("<C><BARCODE>"+ orderInfo.getOrderSn() +"</BARCODE></C>");
+
+            printRequest.setContent(printContent.toString());
+            printRequest.setCopies(1);
+            printRequest.setVoice(2);
+            printRequest.setMode(0);
+            ObjectRestResponse<String> resp = PrinterUtil.print(printRequest);
+        }
+
+        return true;
+    }
+
+    /**
      * 根据ID获打印机取息
      *
      * @param id 打印机ID
@@ -182,7 +228,7 @@ public class PrinterServiceImpl extends ServiceImpl<MtPrinterMapper, MtPrinter> 
     /**
      * 修改打印机数据
      *
-     * @param mtPrinter
+     * @param mtPrinter 打印机参数
      * @throws BusinessCheckException
      * @return
      */
@@ -232,18 +278,16 @@ public class PrinterServiceImpl extends ServiceImpl<MtPrinterMapper, MtPrinter> 
             lambdaQueryWrapper.eq(MtPrinter::getName, name);
         }
         if (StringUtils.isNotBlank(storeId)) {
-            lambdaQueryWrapper.and(wq -> wq
-                    .eq(MtPrinter::getStoreId, 0)
-                    .or()
-                    .eq(MtPrinter::getStoreId, storeId));
+            lambdaQueryWrapper.eq(MtPrinter::getStoreId, storeId);
         }
-
         lambdaQueryWrapper.orderByAsc(MtPrinter::getId);
-        List<MtPrinter> dataList = mtPrinterMapper.selectList(lambdaQueryWrapper);
-        return dataList;
+
+        return mtPrinterMapper.selectList(lambdaQueryWrapper);
     }
 
     /**
+     * 创建接口请求header
+     *
      * @param merchantId 商户ID
      * @param request RestRequest
      * @return
@@ -262,14 +306,9 @@ public class PrinterServiceImpl extends ServiceImpl<MtPrinterMapper, MtPrinter> 
                 }
             }
             if (StringUtil.isNotEmpty(userName) && StringUtil.isNotEmpty(userKey)) {
-                //*必填*：芯烨云平台注册用户名（开发者ID）
                 request.setUser(userName);
-                //*必填*：当前UNIX时间戳
                 request.setTimestamp(System.currentTimeMillis() + "");
-                //*必填*：对参数 user + UserKEY + timestamp 拼接后（+号表示连接符）进行SHA1加密得到签名，值为40位小写字符串，其中 UserKEY 为用户开发者密钥
                 request.setSign(HashSignUtil.sign(request.getUser() + userKey + request.getTimestamp()));
-
-                //debug=1返回非json格式的数据，仅测试时候使用
                 request.setDebug("0");
             }
         }
