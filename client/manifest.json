@@ -109,7 +109,7 @@
         "title" : "fuint汽车会员系统",
         "domain" : "www.fuint.cn",
         "router" : {
-            "base" : "/h5/",
+            "base" : "/car/",
             "mode" : "hash"
         }
     },

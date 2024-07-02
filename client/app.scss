@@ -5,6 +5,10 @@ page {
   background: #fafafa;
 }
 
+uni-modal {
+  z-index: 99999999999999 !important;
+}
+
 @-webkit-keyframes rotate {
   0% {
     transform: rotate(0deg) scale(1);
