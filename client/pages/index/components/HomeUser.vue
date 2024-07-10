@@ -52,8 +52,8 @@
 .com-user {
 	width: 100%;
 	height: auto;
-    padding: 0 20rpx 20rpx;
-    margin-top: -80rpx;
+    padding: 0rpx 10rpx 10rpx 10rpx;
+    margin-top: 20rpx;
     position: relative;
     z-index: 2;
     .user-main{

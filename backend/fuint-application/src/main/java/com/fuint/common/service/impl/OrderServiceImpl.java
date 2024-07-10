@@ -1271,6 +1271,10 @@ public class OrderServiceImpl extends ServiceImpl<MtOrderMapper, MtOrder> implem
             mtOrder.setPayTime(orderDto.getPayTime());
         }
 
+        if (null != orderDto.getPayType()) {
+            mtOrder.setPayType(orderDto.getPayType());
+        }
+
         if (null != orderDto.getPayStatus()) {
             mtOrder.setPayStatus(orderDto.getPayStatus());
         }
@@ -1404,7 +1408,8 @@ public class OrderServiceImpl extends ServiceImpl<MtOrderMapper, MtOrder> implem
             try {
                 if (orderInfo.getIsVisitor().equals(YesOrNoEnum.NO.getKey())) {
                     Map<String, Object> param = new HashMap<>();
-                    param.put("status", StatusEnum.ENABLED.getKey());
+                    param.put("MERCHANT_ID", mtOrder.getMerchantId());
+                    param.put("STATUS", StatusEnum.ENABLED.getKey());
                     MtUser mtUser = memberService.queryMemberById(orderInfo.getUserId());
                     MtUserGrade mtUserGrade = mtUserGradeMapper.selectById(mtUser.getGradeId());
                     if (mtUserGrade == null) {
