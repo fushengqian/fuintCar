@@ -11,26 +11,26 @@
         <view class="order-item" v-for="(item, index) in list.content" :key="index">
           <view class="item-top" @click="handleTargetDetail(item.id)">
             <view class="item-top-left">
-              <text class="order-type">单号：{{ item.orderSn }}</text>
+              <text class="order-sn">服务单号：<text class="sn">{{ item.orderSn }}</text></text>
             </view>
             <view class="item-top-right">
               <text :class="item.status">{{ item.statusText }}</text>
             </view>
           </view>
-          <!-- 备注信息 -->
-          <view v-if="item.remark" class="remark" @click="handleTargetDetail(item.id)">
-              <text>备注：</text>
-              <text>{{ item.remark ? item.remark : '--'}}</text>
-          </view>
           <!-- 服务单号 -->
           <view class="order-total" @click="handleTargetDetail(item.id)">
-            <text>车牌号：</text>
-            <text class="money">琼A770V2</text>
+            <text>车牌号码：</text>
+            <text class="money">{{ item.vehiclePlateNo }}</text>
+          </view>
+          <!-- 备注信息 -->
+          <view v-if="item.remark" class="remark" @click="handleTargetDetail(item.id)">
+              <text>备注信息：</text>
+              <text>{{ item.remark ? item.remark : '--'}}</text>
           </view>
           <!-- 订单操作 -->
           <view class="order-handle">
             <view class="order-time">
-                <text class="time">{{ item.createTime }}</text>
+                <text class="time">{{ item.createTime | timeFormat('yyyy-mm-dd hh:MM') }}</text>
             </view>
             <view class="btn-group">
                 <view class="btn-item" @click="handleTargetDetail(item.id)">详情</view>
@@ -203,7 +203,7 @@
   // 项目内容
   .order-item {
     margin: 10rpx auto 10rpx auto;
-    padding: 20rpx 20rpx;
+    padding: 30rpx 30rpx;
     width: 94%;
     border: 3rpx solid #e8e8e8;
     box-shadow: 5rpx 5rpx 5rpx 5rpx rgba(0.05, 0.05, 0.05, 0.05);
@@ -224,8 +224,7 @@
     font-size: 26rpx;
     margin-bottom: 40rpx;
 
-    .order-type {
-      font-weight: bold;
+    .order-sn {
       margin-left: 20rpx;
     }
 
@@ -331,12 +330,14 @@
     .order-time {
         color: #777;
         float: left;
+        margin-top: 20rpx;
         margin-left: 20rpx;
+        font-size: 24rpx;
     }
     .btn-group {
       .btn-item {
-        border-radius: 10rpx;
-        padding: 8rpx 24rpx;
+        border-radius: 40rpx;
+        padding: 5rpx 24rpx;
         font-size: 28rpx;
         float: right;
         color: #ffffff;

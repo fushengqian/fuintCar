@@ -63,7 +63,7 @@
       <view class="info-item">
         <view class="item-lable">下单时间</view>
         <view class="item-content">
-          <text>{{order.createTime}}</text>
+          <text>{{ order.createTime | timeFormat('yyyy-mm-dd hh:MM') }}</text>
         </view>
       </view>
       <view class="info-item">
