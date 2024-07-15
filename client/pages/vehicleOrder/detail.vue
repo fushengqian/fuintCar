@@ -152,6 +152,12 @@
             app.isLoading = false
           })
       },
+      
+      // 确认服务
+      onReceipt(orderId) {
+          const app = this
+          app.$toast('服务已确认');
+      },
 
       // 复制指定内容
       handleCopy(value) {
