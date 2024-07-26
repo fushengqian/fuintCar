@@ -421,20 +421,28 @@ public class RefundServiceImpl extends ServiceImpl<MtRefundMapper, MtRefund> imp
         if (orderInfo.getPayType().equals(PayTypeEnum.BALANCE.getKey())) {
             List<MtBalance> balanceList = balanceService.getBalanceListByOrderSn(orderInfo.getOrderSn());
             if (balanceList.size() > 0) {
-               for (MtBalance mtBalance : balanceList) {
-                   if (mtBalance.getAmount().compareTo(new BigDecimal("0")) < 0) {
-                       MtBalance balanceReq = new MtBalance();
-                       balanceReq.setUserId(orderInfo.getUserId());
-                       balanceReq.setMerchantId(orderInfo.getMerchantId());
-                       balanceReq.setOrderSn(orderInfo.getOrderSn());
-                       balanceReq.setMobile(orderInfo.getUserInfo().getMobile());
-                       balanceReq.setAmount(mtBalance.getAmount().negate());
-                       balanceReq.setStatus(StatusEnum.ENABLED.getKey());
-                       balanceReq.setCreateTime(new Date());
-                       balanceReq.setUpdateTime(new Date());
-                       balanceService.addBalance(balanceReq, true);
-                   }
-               }
+                BigDecimal refundAmount = new BigDecimal("0");
+                for (MtBalance mtBalance : balanceList) {
+                    if (mtBalance.getAmount().compareTo(new BigDecimal("0")) < 0) {
+                        refundAmount = refundAmount.add(mtBalance.getAmount());
+                    }
+                }
+                MtBalance balanceReq = new MtBalance();
+                balanceReq.setUserId(orderInfo.getUserId());
+                balanceReq.setMerchantId(orderInfo.getMerchantId());
+                balanceReq.setOrderSn(orderInfo.getOrderSn());
+                balanceReq.setMobile(orderInfo.getUserInfo().getMobile());
+
+                if (mtRefund.getAmount() != null && mtRefund.getAmount().compareTo(new BigDecimal("0")) > 0) {
+                    balanceReq.setAmount(mtRefund.getAmount());
+                } else {
+                    balanceReq.setAmount(refundAmount.negate());
+                }
+
+                balanceReq.setStatus(StatusEnum.ENABLED.getKey());
+                balanceReq.setCreateTime(new Date());
+                balanceReq.setUpdateTime(new Date());
+                balanceService.addBalance(balanceReq, true);
             }
         }
 
