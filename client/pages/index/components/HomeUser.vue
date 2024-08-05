@@ -1,5 +1,5 @@
 <template>
-	<view class="com-user">
+    <view class="com-user">
         <view class="user-main">
             <image class="avatar" :src="userInfo.avatar ? userInfo.avatar : '/static/default-avatar.png'"></image>
             <view class="uc">
@@ -22,20 +22,20 @@
 <script>
     export default {
         props: {
-        	userInfo: {
-        		type: Object,
-        		default: { id: '', avatar: '', name: '', balance: '', point: '' }
-        	},
+            userInfo: {
+                type: Object,
+                default: { id: '', avatar: '', name: '', balance: '', point: '' }
+            },
             vehicle: {
-            	type: Object,
-            	default: {}
+                type: Object,
+                default: {}
             }
         },
         methods: {
             // 去登录
-			goLogin() {
-				this.$navTo('pages/login/index')
-			},
+            goLogin() {
+                this.$navTo('pages/login/index')
+            },
             // 跳转会员码
             goMemberCode(userId) {
                 this.$navTo('pages/user/code', { userId: this.userInfo.id })
@@ -44,14 +44,14 @@
             toVehicle() {
                this.$navTo('pages/vehicle/index');
             }
-		}
+        }
     }
 </script>
 
 <style lang="scss" scoped>
 .com-user {
-	width: 100%;
-	height: auto;
+    width: 100%;
+    height: auto;
     padding: 0rpx 10rpx 10rpx 10rpx;
     margin-top: 20rpx;
     position: relative;

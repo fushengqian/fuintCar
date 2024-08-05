@@ -95,7 +95,7 @@ export const getTabBarLinks = () => {
  */
 export const getShareUrlParams = (params) => {
   return util.urlEncode({
-    refereeId: store.getters.userId, // 推荐人ID
+    spm: store.getters.userId, // 推荐人ID
     ...params
   })
 }
@@ -201,7 +201,13 @@ export const wxPayment = (option) => {
   // 微信内浏览器支付
   if (isWechat()) {
       return new Promise((resolve, reject) => {
-         wxH5Payment(options);
+         wxH5Payment(options, 
+         function(res) {
+            resolve(res);
+         },
+         function(err) {
+            reject(err);
+         });
       })
   }
   
@@ -294,9 +300,9 @@ export const isWechat = () => {
     }
 }
 
-export const wxH5Payment = (data ,callback_succ_func ,callback_error_func) => {  
+export const wxH5Payment = (data, callback_succ_func, callback_error_func) => {  
     if (!isWechat()) {  
-        return;  
+        return false;  
     }  
     if (typeof WeixinJSBridge == "undefined") {  
         if (document.addEventListener) {  

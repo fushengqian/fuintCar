@@ -353,6 +353,12 @@
       }
     },
     {
+      "path": "pages/share/index",
+      "style": {
+        "navigationBarTitleText": "邀请有礼"
+      }
+    },
+    {
       "path": "pages/vehicle/index",
       "style": {
         "navigationBarTitleText": "我的车辆"

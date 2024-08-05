@@ -1,6 +1,6 @@
 <template>
-	<view class="navigation">
-		<view class="nav">
+    <view class="navigation">
+        <view class="nav">
             <view class="nav-rows">
                 <view class="item">
                     <image class="icon" src="/static/nav/pay.png" @click.stop="goUrl('pages/pay/index')"></image>
@@ -29,31 +29,31 @@
                     <view class="title">领取卡券</view>
                 </view>
             </view>
-		</view>
-	</view>
+        </view>
+    </view>
 </template>
 
 <script>
 export default {
-	methods: {
-		goUrl(url) {
-			this.$navTo(url);
-		}
-	}
+    methods: {
+        goUrl(url) {
+            this.$navTo(url);
+        }
+    }
 }
 </script>
 
 <style lang="scss" scoped>
 .nav {
     margin-top: 10rpx;
-	border-radius: 10rpx;
-	background-color: #ffffff;
-	box-shadow: #666;
-	padding: 20rpx 0;
+    border-radius: 10rpx;
+    background-color: #ffffff;
+    box-shadow: #666;
+    padding: 20rpx 0;
     border: solid 1rpx #ccc;
     margin: 0 10rpx 10rpx 10rpx;
-	align-items: center;
-	justify-content: center;
+    align-items: center;
+    justify-content: center;
     height: 365rpx;
     .nav-rows {
         height: 120rpx;
