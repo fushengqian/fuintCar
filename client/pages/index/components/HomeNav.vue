@@ -21,7 +21,7 @@
                     <view class="title">新手福利</view>
                 </view>
                 <view class="item">
-                    <image class="icon" src="/static/nav/service.png" @click.stop="goUrl('pages/index/index')"></image>
+                    <image class="icon" src="/static/nav/service.png" @click.stop="goUrl('pages/book/index')"></image>
                     <view class="title">预约服务</view>
                 </view>
                 <view class="item">
