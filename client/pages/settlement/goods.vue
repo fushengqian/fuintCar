@@ -453,17 +453,19 @@
               orderMode = "express";
           }
           
-          app.showPayPopup = true
+          app.showPayPopup = true;
       },
 
       // 订单提交
       doSubmitOrder(payType) {
         const app = this;
         if (app.disabled) {
+            app.$toast('请勿重复提交订单');
             return false;
         }
         
         if (app.totalPrice < 0 || app.goodsCart.length < 1) {
+            app.$toast('提交订单商品有误');
             app.disabled = true;
             return false;
         }
@@ -509,8 +511,8 @@
             } else {
                 app.$error('订单提交失败');
             }
-            app.disabled = false
-            return false
+            app.disabled = false;
+            return false;
         }
         
         // 发起微信支付
@@ -518,14 +520,11 @@
             // #ifdef H5
             app.orderId = result.data.orderInfo.id;
             // #endif
-            wxPayment(result.data.payment)
-            .then(() => {
+            wxPayment(result.data.payment).then(() => {
                 app.$success('支付成功');
-            })
-            .catch(err => {
+            }).catch(err => {
                 app.$error('支付失败');
-            })
-            .finally(() => {
+            }).finally(() => {
                 app.disabled = false;
                 app.navToOrderResult(result.data.orderInfo.id, '');
             })
@@ -540,7 +539,10 @@
 
       // 跳转到订单结果页
       navToOrderResult(orderId, message) {
-         this.$navTo('pages/order/result?orderId='+orderId+'&message=' + message);
+          if (!message || message == undefined) {
+              message = "";
+          }
+          this.$navTo('pages/order/result?orderId='+orderId+'&message=' + message);
       }
     }
   }

@@ -89,6 +89,7 @@ public class WebConfig extends WebMvcConfigurationSupport {
                 .excludePathPatterns("/clientApi/message/wxPush")
                 .excludePathPatterns("/clientApi/sms/sendVerifyCode")
                 .excludePathPatterns("/clientApi/book/list")
+                .excludePathPatterns("/clientApi/book/detail")
                 .excludePathPatterns("/clientApi/book/cateList");
     }
 
