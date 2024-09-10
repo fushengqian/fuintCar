@@ -105,11 +105,21 @@
                         time: app.bookData.time };
         BookApi.submit(param)
            .then(result => {
-                app.$toast('提交预约成功，请等待确认！')
-                setTimeout(() => {
-                  app.disabled = false;
-                  uni.navigateBack();
-                }, 3000)
+                if (result.code == '200') {
+                    app.$toast('提交预约成功，请等待确认！')
+                    setTimeout(() => {
+                      app.disabled = false;
+                      uni.navigateBack();
+                    }, 3000)
+                } else {
+                    if (result.message) {
+                        app.$error(result.message);
+                    } else {
+                        app.$error('预约提交失败');
+                    }
+                    app.disabled = false;
+                    return false;
+                }
             }).catch(err => app.disabled = false)
       }
     }
@@ -147,11 +157,16 @@
   .row-textarea {
     margin: 20rpx auto;
     border-radius: 20rpx;
+    border: solid 1rpx #f5f5f5;
+    height: 100%;
+    display: block;
+    padding: 10rpx 10rpx 80rpx 10rpx;
     .textarea {
-      height: 220rpx;
+      min-height: 260rpx;
+      width: 100%;
       padding: 12rpx;
-      border: 1rpx solid #e8e8e8;
-      border-radius: 5rpx;
+      border: 1rpx solid #ccc;
+      border-radius: 12rpx;
       box-sizing: border-box;
       font-size: 26rpx;
       margin: 0 auto;
@@ -162,12 +177,14 @@
   .row-input {
     padding: 24rpx 20rpx;
     border-radius: 20rpx;
+    border: solid 1rpx #f5f5f5;
     .row-title {
       margin-bottom: 0;
       margin-right: 20rpx;
     }
     .value {
         color: #333;
+        padding-top: 10rpx;
     }
   }
 

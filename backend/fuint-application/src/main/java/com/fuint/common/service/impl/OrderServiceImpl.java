@@ -399,17 +399,18 @@ public class OrderServiceImpl extends ServiceImpl<MtOrderMapper, MtOrder> implem
         List<MtCart> cartList = new ArrayList<>();
         Map<String, Object> cartData = new HashMap<>();
         if (orderDto.getType().equals(OrderTypeEnum.GOOGS.getKey())) {
-            Map<String, Object> param = new HashMap<>();
-            param.put("status", StatusEnum.ENABLED.getKey());
             if (StringUtil.isNotEmpty(orderDto.getCartIds())) {
+                Map<String, Object> param = new HashMap<>();
+                param.put("status", StatusEnum.ENABLED.getKey());
                 param.put("ids", orderDto.getCartIds());
-            }
-            if (orderDto.getGoodsId() < 1) {
                 cartList = cartService.queryCartListByParams(param);
                 if (cartList.size() < 1) {
                     throw new BusinessCheckException("生成订单失败，请稍后重试");
                 }
             } else {
+                if (orderDto.getGoodsId() == null || orderDto.getGoodsId() <= 0) {
+                    throw new BusinessCheckException("生成订单失败，请稍后重试");
+                }
                 // 直接购买
                 MtCart mtCart = new MtCart();
                 mtCart.setGoodsId(orderDto.getGoodsId());
@@ -663,6 +664,11 @@ public class OrderServiceImpl extends ServiceImpl<MtOrderMapper, MtOrder> implem
         if (accountInfo != null) {
             operator = accountInfo.getAccountName();
             staffId = accountInfo.getStaffId() == null ? 0 : accountInfo.getStaffId();
+
+            if (param.getStaffId() != null && param.getStaffId() > 0) {
+                staffId = param.getStaffId();
+            }
+
             storeId = accountInfo.getStoreId();
             merchantId = accountInfo.getMerchantId();
             if (storeId <= 0) {
@@ -1593,6 +1599,12 @@ public class OrderServiceImpl extends ServiceImpl<MtOrderMapper, MtOrder> implem
         // 订单所属店铺
         MtStore storeInfo = storeService.queryStoreById(orderInfo.getStoreId());
         userOrderDto.setStoreInfo(storeInfo);
+
+        // 所属员工
+        if (orderInfo.getStaffId() != null && orderInfo.getStaffId() > 0) {
+            MtStaff staffInfo = staffService.queryStaffById(orderInfo.getStaffId());
+            userOrderDto.setStaffInfo(staffInfo);
+        }
 
         // 下单用户信息直接取会员个人信息
         OrderUserDto userInfo = new OrderUserDto();
