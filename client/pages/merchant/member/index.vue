@@ -154,8 +154,6 @@
   }
   .tabs-wrapper {
     position: sticky;
-    top: var(--window-top);
-
     display: flex;
     width: 100%;
     height: 88rpx;

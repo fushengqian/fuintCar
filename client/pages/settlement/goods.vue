@@ -453,7 +453,11 @@
               orderMode = "express";
           }
           
-          app.showPayPopup = true;
+          if (!app.payPrice) {
+              app.doSubmitOrder(PayTypeEnum.BALANCE.value)
+          } else {
+              app.showPayPopup = true;
+          }
       },
 
       // 订单提交
