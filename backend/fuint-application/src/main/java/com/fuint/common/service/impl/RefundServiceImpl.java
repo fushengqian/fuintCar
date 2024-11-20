@@ -218,7 +218,9 @@ public class RefundServiceImpl extends ServiceImpl<MtRefundMapper, MtRefund> imp
                  if (mtRefund.getStatus().equals(RefundStatusEnum.CANCEL.getKey())) {
                      refundDto.setStatusText(RefundStatusEnum.CANCEL.getValue());
                  }
-
+                 if (mtRefund.getStatus().equals(RefundStatusEnum.COMPLETE.getKey())) {
+                    refundDto.setStatusText(RefundStatusEnum.COMPLETE.getValue());
+                 }
                  dataList.add(refundDto);
             }
         }
@@ -304,7 +306,15 @@ public class RefundServiceImpl extends ServiceImpl<MtRefundMapper, MtRefund> imp
                 refundDto.setImageList(images);
             }
             refundDto.setOrderInfo(orderDto);
+
+            // 退货地址
             AddressDto address = new AddressDto();
+            if (orderDto.getStoreInfo() != null) {
+                address.setMobile(orderDto.getStoreInfo().getPhone());
+                address.setName(orderDto.getStoreInfo().getContact());
+                address.setDetail(orderDto.getStoreInfo().getAddress());
+            }
+
             refundDto.setAddress(address);
             return refundDto;
         }
@@ -338,7 +348,6 @@ public class RefundServiceImpl extends ServiceImpl<MtRefundMapper, MtRefund> imp
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    @OperationServiceLog(description = "更新售后订单")
     public MtRefund updateRefund(RefundDto refundDto) throws BusinessCheckException {
         MtRefund mtRefund = mtRefundMapper.selectById(refundDto.getId());
         if (mtRefund == null) {
@@ -346,8 +355,8 @@ public class RefundServiceImpl extends ServiceImpl<MtRefundMapper, MtRefund> imp
         }
 
         // 已同意的不能再设置为已拒绝
-        if (mtRefund.getStatus().equals(RefundStatusEnum.APPROVED.getKey()) && refundDto.getStatus().equals(RefundStatusEnum.REJECT.getKey())) {
-            throw new BusinessCheckException("该售后订单已同意，不能再改成已拒绝");
+        if ((refundDto.getStatus() != null) && (!refundDto.getStatus().equals(RefundStatusEnum.COMPLETE.getKey())) && (mtRefund.getStatus().equals(RefundStatusEnum.COMPLETE.getKey()))) {
+            throw new BusinessCheckException("该售后订单已完成，不能再改成其他状态");
         }
 
         mtRefund.setId(refundDto.getId());
@@ -358,6 +367,12 @@ public class RefundServiceImpl extends ServiceImpl<MtRefundMapper, MtRefund> imp
         }
         if (null != refundDto.getStatus()) {
             mtRefund.setStatus(refundDto.getStatus());
+        }
+        if (null != refundDto.getExpressName()) {
+            mtRefund.setExpressName(refundDto.getExpressName());
+        }
+        if (null != refundDto.getExpressNo()) {
+            mtRefund.setExpressNo(refundDto.getExpressNo());
         }
         if (null != refundDto.getRemark()) {
             mtRefund.setRemark(refundDto.getRemark());
@@ -384,7 +399,7 @@ public class RefundServiceImpl extends ServiceImpl<MtRefundMapper, MtRefund> imp
         }
 
         // 已经同意过了
-        if (refund.getStatus().equals(RefundStatusEnum.APPROVED.getKey())) {
+        if (refund.getStatus().equals(RefundStatusEnum.COMPLETE.getKey())) {
             if (StringUtil.isNotEmpty(refundDto.getRemark())) {
                 refund.setRemark(refundDto.getRemark());
             }
@@ -586,7 +601,7 @@ public class RefundServiceImpl extends ServiceImpl<MtRefundMapper, MtRefund> imp
             RefundDto agreeDto = new RefundDto();
             agreeDto.setId(mtRefund.getId());
             agreeDto.setOperator(accountInfo.getAccountName());
-            agreeDto.setStatus(RefundStatusEnum.APPROVED.getKey());
+            agreeDto.setStatus(RefundStatusEnum.COMPLETE.getKey());
             MtRefund refundInfo = agreeRefund(agreeDto);
             if (refundInfo == null) {
                 logger.error("退款审核失败，orderId = " + orderId + ", refundId = " + mtRefund.getId());
