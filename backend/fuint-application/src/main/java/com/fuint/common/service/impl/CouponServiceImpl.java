@@ -724,8 +724,12 @@ public class CouponServiceImpl extends ServiceImpl<MtCouponMapper, MtCoupon> imp
                         totalMoney = totalMoney.add((coupon.getAmount().multiply(new BigDecimal(num).multiply(new BigDecimal(coupon.getSendNum())))));
                     }
                     Map<String, String> params = new HashMap<>();
-                    params.put("totalNum", totalNum + "");
-                    params.put("totalMoney", totalMoney + "");
+                    params.put("totalNum", num.toString());
+                    if (couponInfo.getAmount() != null) {
+                        params.put("totalMoney", couponInfo.getAmount().toString());
+                    } else {
+                        params.put("totalMoney",  "0");
+                    }
                     sendSmsService.sendSms(couponInfo.getMerchantId(), "received-coupon", mobileList, params);
                 }
                 // 发送小程序订阅消息
@@ -894,7 +898,7 @@ public class CouponServiceImpl extends ServiceImpl<MtCouponMapper, MtCoupon> imp
             }
             String[] gradeIds = couponInfo.getGradeIds().split(",");
             if (gradeIds.length > 0 && !Arrays.asList(gradeIds).contains(mtUser.getGradeId())) {
-                throw new BusinessCheckException("该卡券不适用该会员等级");
+                throw new BusinessCheckException("该卡券不适用于该会员等级");
             }
         }
 

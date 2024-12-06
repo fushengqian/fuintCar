@@ -12,6 +12,7 @@ import com.fuint.repository.mapper.MtUserCouponMapper;
 import com.fuint.repository.model.MtCoupon;
 import com.fuint.repository.model.MtUser;
 import com.fuint.repository.model.MtUserCoupon;
+import com.fuint.utils.StringUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -113,9 +114,9 @@ public class CouponExpireJob {
                             userInfo = memberService.queryMemberById(mtUserCoupon.getUserId());
                         }
 
-                        if (couponInfo != null && userInfo != null) {
+                        if (couponInfo != null && userInfo != null && StringUtil.isNotEmpty(userInfo.getOpenId())) {
                             mtUserCoupon.getUpdateTime();
-                            Integer days = DateUtil.daysBetween(DateUtil.formatDate(mtUserCoupon.getUpdateTime(), "yyyy-MM-dd HH:mm:ss"), endTime);
+                            Integer days = DateUtil.daysBetween(DateUtil.formatDate(mtUserCoupon.getUpdateTime(), "yyyy-MM-dd HH:mm:ss"), startTime);
                             if (days > 1) {
                                 Date now = new Date();
                                 Date sendTime = new Date(now.getTime());
