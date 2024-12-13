@@ -171,7 +171,7 @@
     onShareAppMessage() {
       const app = this
       return {
-         title: "fuint会员系统",
+         title: "分享给你",
          path: "/pages/index/index?" + app.$getShareUrlParams()
       }
     },

@@ -488,7 +488,7 @@
         margin-right: 20rpx;
         // 禁用按钮
         &.disabled {
-          background: #6cb0b0;
+          background: #cccccc;
         }
       }
 
