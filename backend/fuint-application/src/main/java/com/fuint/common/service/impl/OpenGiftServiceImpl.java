@@ -133,6 +133,10 @@ public class OpenGiftServiceImpl extends ServiceImpl<MtOpenGiftMapper, MtOpenGif
         mtOpenGift.setUpdateTime(new Date());
         mtOpenGift.setCreateTime(new Date());
 
+        if (mtOpenGift.getMerchantId() == null || mtOpenGift.getMerchantId() < 1) {
+            throw new BusinessCheckException("平台方帐号无法执行该操作，请使用商户帐号操作");
+        }
+
         if (mtOpenGift.getCouponNum() != null && mtOpenGift.getCouponNum() > 100) {
             throw new BusinessCheckException("开卡赠礼卡券数量不能大于100");
         }
