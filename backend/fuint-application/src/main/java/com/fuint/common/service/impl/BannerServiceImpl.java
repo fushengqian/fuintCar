@@ -205,9 +205,6 @@ public class BannerServiceImpl extends ServiceImpl<MtBannerMapper, MtBanner> imp
         if (bannerDto.getSort() != null) {
             mtBanner.setSort(bannerDto.getSort());
         }
-        if (mtBanner.getMerchantId() == null || mtBanner.getMerchantId() < 1) {
-            throw new BusinessCheckException("平台方帐号无法执行该操作，请使用商户帐号操作");
-        }
         mtBanner.setUpdateTime(new Date());
         mtBannerMapper.updateById(mtBanner);
         return mtBanner;

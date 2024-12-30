@@ -13,8 +13,8 @@ import java.util.List;
  */
 public interface TAccountDutyMapper extends BaseMapper<TAccountDuty> {
 
-   List<Long> getDutyIdsByAccountId(long accountId);
+   List<Integer> getDutyIdsByAccountId(Integer accountId);
 
-   void deleteDutiesByAccountId(long accountId);
+   void deleteDutiesByAccountId(Integer accountId);
 
 }

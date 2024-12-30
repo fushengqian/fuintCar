@@ -581,8 +581,7 @@ public class GoodsServiceImpl extends ServiceImpl<MtGoodsMapper, MtGoods> implem
      * */
     @Override
     public MtGoodsSpec getSpecDetail(Integer specId) {
-        MtGoodsSpec mtGoodsSpec = mtGoodsSpecMapper.selectById(specId);
-        return mtGoodsSpec;
+        return mtGoodsSpecMapper.selectById(specId);
     }
 
     /**
