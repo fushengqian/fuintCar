@@ -191,10 +191,6 @@ public class BackendUserGradeController extends BaseController {
             return getFailureResult(1001, "请先登录");
         }
 
-        if (accountInfo.getMerchantId() == null || accountInfo.getMerchantId() <= 0) {
-            return getFailureResult(201, "平台方帐号无法执行该操作，请使用商户帐号操作");
-        }
-
         String grade = param.get("grade") == null ? "0" : param.get("grade").toString();
         String name = CommonUtil.replaceXSS(param.get("name").toString());
         String catchType = CommonUtil.replaceXSS(param.get("catchType").toString());
@@ -228,7 +224,7 @@ public class BackendUserGradeController extends BaseController {
 
         mtUserGrade.setGrade(Integer.parseInt(grade));
         mtUserGrade.setName(name);
-        if (mtUserGrade.getMerchantId() == null) {
+        if (accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0) {
             mtUserGrade.setMerchantId(accountInfo.getMerchantId());
         }
         if (StringUtil.isNotEmpty(catchType)) {

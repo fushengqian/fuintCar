@@ -77,7 +77,7 @@ public interface SourceService extends IService<TSource> {
     List<TreeSelect> buildMenuTreeSelect(List<TreeNode> menus);
 
     /**
-     * 添加菜单
+     * 新增后台菜单
      *
      * @param tSource
      * @param accountId
@@ -86,7 +86,7 @@ public interface SourceService extends IService<TSource> {
     void addSource(TSource tSource, Integer accountId);
 
     /**
-     * 修改菜单
+     * 修改后台菜单
      *
      * @param source
      * */
