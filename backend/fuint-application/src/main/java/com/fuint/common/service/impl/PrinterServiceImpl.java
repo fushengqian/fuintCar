@@ -158,9 +158,11 @@ public class PrinterServiceImpl extends ServiceImpl<MtPrinterMapper, MtPrinter> 
      * */
     @Override
     public Boolean printOrder(UserOrderDto orderInfo, boolean autoPrint) throws Exception {
+        logger.info("云打印订单信息，订单编号：{}，所属店铺：{}", orderInfo.getOrderSn(), orderInfo.getStoreInfo().getName());
         PrintRequest printRequest = new PrintRequest();
         createRequestHeader(orderInfo.getMerchantId(), printRequest);
         if (orderInfo.getStoreInfo() == null) {
+            logger.error("云打印订单失败：订单所属店铺信息为空");
             throw new BusinessCheckException("打印失败：订单所属店铺信息为空！");
         }
 
@@ -173,6 +175,7 @@ public class PrinterServiceImpl extends ServiceImpl<MtPrinterMapper, MtPrinter> 
         }
         List<MtPrinter> printers = queryPrinterListByParams(params);
         if (printers == null || printers.size() < 1) {
+            logger.error("云打印订单失败：该店铺还没有添加云打印机！");
             throw new BusinessCheckException("打印失败：该店铺还没有添加云打印机！");
         }
 
@@ -243,6 +246,7 @@ public class PrinterServiceImpl extends ServiceImpl<MtPrinterMapper, MtPrinter> 
             printRequest.setMode(0);
             ObjectRestResponse<String> result = PrinterUtil.print(printRequest);
             if (result != null && result.getCode() != 0) {
+                logger.error("云打印订单失败：" + result.getMsg());
                 throw new BusinessCheckException("打印失败：" + result.getMsg());
             }
         }

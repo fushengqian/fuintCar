@@ -175,8 +175,12 @@ public class BackendStaffController extends BaseController {
         if (mtStaff == null && StringUtil.isNotEmpty(id)) {
             return getFailureResult(201, "员工信息不存在");
         }
-        mtStaff.setMerchantId(accountInfo.getMerchantId());
-        mtStaff.setStoreId(Integer.parseInt(storeId));
+        if (accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0) {
+            mtStaff.setMerchantId(accountInfo.getMerchantId());
+        }
+        if (StringUtil.isNotEmpty(storeId)) {
+            mtStaff.setStoreId(Integer.parseInt(storeId));
+        }
         mtStaff.setRealName(realName);
         if (PhoneFormatCheckUtils.isChinaPhoneLegal(mobile)) {
             mtStaff.setMobile(mobile);
