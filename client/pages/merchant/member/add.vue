@@ -10,25 +10,13 @@
       <view class="info-item">
         <view class="contacts">
           <text class="name">称呼</text>
-          <input class="weui-input value" type="nickname" @blur="getnickname" v-model="nickname" placeholder="请输入称呼"/>
+          <input class="weui-input value" type="nickname" v-model="nickname" placeholder="请输入称呼"/>
         </view>
       </view>
       <view class="info-item">
         <view class="contacts">
           <text class="name">手机</text>
-          <button class="button btn-normal value" open-type="getPhoneNumber" @click="changeMobile" @getphonenumber="getPhoneNumber">
-              <text v-if="userInfo.mobile">{{ userInfo.mobile }}</text>
-              <text style="color: #f9211c;margin-left: 2px;">更换</text>
-          </button>
-        </view>
-      </view>
-      <view class="info-item">
-        <view class="contacts">
-          <text class="name">密码</text>
-          <button class="button btn-normal value" @click="changePassword">
-              <text class="password">********</text>
-              <text style="color: #f9211c;margin-left: 2px;">修改</text>
-          </button>
+          <input class="weui-input value" type="text" v-model="mobile" placeholder="请输入手机号"/>
         </view>
       </view>
       <view class="info-item">
@@ -36,8 +24,8 @@
           <text class="name">性别</text>
           <view class="value">
              <radio-group @change="genderChange">
-                <label class="radio"><radio value="1" color="#409EFF" :checked="userInfo.sex == '1' ? true : false"/>男</label>
-                <label class="radio second"><radio value="0" color="#409EFF" :checked="userInfo.sex == '0' ? true: false"/>女</label>
+                <label class="radio"><radio value="1" color="#00acac" :checked="userInfo.sex == '1' ? true : false"/>男</label>
+                <label class="radio second"><radio value="0" color="#00acac" :checked="userInfo.sex == '0' ? true: false"/>女</label>
              </radio-group>
           </view>
         </view>
@@ -52,19 +40,16 @@
       </view>
     </view>
     <!-- 底部操作按钮 -->
-    <view class="footer-fixed" v-if="userInfo.id">
+    <view class="footer-fixed">
       <view class="btn-wrapper">
-        <view class="btn-item btn-item-main" @click="save()">保存信息</view>
-      </view>
-      <view class="btn-wrapper">
-        <view class="btn-item btn-item-out" @click="logout()">退出登录</view>
+        <view class="btn-item btn-item-main" @click="save()">保存会员</view>
       </view>
     </view>
   </view>
 </template>
 
 <script>
-  import * as UserApi from '@/api/user'
+  import * as MemberApi from '@/api/merchant/member'
   import * as UploadApi from '@/api/upload'
   import store from '@/store'
   export default {
@@ -75,6 +60,7 @@
         // 正在加载
         isLoading: true,
         userInfo: { avatar: '', name: '', sex: 0, birthday: '', hasPassword: '' },
+        openCardPara: null,
         code: "",
         nickname: "",
         avatar: ""
@@ -87,24 +73,9 @@
     onLoad(options) {
       // 当前页面参数
       this.options = options;
-      this.getUserInfo();
     },
 
     methods: {
-      /**
-       * 用户信息
-       * */
-      getUserInfo() {
-        const app = this
-        app.isLoading = true
-        UserApi.info()
-          .then(result => {
-            app.userInfo = result.data.userInfo;
-            app.nickname = app.userInfo.name;
-            app.avatar = app.userInfo.avatar;
-            app.isLoading = false;
-          })
-      },
       bindDateChange (e) {
         let that = this;
         that.userInfo.birthday = e.detail.value;
@@ -113,46 +84,7 @@
           this.nickname = e.detail.value;  
       }, 
       genderChange(e) {
-          this.userInfo.sex = e.detail.value
-      },
-      /**
-       * 获取会员手机
-       * */
-      getPhoneNumber(e) {
-          if (e.detail.errMsg == "getPhoneNumber:ok") {
-              this.onAuthSuccess(e)
-          }
-      },
-      getCode(e) {
-        const app = this
-        return new Promise((resolve, reject) => {
-          uni.login({
-            provider: 'weixin',
-            success: res => {
-              e.detail.code = res.code
-              UserApi.save(e.detail)
-                 .then(result => {
-                 app.userInfo.mobile = result.data.mobile
-              })
-              resolve(res.code)
-            },
-            fail: reject
-          })
-        })
-      },
-      onAuthSuccess(e) {
-         this.getCode(e)
-      },
-      // 修改密码
-      changePassword() {
-         this.$navTo('pages/user/password?hasPassword=' + this.userInfo.hasPassword);
-         console.log(this.userInfo.hasPassword);
-      },
-      // 修改手机号
-      changeMobile() {
-        // #ifdef H5
-        this.$navTo('pages/user/mobile');
-        // #endif
+          this.userInfo.sex = e.detail.value;
       },
       // 选择图片
       chooseImage() {
@@ -183,12 +115,12 @@
         });
       },
       /**
-       * 保存个人信息
+       * 保存会员信息
        */
       save() {
           const app = this
           app.isLoading = true
-          UserApi.save({"name": app.nickname, "avatar": app.avatar, "sex": app.userInfo.sex, "birthday": app.userInfo.birthday})
+          MemberApi.save({"name": app.nickname, "avatar": app.avatar, "sex": app.userInfo.sex, "birthday": app.userInfo.birthday})
             .then(result => {
               app.userInfo = result.data
               app.isLoading = false
@@ -196,14 +128,6 @@
          }).catch(err => {
             app.isLoading = false;
          })
-      },
-      
-      /**
-       * 退出登录
-       */
-      logout() {
-           store.dispatch('Logout')
-           this.$navTo('pages/user/index')
       }
     }
   }

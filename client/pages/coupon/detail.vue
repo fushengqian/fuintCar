@@ -62,7 +62,6 @@
         </view>
       </view>
     </view>
-    
     <view class="footer-fixed" v-if="userCouponId || detail.isReceive">
       <view class="footer-container">
         <!-- 操作按钮 -->
@@ -147,11 +146,9 @@
       give() {
         this.$refs.givePopup.open('top');
       },
-      // 取消转赠
       cancelGive() {
         this.$refs.givePopup.close();
       },
-      // 确定转赠
       doGive(friendMobile) {
         const app = this
         if (friendMobile.length < 11) {
@@ -266,26 +263,26 @@
       },
       // 删除卡券
       remove() {
-          const app = this;
-          if (app.isLoading == true) {
-              return false;
-          }
-          uni.showModal({
-            title: "提示",
-            content: "您确定要删除吗?",
-            success({ confirm }) {
-              if (confirm) {
-                  app.isLoading = true;
-                  myCouponApi.remove(app.userCouponId)
-                    .then(result => {
-                       app.getCouponDetail();
-                       app.isLoading = false;
-                    })
-                    .finally(() => app.isLoading = false)
-              }
+        const app = this;
+        if (app.isLoading == true) {
+            return false;
+        }
+        uni.showModal({
+          title: "提示",
+          content: "您确定要删除吗?",
+          success({ confirm }) {
+            if (confirm) {
+                app.isLoading = true;
+                myCouponApi.remove(app.userCouponId)
+                  .then(result => {
+                     app.getCouponDetail();
+                     app.isLoading = false;
+                  })
+                  .finally(() => app.isLoading = false)
             }
-          });
-      }
+          }
+        });
+     }
     },
     /**
      * 分享当前页面
@@ -322,7 +319,7 @@
     color:#666666;
   }
   .base {
-        border: dashed 5rpx #cccccc;
+        border: #cccccc solid 1rpx;
         padding: 30rpx;
         border-radius: 10rpx;
         margin: 20rpx;
@@ -332,7 +329,7 @@
         .coupon-main {
             clear: both;
             min-height: 164rpx;
-            border: #ccc dashed 2rpx;
+            background: #f5f5f5;
             border-radius: 5rpx;
             margin-bottom: 20rpx;
             .left {
@@ -342,7 +339,6 @@
                     width: 210rpx;
                     height: 160rpx;
                     border-radius: 8rpx;
-                    border-right: #cccccc dashed 2rpx;
                 }
             }
             .right {
@@ -376,7 +372,7 @@
         }
   }
   .coupon-qr {
-      border: dashed 5rpx #cccccc;
+      border: #cccccc solid 1rpx;
       border-radius: 10rpx;
       margin: 20rpx;
       text-align: center;
@@ -401,8 +397,8 @@
   }
   .coupon-content {
     padding: 30rpx;
-    border: dashed 5rpx #cccccc;
-    border-radius: 5rpx;
+    border: #cccccc solid 1rpx;
+    border-radius: 10rpx;
     margin: 20rpx 20rpx 200rpx 20rpx;
     min-height: 400rpx;
     .title {

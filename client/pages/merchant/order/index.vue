@@ -353,10 +353,9 @@
   }
   // 备注信息
   .remark {
+      padding: 12rpx 0 12rpx 20rpx;
       border-radius: 5rpx;
       height: 60rpx;
-      margin: 10rpx;
-      background: red;
   }
 
   // 订单合计

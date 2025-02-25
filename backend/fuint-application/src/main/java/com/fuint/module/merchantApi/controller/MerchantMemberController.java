@@ -1,10 +1,11 @@
 package com.fuint.module.merchantApi.controller;
 
 import com.fuint.common.Constants;
-import com.fuint.common.dto.AccountInfo;
 import com.fuint.common.dto.UserDto;
 import com.fuint.common.dto.UserInfo;
 import com.fuint.common.enums.StatusEnum;
+import com.fuint.common.param.MemberDetailParam;
+import com.fuint.common.param.MemberInfoParam;
 import com.fuint.common.param.MemberListParam;
 import com.fuint.common.service.*;
 import com.fuint.common.util.DateUtil;
@@ -44,11 +45,6 @@ public class MerchantMemberController extends BaseController {
     private MemberService memberService;
 
     /**
-     * 会员等级服务接口
-     * */
-    private UserGradeService userGradeService;
-
-    /**
      * 店铺员工服务接口
      * */
     private StaffService staffService;
@@ -56,7 +52,7 @@ public class MerchantMemberController extends BaseController {
     /**
      * 会员列表查询
      *
-     * @param  request HttpServletRequest对象
+     * @param request HttpServletRequest对象
      * @return 会员列表
      */
     @ApiOperation(value = "查询会员列表")
@@ -70,7 +66,6 @@ public class MerchantMemberController extends BaseController {
         String birthday = memberListParam.getBirthday();
         String userNo = memberListParam.getUserNo();
         String gradeId = memberListParam.getGradeId();
-        String orderBy = memberListParam.getOrderBy() == null ? "" : memberListParam.getOrderBy();
         String regTime = memberListParam.getRegTime() == null ? "" : memberListParam.getRegTime();
         String activeTime = memberListParam.getActiveTime() == null ? "" : memberListParam.getActiveTime();
         String memberTime = memberListParam.getMemberTime() == null ? "" : memberListParam.getMemberTime();
@@ -78,6 +73,7 @@ public class MerchantMemberController extends BaseController {
         String dataType = memberListParam.getDataType();
         Integer page = memberListParam.getPage() == null ? Constants.PAGE_NUMBER : memberListParam.getPage();
         Integer pageSize = memberListParam.getPageSize() == null ? Constants.PAGE_SIZE : memberListParam.getPageSize();
+        String keyword = memberListParam.getKeyword() == null ? "" : memberListParam.getKeyword();
 
         // 今日注册、今日活跃
         if (dataType.equals("todayRegister")) {
@@ -105,6 +101,9 @@ public class MerchantMemberController extends BaseController {
         paginationRequest.setPageSize(pageSize);
 
         Map<String, Object> params = new HashMap<>();
+        if (staffInfo.getMerchantId() != null && staffInfo.getMerchantId() > 0) {
+            params.put("merchantId", staffInfo.getMerchantId());
+        }
         if (staffInfo.getStoreId() != null && staffInfo.getStoreId() > 0) {
             params.put("storeId", staffInfo.getStoreId());
         }
@@ -145,6 +144,11 @@ public class MerchantMemberController extends BaseController {
             params.put("memberTime", memberTime);
         }
 
+        // 搜索关键字
+        if (StringUtil.isNotEmpty(keyword)) {
+            params.put("keyword", keyword);
+        }
+
         paginationRequest.setSearchParams(params);
         PaginationResponse<UserDto> paginationResponse = memberService.queryMemberListByPagination(paginationRequest);
 
@@ -167,32 +171,75 @@ public class MerchantMemberController extends BaseController {
      * 会员详情
      *
      * @param request
-     * @param id 会员ID
      * @return
      */
     @ApiOperation(value = "查询会员详情")
-    @RequestMapping(value = "/info/{id}", method = RequestMethod.GET)
+    @RequestMapping(value = "/info", method = RequestMethod.POST)
     @CrossOrigin
-    public ResponseObject info(HttpServletRequest request, @PathVariable("id") Integer id) throws BusinessCheckException {
+    public ResponseObject info(HttpServletRequest request, @RequestBody MemberDetailParam memberParam) throws BusinessCheckException {
         String token = request.getHeader("Access-Token");
-        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
-        if (accountInfo == null) {
+        UserInfo userInfo = TokenUtil.getUserInfoByToken(token);
+        if (userInfo == null) {
             return getFailureResult(1001, "请先登录");
         }
 
-        MtUser mtUserInfo = memberService.queryMemberById(id);
-
-        Map<String, Object> param = new HashMap<>();
-        if (accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0) {
-            param.put("MERCHANT_ID", accountInfo.getMerchantId());
+        MtStaff staffInfo = null;
+        MtUser mtUser = memberService.queryMemberById(userInfo.getId());
+        if (mtUser != null && mtUser.getMobile() != null) {
+            staffInfo = staffService.queryStaffByMobile(mtUser.getMobile());
         }
-        param.put("STATUS", StatusEnum.ENABLED.getKey());
-        List<MtUserGrade> userGradeList = memberService.queryMemberGradeByParams(param);
+        if (staffInfo == null) {
+            return getFailureResult(201, "该账号不是商户");
+        }
+        MtUser memberInfo = memberService.queryMemberById(memberParam.getMemberId());
+        MtUserGrade gradeInfo = memberService.queryMemberGradeByGradeId(Integer.parseInt(memberInfo.getGradeId()));
 
         Map<String, Object> result = new HashMap<>();
-        result.put("userGradeList", userGradeList);
-        result.put("memberInfo", mtUserInfo);
+        result.put("userInfo", memberInfo);
+        result.put("gradeInfo", gradeInfo);
 
         return getSuccessResult(result);
+    }
+
+    /**
+     * 保存会员信息
+     */
+    @ApiOperation(value = "保存会员信息")
+    @RequestMapping(value = "/save", method = RequestMethod.POST)
+    @CrossOrigin
+    public ResponseObject save(HttpServletRequest request, @RequestBody MemberInfoParam memberInfoParam) throws BusinessCheckException {
+        String token = request.getHeader("Access-Token");
+        UserInfo userInfo = TokenUtil.getUserInfoByToken(token);
+        if (userInfo == null) {
+            return getFailureResult(1001, "请先登录");
+        }
+
+        MtStaff staffInfo = null;
+        MtUser myUserInfo = memberService.queryMemberById(userInfo.getId());
+        if (myUserInfo != null && myUserInfo.getMobile() != null) {
+            staffInfo = staffService.queryStaffByMobile(myUserInfo.getMobile());
+        }
+        if (staffInfo == null) {
+            return getFailureResult(201, "该账号不是商户");
+        }
+        MtUser mtUser = new MtUser();
+        if (memberInfoParam.getId() != null) {
+            mtUser = memberService.queryMemberById(memberInfoParam.getId());
+        }
+        mtUser.setMerchantId(staffInfo.getMerchantId());
+        mtUser.setStoreId(staffInfo.getStoreId());
+        mtUser.setMobile(memberInfoParam.getMobile());
+        mtUser.setName(memberInfoParam.getName());
+        mtUser.setAvatar(memberInfoParam.getAvatar());
+        mtUser.setSex(memberInfoParam.getSex());
+        mtUser.setBirthday(memberInfoParam.getBirthday());
+        mtUser.setUserNo(memberInfoParam.getUserNo());
+        MtUser memberInfo;
+        if (memberInfoParam.getId() == null) {
+            memberInfo = memberService.addMember(mtUser);
+        } else {
+            memberInfo = memberService.updateMember(mtUser, false);
+        }
+        return getSuccessResult(memberInfo);
     }
 }
