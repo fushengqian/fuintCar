@@ -75,6 +75,7 @@
         // 正在加载
         isLoading: true,
         userInfo: { avatar: '', name: '', sex: 0, birthday: '', hasPassword: '' },
+        openCardPara: null,
         code: "",
         nickname: "",
         avatar: ""
@@ -100,6 +101,9 @@
         UserApi.info()
           .then(result => {
             app.userInfo = result.data.userInfo;
+            if (result.data.openCardPara) {
+                app.openCardPara = result.data.openCardPara; 
+            }
             app.nickname = app.userInfo.name;
             app.avatar = app.userInfo.avatar;
             app.isLoading = false;
@@ -150,9 +154,9 @@
       },
       // 修改手机号
       changeMobile() {
-        // #ifdef H5
-        this.$navTo('pages/user/mobile');
-        // #endif
+         // #ifdef H5
+         this.$navTo('pages/user/mobile');
+         // #endif
       },
       // 选择图片
       chooseImage() {
@@ -202,8 +206,8 @@
        * 退出登录
        */
       logout() {
-           store.dispatch('Logout')
-           this.$navTo('pages/user/index')
+         store.dispatch('Logout');
+         this.$navTo('pages/user/index');
       }
     }
   }
