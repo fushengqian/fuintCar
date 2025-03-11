@@ -177,6 +177,9 @@ public class CouponServiceImpl extends ServiceImpl<MtCouponMapper, MtCoupon> imp
             mtCoupon = mtCouponMapper.selectById(reqCouponDto.getId());
         } else {
             mtCoupon = new MtCoupon();
+            if (reqCouponDto.getMerchantId() == null || reqCouponDto.getMerchantId() <= 0) {
+                throw new BusinessCheckException("平台方帐号无法执行该操作，请使用商户帐号操作");
+            }
         }
         // 固定有效期验证
         if (reqCouponDto.getExpireType().equals(CouponExpireTypeEnum.FIX.getKey())) {
@@ -1023,7 +1026,7 @@ public class CouponServiceImpl extends ServiceImpl<MtCouponMapper, MtCoupon> imp
 
         // 未使用状态才能作废删除
         if(!userCoupon.getStatus().equals(UserCouponStatusEnum.UNUSED.getKey())) {
-            throw new BusinessCheckException("不能作废，该劵状态异常");
+            throw new BusinessCheckException("未使用状态的卡券才能作废");
         }
         userCoupon.setStatus(UserCouponStatusEnum.DISABLE.getKey());
 

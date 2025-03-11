@@ -724,7 +724,7 @@ public class OrderServiceImpl extends ServiceImpl<MtOrderMapper, MtOrder> implem
 
         if (userInfo == null) {
             if (StringUtil.isNotEmpty(operator)) {
-                throw new BusinessCheckException("该管理员还未关联店铺员工");
+                throw new BusinessCheckException("该管理员还未关联店铺员工，请先关联！");
             } else {
                 throw new BusinessCheckException("请先登录");
             }
@@ -1928,15 +1928,15 @@ public class OrderServiceImpl extends ServiceImpl<MtOrderMapper, MtOrder> implem
                 }
                 // 购物车商品信息
                 MtGoods mtGoodsInfo = goodsService.queryGoodsById(cart.getGoodsId());
+                if (mtGoodsInfo == null || !mtGoodsInfo.getStatus().equals(StatusEnum.ENABLED.getKey())) {
+                    continue;
+                }
                 // 取对应sku的价格
                 if (cart.getSkuId() != null && cart.getSkuId() > 0) {
                     MtGoodsSku mtGoodsSku = mtGoodsSkuMapper.selectById(cart.getSkuId());
                     if (mtGoodsSku != null && mtGoodsSku.getPrice().compareTo(new BigDecimal("0")) > 0) {
                         mtGoodsInfo.setPrice(mtGoodsSku.getPrice());
                     }
-                }
-                if (mtGoodsInfo == null || !mtGoodsInfo.getStatus().equals(StatusEnum.ENABLED.getKey())) {
-                    continue;
                 }
                 // 会员支付折扣
                 boolean isDiscount = mtGoodsInfo.getIsMemberDiscount().equals(YesOrNoEnum.YES.getKey()) ? true : false;
