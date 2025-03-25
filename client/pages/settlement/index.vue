@@ -51,8 +51,12 @@
     <view class="flow-fixed-footer b-f m-top10">
       <view class="dis-flex chackout-box">
         <view class="chackout-left pl-12">
-          <view class="col-amount-do">应付金额：￥{{ totalAmount.toFixed(2) }}</view>
-          <view class="col-amount-view">实得金额：￥{{ getTotalAmount.toFixed(2) }}</view>
+            <view class="col-amount-do">应付金额：
+              <text class="pay-amount">￥{{ totalAmount ? totalAmount.toFixed(2) : '0.00' }}</text>
+            </view>
+            <view class="col-amount-view">实得金额：
+              <text class="pay-amount">￥{{ getTotalAmount ? getTotalAmount.toFixed(2) : '0.00' }}</text>
+            </view>
         </view>
         <view class="chackout-right" @click="onSubmitOrder()">
           <view class="flow-btn f-32" :class="{ disabled }">提交订单</view>
@@ -155,11 +159,12 @@
       onSubmitOrder() {
         const app = this
         if (app.disabled) {
-          return false
+            app.$toast('请勿重复提交订单哦');
+            return false
         }
         // 表单验证
         if (!app.onVerifyFrom()) {
-          return false
+            return false
         }
         // 按钮禁用
         app.disabled = true

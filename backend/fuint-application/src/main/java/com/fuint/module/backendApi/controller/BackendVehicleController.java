@@ -3,6 +3,7 @@ package com.fuint.module.backendApi.controller;
 import com.fuint.common.dto.AccountInfo;
 import com.fuint.common.dto.VehicleDto;
 import com.fuint.common.enums.StatusEnum;
+import com.fuint.common.param.UserVehicleParam;
 import com.fuint.common.service.AccountService;
 import com.fuint.common.service.VehicleService;
 import com.fuint.common.util.TokenUtil;
@@ -14,7 +15,6 @@ import com.fuint.repository.model.MtVehicle;
 import com.fuint.repository.model.TAccount;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -39,9 +39,6 @@ public class BackendVehicleController extends BaseController {
         String token = request.getHeader("Access-Token");
 
         AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
-        if (accountInfo == null) {
-            return getFailureResult(1001, "请先登录");
-        }
         TAccount account = accountService.getAccountInfoById(accountInfo.getId());
         if (account == null) {
             return getFailureResult(1002, "账号不存在");
@@ -59,9 +56,6 @@ public class BackendVehicleController extends BaseController {
         String token = request.getHeader("Access-Token");
 
         AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
-        if (accountInfo == null) {
-            return getFailureResult(1001, "请先登录");
-        }
 
         TAccount account = accountService.getAccountInfoById(accountInfo.getId());
         if (account == null) {
@@ -73,33 +67,25 @@ public class BackendVehicleController extends BaseController {
         return getSuccessResult(vehicleDto);
     }
 
-    @ApiOperation(value="查询车辆信息", notes="查询车辆信息")
+    @ApiOperation(value="更新车辆信息", notes="更新会员车辆信息")
     @RequestMapping(value = "/update", method = RequestMethod.POST)
     @CrossOrigin
-    public ResponseObject update(HttpServletRequest request, @RequestBody Map<String, String> param) {
+    public ResponseObject update(HttpServletRequest request, @RequestBody UserVehicleParam param) {
         String token = request.getHeader("Access-Token");
 
         AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
-        if (accountInfo == null) {
-            return getFailureResult(1001, "请先登录");
-        }
         TAccount account = accountService.getAccountInfoById(accountInfo.getId());
         if (account == null) {
             return getFailureResult(1002, "账号不存在");
         }
 
-        String id = param.get("id");
-        String vehiclePlateNo = param.get("vehiclePlateNo");
-        String vehicleType  = param.get("vehicleType");
-        String vehicleColor = param.get("vehicleColor");
-        String vehicleBrand = param.get("vehicleBrand");
-        String vehicleModel = param.get("vehicleModel");
+        String vehiclePlateNo = param.getVehiclePlateNo();
+        String vehicleType  = param.getVehicleType();
+        String vehicleColor = param.getVehicleColor();
+        String vehicleBrand = param.getVehicleBrand();
+        String vehicleModel = param.getVehicleModel();
 
-        if(StringUtils.isEmpty(id)) {
-            return getSuccessResult(false);
-        }
-
-        MtVehicle mtVehicle = vehicleService.queryVehicleById(Integer.parseInt(id));
+        MtVehicle mtVehicle = vehicleService.queryVehicleById(param.getId());
         if(mtVehicle == null) {
             return getSuccessResult(false);
         }
@@ -115,7 +101,7 @@ public class BackendVehicleController extends BaseController {
         return getSuccessResult(true);
     }
 
-    @ApiOperation(value = "更新车辆状态")
+    @ApiOperation(value = "更新车辆状态", notes="更新车辆状态信息")
     @RequestMapping(value = "/updateStatus", method = RequestMethod.POST)
     @CrossOrigin
     public ResponseObject updateStatus(HttpServletRequest request, @RequestBody Map<String, String> param) throws BusinessCheckException {
@@ -124,9 +110,6 @@ public class BackendVehicleController extends BaseController {
         String status = param.get("status") == null ? StatusEnum.ENABLED.getKey() : param.get("status");
 
         AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
-        if (accountInfo == null) {
-            return getFailureResult(1001, "请先登录");
-        }
 
         MtVehicle mtVehicle = vehicleService.queryVehicleById(vehicleId);
         if (mtVehicle == null) {
@@ -140,15 +123,12 @@ public class BackendVehicleController extends BaseController {
         return getSuccessResult(true);
     }
 
-    @ApiOperation(value = "删除车辆", notes = "删除车辆")
+    @ApiOperation(value = "删除车辆", notes = "根据ID删除会员车辆")
     @RequestMapping(value = "/delete/{id}", method = RequestMethod.GET)
     @CrossOrigin
     public ResponseObject delete(HttpServletRequest request, @PathVariable("id") Integer id) throws BusinessCheckException {
         String token = request.getHeader("Access-Token");
         AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
-        if (accountInfo == null) {
-            return getFailureResult(1001, "请先登录");
-        }
 
         String operator = accountInfo.getAccountName();
         vehicleService.deleteVehicle(id, operator);
