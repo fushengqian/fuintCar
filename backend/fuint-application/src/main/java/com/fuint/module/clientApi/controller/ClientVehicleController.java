@@ -66,9 +66,6 @@ public class ClientVehicleController extends BaseController {
         Integer merchantId = merchantService.getMerchantId(merchantNo);
 
         UserInfo mtUser = TokenUtil.getUserInfoByToken(token);
-        if (null == mtUser) {
-            return getFailureResult(1001);
-        }
 
         String vehiclePlateNo = requestParam.getVehiclePlateNo() == null ? "" : requestParam.getVehiclePlateNo();
         String vehicleBrand = requestParam.getVehicleBrand() == null ? "" : requestParam.getVehicleBrand();
@@ -106,9 +103,6 @@ public class ClientVehicleController extends BaseController {
         String isDefault = request.getParameter("isDefault") == null ? "" : request.getParameter("isDefault");
 
         UserInfo mtUser = TokenUtil.getUserInfoByToken(token);
-        if (null == mtUser) {
-            return getFailureResult(1001);
-        }
 
         List<VehicleDto> dataList = vehicleService.getVehicleByUserId(mtUser.getId(), StringUtil.isNotEmpty(isDefault) ? true : false);
         return getSuccessResult(dataList);
@@ -125,9 +119,6 @@ public class ClientVehicleController extends BaseController {
         Integer vehicleId = requestParam.getVehicleId() == null ? 0 : requestParam.getVehicleId();
 
         UserInfo mtUser = TokenUtil.getUserInfoByToken(token);
-        if (null == mtUser || StringUtil.isEmpty(token)) {
-            return getFailureResult(1001);
-        }
 
         MtVehicle mtVehicle = null;
         if (vehicleId > 0) {
@@ -158,9 +149,6 @@ public class ClientVehicleController extends BaseController {
         Integer merchantId = merchantService.getMerchantId(merchantNo);
 
         UserInfo mtUser = TokenUtil.getUserInfoByToken(token);
-        if (null == mtUser) {
-            return getFailureResult(1001);
-        }
 
         Integer vehicleId = requestParam.getVehicleId() == null ? 0 : requestParam.getVehicleId();
         Integer couponId = requestParam.getCouponId() == null ? 0 : requestParam.getCouponId();

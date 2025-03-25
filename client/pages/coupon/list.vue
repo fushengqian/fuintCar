@@ -1,10 +1,6 @@
 <template>
   <mescroll-body ref="mescrollRef" :sticky="true" @init="mescrollInit" :down="{ native: true }" @down="downCallback"
     :up="upOption" @up="upCallback">
-    <!-- 页面头部 -->
-    <view class="header">
-      <search class="search" :tips="options.search ? options.search : '搜索卡券'" @event="handleSearch" />
-    </view>
 
     <!-- 排序标签 -->
     <view class="store-sort">
@@ -227,20 +223,6 @@
                 this.$navTo(`pages/timer/detail`, { couponId: couponId, userCouponId: userCouponId })
             }
         }
-      },
-
-      //卡券搜索
-      handleSearch() {
-        const searchPageUrl = 'pages/search/index'
-        // 判断来源页面
-        let pages = getCurrentPages()
-        if (pages.length > 1 &&
-          pages[pages.length - 2].route === searchPageUrl) {
-          uni.navigateBack()
-          return
-        }
-        // 跳转到卡券搜索页
-        this.$navTo(searchPageUrl)
       }
     },
 

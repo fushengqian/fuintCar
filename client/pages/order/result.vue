@@ -3,12 +3,13 @@
       <view class="success">
         <view v-if="isSuccess" class="result">
            <image class="icon" src='/static/pay/success.png'></image>
-           <text class="text">恭喜，支付成功！</text>
+           <text class="text" v-if="message && message != undefined">{{ message }}</text>
+           <text class="text" v-if="!message || message == undefined">恭喜，支付成功！</text>
         </view>
         <view v-if="!isSuccess" class="result">
            <image class="icon" src='/static/pay/fail.png'></image>
-           <text class="text" v-if="message" style="color:#888888;">支付失败：{{ message }}</text>
-           <text class="text" v-if="!message" style="color:#888888;">哎呀，支付失败啦~</text>
+           <text class="text" v-if="message && message != undefined" style="color:#888888;">支付失败：{{ message }}</text>
+           <text class="text" v-if="!message || message == undefined" style="color:#888888;">哎呀，支付失败啦~</text>
         </view>
         <view class="options">
             <view class="to-home" @click="toHome()"><text class="iconfont icon-home"></text>返回首页</view>
@@ -120,6 +121,13 @@
         OrderApi.detail(app.orderId)
           .then(result => {
               app.isSuccess = result.data.payStatus === 'B' ? true : false;
+              if (app.isSuccess) {
+                  app.message = "支付成功！";
+              }
+              if (result.data.payType == 'STORE') {
+                  app.isSuccess = true;
+                  app.message = "订单已提交！";
+              }
               app.isLoading = false;
           })
       },
