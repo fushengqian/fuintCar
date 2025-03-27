@@ -81,6 +81,9 @@ public class BackendAccountController extends BaseController {
         String accountName = request.getParameter("accountName") == null ? "" : request.getParameter("accountName");
         String realName = request.getParameter("realName") == null ? "" : request.getParameter("realName");
         String accountStatus = request.getParameter("accountStatus") == null ? "" : request.getParameter("accountStatus");
+        String merchantId = request.getParameter("merchantId") == null ? "" : request.getParameter("merchantId");
+        String storeId = request.getParameter("storeId") == null ? "" : request.getParameter("storeId");
+        String staffId = request.getParameter("staffId") == null ? "" : request.getParameter("staffId");
 
         AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
         if (accountInfo == null) {
@@ -106,9 +109,20 @@ public class BackendAccountController extends BaseController {
         }
         if (accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0) {
             searchParams.put("merchantId", accountInfo.getMerchantId());
+        } else {
+            if (StringUtil.isNotEmpty(merchantId)) {
+                searchParams.put("merchantId", merchantId);
+            }
         }
         if (accountInfo.getStoreId() != null && accountInfo.getStoreId() > 0) {
             searchParams.put("storeId", accountInfo.getStoreId());
+        } else {
+            if (StringUtil.isNotEmpty(storeId)) {
+                searchParams.put("storeId", storeId);
+            }
+        }
+        if (StringUtil.isNotEmpty(staffId)) {
+            searchParams.put("staffId", staffId);
         }
 
         paginationRequest.setSearchParams(searchParams);
@@ -222,7 +236,7 @@ public class BackendAccountController extends BaseController {
         String staffId = param.get("staffId") == null ? "0" : param.get("staffId").toString();
 
         AccountInfo accountInfo = tAccountService.getAccountByName(accountName);
-        if (accountInfo != null && accountInfo.getAccountStatus() == 1) {
+        if (accountInfo != null) {
             return getFailureResult(201, "该用户名已存在");
         }
 
@@ -309,7 +323,7 @@ public class BackendAccountController extends BaseController {
         }
 
         AccountInfo accountInfo = tAccountService.getAccountByName(accountName);
-        if (accountInfo != null && accountInfo.getId() != id.intValue() && accountInfo.getAccountStatus() == 1) {
+        if (accountInfo != null && accountInfo.getId() != id.intValue()) {
             return getFailureResult(201, "该用户名已存在");
         }
 
