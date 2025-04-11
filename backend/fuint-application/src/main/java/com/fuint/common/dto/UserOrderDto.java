@@ -4,8 +4,7 @@ import com.fuint.repository.model.MtRefund;
 import com.fuint.repository.model.MtStaff;
 import com.fuint.repository.model.MtStore;
 import io.swagger.annotations.ApiModelProperty;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -17,8 +16,7 @@ import java.util.List;
  * Created by FSQ
  * CopyRight https://www.fuint.cn
  */
-@Getter
-@Setter
+@Data
 public class UserOrderDto implements Serializable {
 
     @ApiModelProperty("自增ID")
@@ -44,6 +42,9 @@ public class UserOrderDto implements Serializable {
 
     @ApiModelProperty("订单模式")
     private String orderMode;
+
+    @ApiModelProperty("下单平台")
+    private String platform;
 
     @ApiModelProperty("是否核销")
     private Boolean isVerify;
@@ -134,6 +135,15 @@ public class UserOrderDto implements Serializable {
 
     @ApiModelProperty("所属员工")
     private MtStaff staffInfo;
+
+    @ApiModelProperty("核销状态")
+    private String confirmStatus;
+
+    @ApiModelProperty("核销时间")
+    private String confirmTime;
+
+    @ApiModelProperty("核销备注")
+    private String confirmRemark;
 
 }
 

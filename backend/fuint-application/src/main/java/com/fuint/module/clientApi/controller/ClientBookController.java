@@ -29,7 +29,6 @@ import java.lang.reflect.InvocationTargetException;
 import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
 import java.text.ParseException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -258,17 +257,7 @@ public class ClientBookController extends BaseController {
         PaginationResponse<BookItemDto> paginationResponse = bookItemService.queryBookItemListByPagination(paginationRequest);
 
         // 预约状态列表
-        BookStatusEnum[] enums = BookStatusEnum.values();
-        List<ParamDto> statusList = new ArrayList<>();
-        for (BookStatusEnum enumItem : enums) {
-            if (!enumItem.getKey().equals(BookStatusEnum.DELETE.getKey())) {
-                ParamDto paramDto = new ParamDto();
-                paramDto.setKey(enumItem.getKey());
-                paramDto.setName(enumItem.getValue());
-                paramDto.setValue(enumItem.getKey());
-                statusList.add(paramDto);
-            }
-        }
+        List<ParamDto> statusList = BookStatusEnum.getBookStatusList();
 
         Map<String, Object> result = new HashMap<>();
         result.put("content", paginationResponse.getContent());
@@ -292,10 +281,6 @@ public class ClientBookController extends BaseController {
         String bookId = request.getParameter("bookId");
         String remark = request.getParameter("remark") == null ? "会员取消" : request.getParameter("remark");
         UserInfo mtUser = TokenUtil.getUserInfoByToken(token);
-
-        if (mtUser == null) {
-            return getFailureResult(1001, "用户未登录");
-        }
 
         if (StringUtil.isEmpty(bookId)) {
             return getFailureResult(2000, "订单不能为空");

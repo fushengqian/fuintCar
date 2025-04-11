@@ -202,7 +202,12 @@ public class OrderServiceImpl extends ServiceImpl<MtOrderMapper, MtOrder> implem
         String storeIds = orderListParam.getStoreIds() == null ? "" : orderListParam.getStoreIds();
         String startTime = orderListParam.getStartTime() == null ? "" : orderListParam.getStartTime();
         String endTime = orderListParam.getEndTime() == null ? "" : orderListParam.getEndTime();
+        String keyword = orderListParam.getKeyword() == null ? "" : orderListParam.getKeyword();
+        String confirmStatus = orderListParam.getConfirmStatus() == null ? "" : orderListParam.getConfirmStatus();
         List<String> payType = orderListParam.getPayType();
+
+        LambdaQueryWrapper<MtOrder> lambdaQueryWrapper = Wrappers.lambdaQuery();
+        lambdaQueryWrapper.ne(MtOrder::getStatus, OrderStatusEnum.DELETED.getKey());
 
         if (dataType.equals("toPay")) {
             status = OrderStatusEnum.CREATED.getKey(); // 待支付
@@ -211,11 +216,20 @@ public class OrderServiceImpl extends ServiceImpl<MtOrderMapper, MtOrder> implem
             payStatus = PayStatusEnum.SUCCESS.getKey(); // 已支付
         } else if(dataType.equals("cancel")) {
             status = OrderStatusEnum.CANCEL.getKey();  // 已取消
+        } else if(dataType.equals("todo")) {
+            // 待核销
+            payStatus = PayStatusEnum.SUCCESS.getKey();
+            lambdaQueryWrapper.eq(MtOrder::getConfirmStatus, YesOrNoEnum.NO.getKey());
+            lambdaQueryWrapper.eq(MtOrder::getType, OrderTypeEnum.GOODS.getKey());
+            lambdaQueryWrapper.eq(MtOrder::getOrderMode, OrderModeEnum.ONESELF.getKey());
+        } else if(dataType.equals("confirm")) {
+            // 已核销
+            payStatus = PayStatusEnum.SUCCESS.getKey();
+            lambdaQueryWrapper.eq(MtOrder::getType, OrderTypeEnum.GOODS.getKey());
+            lambdaQueryWrapper.eq(MtOrder::getConfirmStatus, YesOrNoEnum.YES.getKey());
+            lambdaQueryWrapper.eq(MtOrder::getOrderMode, OrderModeEnum.ONESELF.getKey());
         }
 
-        Page<MtOpenGift> pageHelper = PageHelper.startPage(pageNumber, pageSize);
-        LambdaQueryWrapper<MtOrder> lambdaQueryWrapper = Wrappers.lambdaQuery();
-        lambdaQueryWrapper.ne(MtOrder::getStatus, OrderStatusEnum.DELETED.getKey());
         if (StringUtil.isNotEmpty(orderSn)) {
             lambdaQueryWrapper.eq(MtOrder::getOrderSn, orderSn);
         }
@@ -228,10 +242,21 @@ public class OrderServiceImpl extends ServiceImpl<MtOrderMapper, MtOrder> implem
         if (StringUtil.isNotEmpty(settleStatus)) {
             lambdaQueryWrapper.eq(MtOrder::getSettleStatus, settleStatus);
         }
+        if (StringUtil.isNotEmpty(keyword)) {
+            MtUser userInfo = memberService.queryMemberByMobile(merchantId, keyword);
+            if (userInfo != null) {
+                lambdaQueryWrapper.and(wq -> wq
+                        .like(MtOrder::getOrderSn, keyword)
+                        .or()
+                        .eq(MtOrder::getUserId, userInfo.getId().toString()));
+            } else {
+                lambdaQueryWrapper.like(MtOrder::getOrderSn, keyword);
+            }
+        }
         if (StringUtil.isNotEmpty(mobile)) {
             MtUser userInfo = memberService.queryMemberByMobile(merchantId, mobile);
             if (userInfo != null) {
-                userId = userInfo.getId() + "";
+                userId = userInfo.getId().toString();
             } else {
                 userId = "0";
             }
@@ -272,7 +297,13 @@ public class OrderServiceImpl extends ServiceImpl<MtOrderMapper, MtOrder> implem
         if (payType != null && payType.size() > 0) {
             lambdaQueryWrapper.in(MtOrder::getPayType, payType);
         }
+        if (StringUtil.isNotEmpty(confirmStatus)) {
+            lambdaQueryWrapper.eq(MtOrder::getConfirmStatus, confirmStatus);
+            lambdaQueryWrapper.eq(MtOrder::getPayStatus, PayStatusEnum.SUCCESS.getKey());
+            lambdaQueryWrapper.eq(MtOrder::getType, OrderTypeEnum.GOODS.getKey());
+        }
         lambdaQueryWrapper.orderByDesc(MtOrder::getId);
+        Page<MtOpenGift> pageHelper = PageHelper.startPage(pageNumber, pageSize);
         List<MtOrder> orderList = mtOrderMapper.selectList(lambdaQueryWrapper);
 
         List<UserOrderDto> dataList = new ArrayList<>();
@@ -353,6 +384,7 @@ public class OrderServiceImpl extends ServiceImpl<MtOrderMapper, MtOrder> implem
         mtOrder.setUpdateTime(new Date());
         mtOrder.setDeliveryFee(orderDto.getDeliveryFee() == null ? new BigDecimal(0) : orderDto.getDeliveryFee());
         mtOrder.setSettleStatus(SettleStatusEnum.WAIT.getKey());
+        mtOrder.setConfirmStatus(YesOrNoEnum.NO.getKey());
 
         if (mtOrder.getId() == null || mtOrder.getId() <= 0) {
             mtOrder.setCreateTime(new Date());
@@ -403,7 +435,7 @@ public class OrderServiceImpl extends ServiceImpl<MtOrderMapper, MtOrder> implem
         // 计算商品订单总金额
         List<MtCart> cartList = new ArrayList<>();
         Map<String, Object> cartData = new HashMap<>();
-        if (orderDto.getType().equals(OrderTypeEnum.GOOGS.getKey())) {
+        if (orderDto.getType().equals(OrderTypeEnum.GOODS.getKey())) {
             if (StringUtil.isNotEmpty(orderDto.getCartIds())) {
                 Map<String, Object> param = new HashMap<>();
                 param.put("status", StatusEnum.ENABLED.getKey());
@@ -519,7 +551,7 @@ public class OrderServiceImpl extends ServiceImpl<MtOrderMapper, MtOrder> implem
         }
 
         // 如果是商品订单，生成订单商品
-        if (orderDto.getType().equals(OrderTypeEnum.GOOGS.getKey()) && cartList.size() > 0) {
+        if (orderDto.getType().equals(OrderTypeEnum.GOODS.getKey()) && cartList.size() > 0) {
             Object listObject = cartData.get("list");
             List<ResCartDto> lists =(ArrayList<ResCartDto>)listObject;
             BigDecimal memberDiscount = new BigDecimal("0");
@@ -827,12 +859,12 @@ public class OrderServiceImpl extends ServiceImpl<MtOrderMapper, MtOrder> implem
         }
 
         // 商品订单
-        if (orderDto.getType().equals(OrderTypeEnum.GOOGS.getKey())) {
+        if (orderDto.getType().equals(OrderTypeEnum.GOODS.getKey())) {
             orderDto.setCouponId(couponId);
         }
 
         // 商品订单且配送要加上配送费用
-        if (orderDto.getType().equals(OrderTypeEnum.GOOGS.getKey()) && orderDto.getOrderMode().equals(OrderModeEnum.EXPRESS.getKey())) {
+        if (orderDto.getType().equals(OrderTypeEnum.GOODS.getKey()) && orderDto.getOrderMode().equals(OrderModeEnum.EXPRESS.getKey())) {
             MtSetting mtSetting = settingService.querySettingByName(merchantId, SettingTypeEnum.ORDER.getKey(), OrderSettingEnum.DELIVERY_FEE.getKey());
             if (mtSetting != null && StringUtil.isNotEmpty(mtSetting.getValue())) {
                 BigDecimal deliveryFee = new BigDecimal(mtSetting.getValue());
@@ -1288,6 +1320,9 @@ public class OrderServiceImpl extends ServiceImpl<MtOrderMapper, MtOrder> implem
             if (orderDto.getVerifyCode().equals(mtOrder.getVerifyCode())) {
                 mtOrder.setStatus(OrderStatusEnum.DELIVERED.getKey());
                 mtOrder.setVerifyCode("");
+                mtOrder.setConfirmStatus(YesOrNoEnum.YES.getKey());
+                mtOrder.setConfirmTime(new Date());
+                mtOrder.setConfirmRemark(orderDto.getConfirmRemark());
             } else {
                 throw new BusinessCheckException("核销码错误，请确认！");
             }
@@ -1379,7 +1414,7 @@ public class OrderServiceImpl extends ServiceImpl<MtOrderMapper, MtOrder> implem
 
         // 处理购物订单
         UserOrderDto orderInfo = getOrderByOrderSn(mtOrder.getOrderSn());
-        if (orderInfo.getType().equals(OrderTypeEnum.GOOGS.getKey())) {
+        if (orderInfo.getType().equals(OrderTypeEnum.GOODS.getKey())) {
             try {
                 List<OrderGoodsDto> goodsList = orderInfo.getGoods();
                 if (goodsList != null && goodsList.size() > 0) {
@@ -1396,7 +1431,7 @@ public class OrderServiceImpl extends ServiceImpl<MtOrderMapper, MtOrder> implem
                                 }
                             }
                             // 将已销售数量+1
-                            goodsService.updateInitSale(mtGoods.getId());
+                            goodsService.updateInitSale(mtGoods.getId(), goodsDto.getNum());
                         }
                     }
                 }
@@ -1444,7 +1479,7 @@ public class OrderServiceImpl extends ServiceImpl<MtOrderMapper, MtOrder> implem
         }
 
         // 计算是否要升级（购物订单、付款订单、充值订单）
-        if (orderInfo.getIsVisitor().equals(YesOrNoEnum.NO.getKey()) && orderInfo.getType().equals(OrderTypeEnum.GOOGS.getKey()) || orderInfo.getType().equals(OrderTypeEnum.PAYMENT.getKey()) || orderInfo.getType().equals(OrderTypeEnum.RECHARGE.getKey())) {
+        if (orderInfo.getIsVisitor().equals(YesOrNoEnum.NO.getKey()) && orderInfo.getType().equals(OrderTypeEnum.GOODS.getKey()) || orderInfo.getType().equals(OrderTypeEnum.PAYMENT.getKey()) || orderInfo.getType().equals(OrderTypeEnum.RECHARGE.getKey())) {
             try {
                 if (orderInfo.getIsVisitor().equals(YesOrNoEnum.NO.getKey())) {
                     Map<String, Object> param = new HashMap<>();
@@ -1544,12 +1579,17 @@ public class OrderServiceImpl extends ServiceImpl<MtOrderMapper, MtOrder> implem
         userOrderDto.setStaffId(orderInfo.getStaffId());
         userOrderDto.setVerifyCode("");
         userOrderDto.setDeliveryFee(orderInfo.getDeliveryFee());
+        userOrderDto.setPlatform(orderInfo.getPlatform());
+        userOrderDto.setConfirmRemark(orderInfo.getConfirmRemark());
+        userOrderDto.setConfirmStatus(orderInfo.getConfirmStatus());
+        if (orderInfo.getConfirmTime() != null) {
+            userOrderDto.setConfirmTime(DateUtil.formatDate(orderInfo.getConfirmTime(), "yyyy.MM.dd HH:mm"));
+        }
 
-        // 核销码为空，说明已经核销
-        if (orderInfo.getVerifyCode() == null || StringUtil.isEmpty(orderInfo.getVerifyCode())) {
-            userOrderDto.setIsVerify(true);
-        } else {
+        if (orderInfo.getType().equals(OrderTypeEnum.GOODS.getKey()) && orderInfo.getPayStatus().equals(PayStatusEnum.SUCCESS.getKey()) && orderInfo.getConfirmStatus().equals(YesOrNoEnum.NO.getKey())) {
             userOrderDto.setIsVerify(false);
+        } else {
+            userOrderDto.setIsVerify(true);
         }
 
         if (orderInfo.getPayAmount() != null) {
@@ -1587,8 +1627,8 @@ public class OrderServiceImpl extends ServiceImpl<MtOrderMapper, MtOrder> implem
             userOrderDto.setTypeName(OrderTypeEnum.PRESTORE.getValue());
         } else if(userOrderDto.getType().equals(OrderTypeEnum.PAYMENT.getKey())) {
             userOrderDto.setTypeName(OrderTypeEnum.PAYMENT.getValue());
-        } else if(userOrderDto.getType().equals(OrderTypeEnum.GOOGS.getKey())) {
-            userOrderDto.setTypeName(OrderTypeEnum.GOOGS.getValue());
+        } else if(userOrderDto.getType().equals(OrderTypeEnum.GOODS.getKey())) {
+            userOrderDto.setTypeName(OrderTypeEnum.GOODS.getValue());
         } else if(userOrderDto.getType().equals(OrderTypeEnum.MEMBER.getKey())) {
             userOrderDto.setTypeName(OrderTypeEnum.MEMBER.getValue());
         } else if(userOrderDto.getType().equals(OrderTypeEnum.RECHARGE.getKey())) {
@@ -1665,7 +1705,7 @@ public class OrderServiceImpl extends ServiceImpl<MtOrderMapper, MtOrder> implem
         }
 
         // 商品订单
-        if (orderInfo.getType().equals(OrderTypeEnum.GOOGS.getKey())) {
+        if (orderInfo.getType().equals(OrderTypeEnum.GOODS.getKey())) {
             Map<String, Object> params = new HashMap<>();
             params.put("ORDER_ID", orderInfo.getId());
             List<MtOrderGoods> orderGoodsList = mtOrderGoodsMapper.selectByMap(params);
@@ -1678,7 +1718,7 @@ public class OrderServiceImpl extends ServiceImpl<MtOrderMapper, MtOrder> implem
                     if (goodsInfo.getLogo().indexOf(baseImage) == -1) {
                         orderGoodsDto.setImage(baseImage + goodsInfo.getLogo());
                     }
-                    orderGoodsDto.setType(OrderTypeEnum.GOOGS.getKey());
+                    orderGoodsDto.setType(OrderTypeEnum.GOODS.getKey());
                     orderGoodsDto.setNum(orderGoods.getNum());
                     orderGoodsDto.setSkuId(orderGoods.getSkuId());
                     orderGoodsDto.setPrice(orderGoods.getPrice().toString());

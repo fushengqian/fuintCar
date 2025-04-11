@@ -82,9 +82,6 @@ public class BackendRefundController extends BaseController {
         String endTime = request.getParameter("endTime") == null ? "" : request.getParameter("endTime");
 
         AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
-        if (accountInfo == null) {
-            return getFailureResult(1001, "请先登录");
-        }
 
         TAccount account = accountService.getAccountInfoById(accountInfo.getId());
         Integer storeId = account.getStoreId() == null ? 0 : account.getStoreId();
@@ -132,26 +129,10 @@ public class BackendRefundController extends BaseController {
         PaginationResponse<RefundDto> paginationResponse = refundService.getRefundListByPagination(paginationRequest);
 
         // 售后状态列表
-        RefundStatusEnum[] statusListEnum = RefundStatusEnum.values();
-        List<ParamDto> statusList = new ArrayList<>();
-        for (RefundStatusEnum enumItem : statusListEnum) {
-             ParamDto paramDto = new ParamDto();
-             paramDto.setKey(enumItem.getKey());
-             paramDto.setName(enumItem.getValue());
-             paramDto.setValue(enumItem.getKey());
-             statusList.add(paramDto);
-        }
+        List<ParamDto> statusList = RefundStatusEnum.getRefundStatusList();
 
         // 售后类型列表
-        RefundTypeEnum[] refundTypeEnums = RefundTypeEnum.values();
-        List<ParamDto> refundTypeList = new ArrayList<>();
-        for (RefundTypeEnum enumItem : refundTypeEnums) {
-             ParamDto paramDto = new ParamDto();
-             paramDto.setKey(enumItem.getKey());
-             paramDto.setName(enumItem.getValue());
-             paramDto.setValue(enumItem.getKey());
-             refundTypeList.add(paramDto);
-        }
+        List<ParamDto> refundTypeList = RefundTypeEnum.getRefundTypeList();
 
         Map<String, Object> result = new HashMap<>();
         result.put("paginationResponse", paginationResponse);
@@ -173,14 +154,17 @@ public class BackendRefundController extends BaseController {
     public ResponseObject info(HttpServletRequest request, @PathVariable("refundId") Integer refundId) throws BusinessCheckException {
         String token = request.getHeader("Access-Token");
         AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
-        if (accountInfo == null) {
-            return getFailureResult(1001, "请先登录");
-        }
 
-        RefundDto refundInfo = refundService.getRefundById(refundId);
         UserOrderDto orderInfo = null;
+        RefundDto refundInfo = refundService.getRefundById(refundId);
         if (refundInfo != null) {
             orderInfo = orderService.getOrderById(refundInfo.getOrderId());
+        }
+
+        if (accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0) {
+            if (!accountInfo.getMerchantId().equals(refundInfo.getMerchantId())) {
+                return getFailureResult(1004);
+            }
         }
 
         Map<String, Object> result = new HashMap<>();
@@ -205,9 +189,7 @@ public class BackendRefundController extends BaseController {
         String remark = param.get("remark") == null ? "" : param.get("remark").toString();
         String rejectReason = param.get("rejectReason") == null ? "" : param.get("rejectReason").toString();
         AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
-        if (accountInfo == null) {
-            return getFailureResult(1001, "请先登录");
-        }
+
         String operator = accountInfo.getAccountName();
         if (status.equals(RefundStatusEnum.REJECT.getKey())) {
             RefundDto dto = new RefundDto();
@@ -246,9 +228,7 @@ public class BackendRefundController extends BaseController {
         String remark = param.get("remark") == null ? "" : param.get("remark").toString();
         String refundAmount = param.get("refundAmount") == null ? "" : param.get("refundAmount").toString();
         AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
-        if (accountInfo == null) {
-            return getFailureResult(1001, "请先登录");
-        }
+
         if (orderId <= 0 || StringUtil.isEmpty(refundAmount)) {
             return getFailureResult(201, "参数有误，发起退款失败");
         }

@@ -24,7 +24,6 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -99,15 +98,7 @@ public class BackendVehicleOrderController extends BaseController {
         List<MtStore> storeList = storeService.queryStoresByParams(paramsStore);
 
         // 服务单状态列表
-        VehicleOrderStatusEnum[] statusListEnum = VehicleOrderStatusEnum.values();
-        List<ParamDto> statusList = new ArrayList<>();
-        for (VehicleOrderStatusEnum enumItem : statusListEnum) {
-            ParamDto paramDto = new ParamDto();
-            paramDto.setKey(enumItem.getKey());
-            paramDto.setName(enumItem.getValue());
-            paramDto.setValue(enumItem.getKey());
-            statusList.add(paramDto);
-        }
+        List<ParamDto> statusList = VehicleOrderStatusEnum.getVehicleOrderStatusList();
 
         Map<String, Object> result = new HashMap<>();
         result.put("storeList", storeList);

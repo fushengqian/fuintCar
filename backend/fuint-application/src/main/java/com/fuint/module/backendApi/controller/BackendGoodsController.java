@@ -7,6 +7,7 @@ import com.fuint.common.dto.*;
 import com.fuint.common.enums.GoodsTypeEnum;
 import com.fuint.common.enums.StatusEnum;
 import com.fuint.common.enums.YesOrNoEnum;
+import com.fuint.common.param.GoodsListParam;
 import com.fuint.common.service.*;
 import com.fuint.common.util.CommonUtil;
 import com.fuint.common.util.TokenUtil;
@@ -79,79 +80,32 @@ public class BackendGoodsController extends BaseController {
      * @return
      */
     @ApiOperation(value = "分页查询商品列表")
-    @RequestMapping(value = "/list", method = RequestMethod.GET)
+    @RequestMapping(value = "/list", method = RequestMethod.POST)
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('goods:goods:index')")
-    public ResponseObject list(HttpServletRequest request) throws BusinessCheckException {
+    public ResponseObject list(HttpServletRequest request, @RequestBody GoodsListParam param) throws BusinessCheckException, IllegalAccessException {
         String token = request.getHeader("Access-Token");
-        Integer page = request.getParameter("page") == null ? Constants.PAGE_NUMBER : Integer.parseInt(request.getParameter("page"));
-        Integer pageSize = request.getParameter("pageSize") == null ? Constants.PAGE_SIZE : Integer.parseInt(request.getParameter("pageSize"));
-        String name = request.getParameter("name");
-        String goodsNo = request.getParameter("goodsNo");
-        String isSingleSpec = request.getParameter("isSingleSpec");
-        String type = request.getParameter("type");
-        String status = request.getParameter("status");
-        String searchStoreId = request.getParameter("storeId");
-        String stock = request.getParameter("stock");
-        String cateId = request.getParameter("cateId");
-
         AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
-        if (accountInfo == null) {
-            return getFailureResult(1001, "请先登录");
-        }
 
         TAccount account = accountService.getAccountInfoById(accountInfo.getId());
         Integer storeId = account.getStoreId() == null ? 0 : account.getStoreId();
         Integer merchantId = account.getMerchantId() == null ? 0 : account.getMerchantId();
 
         PaginationRequest paginationRequest = new PaginationRequest();
-        paginationRequest.setCurrentPage(page);
-        paginationRequest.setPageSize(pageSize);
+        paginationRequest.setCurrentPage(param.getPage());
+        paginationRequest.setPageSize(param.getPageSize());
 
-        Map<String, Object> params = new HashMap<>();
-        if (StringUtil.isNotEmpty(searchStoreId)) {
-            params.put("storeId", searchStoreId);
-        }
         if (merchantId > 0) {
-            params.put("merchantId", merchantId);
+            param.setMerchantId(merchantId);
         }
         if (storeId > 0) {
-            params.put("storeId", storeId);
+            param.setStoreId(storeId);
         }
-        if (StringUtil.isNotEmpty(name)) {
-            params.put("name", name);
-        }
-        if (StringUtil.isNotEmpty(type)) {
-            params.put("type", type);
-        }
-        if (StringUtil.isNotEmpty(cateId)) {
-            params.put("cateId", cateId);
-        }
-        if (StringUtil.isNotEmpty(goodsNo)) {
-            params.put("goodsNo", goodsNo);
-        }
-        if (StringUtil.isNotEmpty(isSingleSpec)) {
-            params.put("isSingleSpec", isSingleSpec);
-        }
-        if (StringUtil.isNotEmpty(status)) {
-            params.put("status", status);
-        }
-        if (StringUtil.isNotEmpty(stock)) {
-            params.put("stock", stock);
-        }
-        paginationRequest.setSearchParams(params);
+        paginationRequest.setSearchParams(CommonUtil.convert(param));
         PaginationResponse<GoodsDto> paginationResponse = goodsService.queryGoodsListByPagination(paginationRequest);
 
         // 商品类型列表
-        GoodsTypeEnum[] typeListEnum = GoodsTypeEnum.values();
-        List<ParamDto> typeList = new ArrayList<>();
-        for (GoodsTypeEnum enumItem : typeListEnum) {
-            ParamDto paramDto = new ParamDto();
-            paramDto.setKey(enumItem.getKey());
-            paramDto.setName(enumItem.getValue());
-            paramDto.setValue(enumItem.getKey());
-            typeList.add(paramDto);
-        }
+        List<ParamDto> typeList = GoodsTypeEnum.getGoodsTypeList();
 
         Map<String, Object> paramsStore = new HashMap<>();
         paramsStore.put("status", StatusEnum.ENABLED.getKey());
@@ -348,15 +302,7 @@ public class BackendGoodsController extends BaseController {
         List<MtStore> storeList = storeService.queryStoresByParams(paramsStore);
 
         // 商品类型列表
-        GoodsTypeEnum[] typeListEnum = GoodsTypeEnum.values();
-        List<ParamDto> typeList = new ArrayList<>();
-        for (GoodsTypeEnum enumItem : typeListEnum) {
-             ParamDto paramDto = new ParamDto();
-             paramDto.setKey(enumItem.getKey());
-             paramDto.setName(enumItem.getValue());
-             paramDto.setValue(enumItem.getKey());
-             typeList.add(paramDto);
-        }
+        List<ParamDto> typeList = GoodsTypeEnum.getGoodsTypeList();
 
         result.put("typeList", typeList);
         result.put("storeId", storeId);
@@ -378,9 +324,6 @@ public class BackendGoodsController extends BaseController {
     public ResponseObject saveHandler(HttpServletRequest request, @RequestBody Map<String, Object> param) throws BusinessCheckException {
         String token = request.getHeader("Access-Token");
         AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
-        if (accountInfo == null) {
-            return getFailureResult(1001, "请先登录");
-        }
 
         String goodsId = param.get("goodsId") == null ? "0" : param.get("goodsId").toString();
         if (StringUtil.isEmpty(goodsId)) {
@@ -603,11 +546,6 @@ public class BackendGoodsController extends BaseController {
         String goodsId = param.get("goodsId") == null ? "0" : param.get("goodsId").toString();
         String name = param.get("name") == null ? "" : param.get("name").toString();
 
-        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
-        if (accountInfo == null) {
-            return getFailureResult(1001, "请先登录");
-        }
-
         if (StringUtil.isEmpty(goodsId)) {
             return getFailureResult(201, "请先保存商品基础信息");
         }
@@ -652,16 +590,10 @@ public class BackendGoodsController extends BaseController {
     @RequestMapping(value = "/saveSpecValue", method = RequestMethod.POST)
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('goods:goods:add')")
-    public ResponseObject saveSpecValue(HttpServletRequest request, @RequestBody Map<String, Object> param) {
-        String token = request.getHeader("Access-Token");
+    public ResponseObject saveSpecValue(@RequestBody Map<String, Object> param) {
         String specName = param.get("specName") == null ? "" : param.get("specName").toString();
         String goodsId = param.get("goodsId") == null ? "" : param.get("goodsId").toString();
         String value = param.get("value") == null ? "" : param.get("value").toString();
-
-        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
-        if (accountInfo == null) {
-            return getFailureResult(1001, "请先登录");
-        }
 
         if (StringUtil.isEmpty(goodsId)) {
             return getFailureResult(201, "请先保存商品基础信息");
@@ -815,9 +747,6 @@ public class BackendGoodsController extends BaseController {
     public ResponseObject selectGoods(HttpServletRequest request, @RequestBody Map<String, Object> params) throws BusinessCheckException {
         String token = request.getHeader("Access-Token");
         AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
-        if (accountInfo == null) {
-            return getFailureResult(1001, "请先登录");
-        }
         if (accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0) {
             params.put("merchantId", accountInfo.getMerchantId());
         }
