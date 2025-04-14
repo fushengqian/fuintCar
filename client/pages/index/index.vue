@@ -50,7 +50,7 @@
         goodsStyle: {
             "background": "#F6F6F6",
             "display": "list",
-            "column": 1,
+            "column": 2,
             "show": ["goodsName", "goodsPrice", "linePrice", "sellingPoint", "goodsSales"]
         },
         goodsParams: {

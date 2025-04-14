@@ -1,6 +1,9 @@
 <template>
   <!-- 商品列表 -->
   <view class="goods-container">
+      <view class="recommend" v-if="list.content.length > 0">
+         <text class="txt">为您推荐</text>
+      </view>
       <mescroll-body ref="mescrollRef" :sticky="true" @init="mescrollInit" :down="{ native: true }" @down="downCallback" :up="upOption" @up="upCallback">
       <view class="diy-goods" :style="{ background: itemStyle.background }">
         <view class="goods-list" :class="[`display__${itemStyle.display}`, `column__${itemStyle.column}`]">
@@ -39,20 +42,27 @@
               </block>
               <!-- 多列商品 -->
               <block v-else>
-                <!-- 商品图片 -->
-                <view class="goods-image">
-                  <image class="image" lazy-load :lazy-load-margin="0" mode="aspectFill" :src="dataItem.logo"></image>
-                </view>
-                <view class="detail">
-                  <!-- 商品标题 -->
-                  <view v-if="itemStyle.show.includes('goodsName')" class="goods-name twoline-hide">
-                    {{ dataItem.name }}
-                  </view>
-                  <!-- 商品价格 -->
-                  <view class="detail-price oneline-hide">
-                    <text v-if="itemStyle.show.includes('goodsPrice')" class="goods-price f-30 col-m">￥{{ dataItem.price }}</text>
-                    <text v-if="itemStyle.show.includes('linePrice') && dataItem.linePrice > 0" class="line-price col-9 f-24">￥{{ dataItem.linePrice }}</text>
-                  </view>
+                <view class="goods-info">
+                    <!-- 商品图片 -->
+                    <view class="goods-image">
+                      <image class="image" lazy-load :lazy-load-margin="0" mode="aspectFill" :src="dataItem.logo"></image>
+                    </view>
+                    <view class="detail">
+                      <!-- 商品标题 -->
+                      <view v-if="itemStyle.show.includes('goodsName')" class="goods-name twoline-hide">
+                        {{ dataItem.name }}
+                      </view>
+                      <!-- 商品卖点 -->
+                      <view v-if="itemStyle.show.includes('sellingPoint')" class="desc-selling_point dis-flex">
+                        <text class="oneline-hide">{{ dataItem.salePoint ? dataItem.salePoint : '' }}</text>
+                      </view>
+                      <!-- 商品价格 -->
+                      <view class="detail-price oneline-hide">
+                        <text v-if="itemStyle.show.includes('goodsPrice')" class="goods-price f-30 col-m">￥{{ dataItem.price }}</text>
+                        <text v-if="itemStyle.show.includes('linePrice') && dataItem.linePrice > 0" class="line-price col-9 f-24">￥{{ dataItem.linePrice }}</text>
+                        <text v-if="itemStyle.show.includes('goodsSales')" class="sales">已售{{ dataItem.initSale ? dataItem.initSale : 0 }}件</text>
+                      </view>
+                    </view>
                 </view>
               </block>
             </view>
@@ -151,7 +161,7 @@
        */
       getGoodsList(pageNo) {
         const app = this
-        console.log('pageNo==', pageNo);
+        console.log('pageNo=====', pageNo);
         const param = { page: pageNo, pageSize: pageSize }
         return new Promise((resolve, reject) => {
           GoodsApi.search(param)
@@ -169,43 +179,65 @@
 </script>
 <style lang="scss" scoped>
   .goods-container {
+      .recommend {
+        font-size: 30rpx;
+        font-weight: bold;
+        margin-left: 20rpx;
+        margin-right: 20rpx;
+        padding: 20rpx 8rpx 20rpx 8rpx;
+        background: #f5f5f5;
+        .txt {
+          border-left: solid $fuint-theme 10rpx;
+          padding-left: 10rpx;
+        }
+      }
       .diy-goods {
         .goods-list {
-          padding: 5rpx;
+          padding: 0rpx 12rpx 12rpx 12rpx;
           box-sizing: border-box;
           .goods-item {
             box-sizing: border-box;
-            padding: 6rpx;
-
-            .goods-image {
-              position: relative;
-              width: 100%;
-              height: 0;
-              padding-bottom: 100%;
-              overflow: hidden;
-              background: #fff;
-
-              &:after {
-                content: '';
-                display: block;
-                margin-top: 100%;
-              }
-
-              .image {
-                position: absolute;
-                width: 100%;
-                height: 100%;
-                top: 0;
-                left: 0;
-                -o-object-fit: cover;
-                object-fit: cover;
-              }
+            padding: 0rpx 12rpx 12rpx 12rpx;
+            background: #f5f5f5;
+            .goods-info {
+                background: #ffffff;
+                border-radius: 16rpx;
+                padding: 2px;
+                overflow: hidden;
+                .goods-image {
+                  position: relative;
+                  width: 100%;
+                  height: 0;
+                  padding-bottom: 100%;
+                  overflow: hidden;
+                  text-align: center;
+                  &:after {
+                    content: '';
+                    display: block;
+                    margin-top: 100%;
+                  }
+                  .image {
+                    position: absolute;
+                    box-sizing: border-box;
+                    padding: 10rpx;
+                    width: 100%;
+                    height: 100%;
+                    top: 0;
+                    left: 0;
+                    -o-object-fit: cover;
+                    object-fit: cover;
+                    border-radius: 40rpx;
+                  }
+                }
             }
 
             .detail {
               padding: 8rpx;
-              background: #fff;
-
+              background: #ffffff;
+              border-bottom-left-radius: 16rpx;
+              border-bottom-right-radius: 16rpx;
+              overflow: hidden;
+              height: 180rpx;
               .goods-name {
                 height: 64rpx;
                 line-height: 1.3;
@@ -218,6 +250,8 @@
               .detail-price {
                 .goods-price {
                   margin-right: 8rpx;
+                  font-size: 34rpx;
+                  font-weight: bold;
                 }
 
                 .line-price {
@@ -246,6 +280,21 @@
             .goods-item {
               width: 50%;
             }
+            .desc-selling_point {
+              min-height: 40rpx;
+              line-height: 40rpx;
+              max-width: 400rpx;
+              font-size: 24rpx;
+              color: #e49a3d;
+              overflow: hidden;
+            }
+            
+            .sales {
+              color: #999;
+              font-size: 24rpx;
+              margin-top: 10rpx;
+              float: right;
+            }
           }
 
           &.column__3 {
@@ -263,9 +312,11 @@
               box-sizing: border-box;
               background: #fff;
               line-height: 1.6;
-              border: 1rpx #F5f5f5 solid;
               &:last-child {
                 margin-bottom: 0;
+              }
+              &:first-child {
+                  margin-top: 8rpx;
               }
             }
 
@@ -280,7 +331,6 @@
                 width: 220rpx;
                 height: 200rpx;
                 border-radius: 10rpx;
-                border: 1rpx #cccccc solid;
               }
             }
 
