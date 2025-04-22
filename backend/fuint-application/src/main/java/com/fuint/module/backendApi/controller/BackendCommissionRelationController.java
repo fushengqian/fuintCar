@@ -67,9 +67,6 @@ public class BackendCommissionRelationController extends BaseController {
         String subUserId = request.getParameter("subUserId");
 
         AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
-        if (accountInfo == null) {
-            return getFailureResult(1001, "请先登录");
-        }
 
         PaginationRequest paginationRequest = new PaginationRequest();
         paginationRequest.setCurrentPage(page);
@@ -126,13 +123,17 @@ public class BackendCommissionRelationController extends BaseController {
     public ResponseObject updateStatus(HttpServletRequest request, @RequestBody Map<String, Object> param) throws BusinessCheckException {
         String token = request.getHeader("Access-Token");
         AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
-        if (accountInfo == null) {
-            return getFailureResult(1001, "请先登录");
-        }
+
         Integer id = param.get("id") == null ? 0 : Integer.parseInt(param.get("id").toString());
         String status = param.get("status") == null ? StatusEnum.ENABLED.getKey() : param.get("status").toString();
 
         MtCommissionRelation mtCommissionRelation = commissionRelationService.getById(id);
+        if (accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0) {
+            if (!accountInfo.getMerchantId().equals(mtCommissionRelation.getMerchantId())) {
+                return getFailureResult(1004);
+            }
+        }
+
         mtCommissionRelation.setStatus(status);
         commissionRelationService.updateById(mtCommissionRelation);
 
@@ -142,7 +143,7 @@ public class BackendCommissionRelationController extends BaseController {
     /**
      * 删除分销提成邀请记录
      *
-     * @param  id 邀请记录ID
+     * @param id 邀请记录ID
      * @return
      */
     @ApiOperation(value = "删除分销提成邀请记录")
@@ -152,13 +153,15 @@ public class BackendCommissionRelationController extends BaseController {
     public ResponseObject delete(HttpServletRequest request, @PathVariable("id") Integer id) throws BusinessCheckException {
         String token = request.getHeader("Access-Token");
         AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
-        if (accountInfo == null) {
-            return getFailureResult(1001, "请先登录");
-        }
 
         MtCommissionRelation mtCommissionRelation = commissionRelationService.getById(id);
         mtCommissionRelation.setStatus(StatusEnum.DISABLE.getKey());
         commissionRelationService.updateById(mtCommissionRelation);
+        if (accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0) {
+            if (!accountInfo.getMerchantId().equals(mtCommissionRelation.getMerchantId())) {
+                return getFailureResult(1004);
+            }
+        }
 
         return getSuccessResult(true);
     }

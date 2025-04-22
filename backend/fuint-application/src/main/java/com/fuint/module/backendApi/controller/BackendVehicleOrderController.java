@@ -61,9 +61,6 @@ public class BackendVehicleOrderController extends BaseController {
         String endTime = request.getParameter("endTime");
 
         AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
-        if (accountInfo == null) {
-            return getFailureResult(1001, "请先登录");
-        }
         TAccount account = accountService.getAccountInfoById(accountInfo.getId());
         if (account == null) {
             return getFailureResult(1002, "账号不存在");
@@ -115,9 +112,6 @@ public class BackendVehicleOrderController extends BaseController {
             String token = request.getHeader("Access-Token");
 
             AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
-            if (accountInfo == null) {
-                return getFailureResult(1001, "请先登录");
-            }
             TAccount account = accountService.getAccountInfoById(accountInfo.getId());
             if (account == null) {
                 return getFailureResult(1002, "账号不存在");
@@ -132,11 +126,7 @@ public class BackendVehicleOrderController extends BaseController {
     @CrossOrigin
     public ResponseObject update(HttpServletRequest request, @RequestBody Map<String, String> param) {
         String token = request.getHeader("Access-Token");
-
         AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
-        if (accountInfo == null) {
-            return getFailureResult(1001, "请先登录");
-        }
         TAccount account = accountService.getAccountInfoById(accountInfo.getId());
         if (account == null) {
             return getFailureResult(1002, "账号不存在");
@@ -170,9 +160,6 @@ public class BackendVehicleOrderController extends BaseController {
         String status = param.get("status") == null ? StatusEnum.ENABLED.getKey() : param.get("status");
 
         AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
-        if (accountInfo == null) {
-            return getFailureResult(1001, "请先登录");
-        }
 
         MtVehicleOrder mtVehicleOrder = vehicleOrderService.getVehicleOrderById(vehicleId);
         if (mtVehicleOrder == null) {
@@ -192,9 +179,6 @@ public class BackendVehicleOrderController extends BaseController {
     public ResponseObject delete(HttpServletRequest request, @PathVariable("id") Integer id) throws BusinessCheckException {
         String token = request.getHeader("Access-Token");
         AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
-        if (accountInfo == null) {
-            return getFailureResult(1001, "请先登录");
-        }
 
         String operator = accountInfo.getAccountName();
         vehicleOrderService.deleteVehicleOrder(id, operator);

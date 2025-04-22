@@ -172,6 +172,10 @@ public class BalanceServiceImpl extends ServiceImpl<MtBalanceMapper, MtBalance> 
         mtBalance.setUpdateTime(new Date());
 
         MtUser mtUser = mtUserMapper.selectById(mtBalance.getUserId());
+        if (!mtBalance.getMerchantId().equals(mtUser.getMerchantId())) {
+            throw new BusinessCheckException("余额充值出错，权限不足");
+        }
+
         BigDecimal newAmount = mtUser.getBalance().add(mtBalance.getAmount());
         if (newAmount.compareTo(new BigDecimal("0")) < 0) {
             return false;

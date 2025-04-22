@@ -86,9 +86,6 @@ public class BackendAccountController extends BaseController {
         String staffId = request.getParameter("staffId") == null ? "" : request.getParameter("staffId");
 
         AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
-        if (accountInfo == null) {
-            return getFailureResult(1001, "请先登录");
-        }
 
         PaginationRequest paginationRequest = new PaginationRequest();
         paginationRequest.setCurrentPage(page);
@@ -143,9 +140,6 @@ public class BackendAccountController extends BaseController {
     public ResponseObject info(HttpServletRequest request, @PathVariable("userId") Long userId) throws BusinessCheckException {
         String token = request.getHeader("Access-Token");
         AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
-        if (accountInfo == null) {
-            return getFailureResult(1001, "请先登录");
-        }
         Map<String, Object> result = new HashMap<>();
 
         List<TDuty> roleList = tDutyService.getAvailableRoles(accountInfo.getMerchantId(), accountInfo.getId());
@@ -221,10 +215,7 @@ public class BackendAccountController extends BaseController {
     @PreAuthorize("@pms.hasPermission('system:account:add')")
     public ResponseObject doCreate(HttpServletRequest request, @RequestBody Map<String, Object> param) throws BusinessCheckException {
         String token = request.getHeader("Access-Token");
-        AccountInfo loginAccount = TokenUtil.getAccountInfoByToken(token);
-        if (loginAccount == null) {
-            return getFailureResult(1001, "请先登录");
-        }
+        AccountInfo account = TokenUtil.getAccountInfoByToken(token);
 
         List<Integer> roleIds = (List) param.get("roleIds");
         String accountName = param.get("accountName").toString();
@@ -261,6 +252,7 @@ public class BackendAccountController extends BaseController {
         tAccount.setPassword(password);
         tAccount.setIsActive(1);
         tAccount.setLocked(0);
+        tAccount.setOwnerId(account.getOwnerId());
         if (StringUtil.isNotEmpty(storeId)) {
             tAccount.setStoreId(Integer.parseInt(storeId));
         }
@@ -298,11 +290,10 @@ public class BackendAccountController extends BaseController {
         Long id = Long.parseLong(param.get("id").toString());
 
         AccountInfo loginAccount = TokenUtil.getAccountInfoByToken(token);
-        if (loginAccount == null) {
-            return getFailureResult(1001, "请先登录");
-        }
-
         TAccount tAccount = tAccountService.getAccountInfoById(id.intValue());
+        if (loginAccount.getMerchantId() > 0 && !tAccount.getMerchantId().equals(loginAccount.getMerchantId())) {
+            return getFailureResult(1004);
+        }
         tAccount.setAcctId(id.intValue());
         tAccount.setRealName(realName);
 
@@ -359,9 +350,6 @@ public class BackendAccountController extends BaseController {
     public ResponseObject deleteAccount(HttpServletRequest request, @PathVariable("userIds") String userIds) {
         String token = request.getHeader("Access-Token");
         AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
-        if (accountInfo == null) {
-            return getFailureResult(1001, "请先登录");
-        }
         String ids[] = userIds.split(",");
         if (ids.length > 0) {
             for (int i = 0; i < ids.length; i++) {
@@ -401,12 +389,9 @@ public class BackendAccountController extends BaseController {
         Integer status = param.get("status") == null ? 0 : Integer.parseInt(param.get("status").toString());
 
         AccountInfo accountDto = TokenUtil.getAccountInfoByToken(token);
-        if (accountDto == null) {
-            return getFailureResult(1001, "请先登录");
-        }
 
         TAccount tAccount = tAccountService.getAccountInfoById(userId.intValue());
-        if (tAccount == null) {
+        if (tAccount == null || accountDto == null) {
             return getFailureResult(201, "账户不存在");
         }
 
@@ -430,12 +415,12 @@ public class BackendAccountController extends BaseController {
         Integer userId = param.get("userId") == null ? 0 : Integer.parseInt(param.get("userId").toString());
         String password = param.get("password") == null ? "" : param.get("password").toString();
 
-        AccountInfo accountDto = TokenUtil.getAccountInfoByToken(token);
-        if (accountDto == null) {
-            return getFailureResult(1001, "请先登录");
-        }
+        AccountInfo account = TokenUtil.getAccountInfoByToken(token);
 
         TAccount tAccount = tAccountService.getAccountInfoById(userId.intValue());
+        if (account.getMerchantId() > 0 && !account.getMerchantId().equals(tAccount.getMerchantId())) {
+            return getFailureResult(1004);
+        }
         tAccount.setPassword(password);
 
         if (tAccount != null) {

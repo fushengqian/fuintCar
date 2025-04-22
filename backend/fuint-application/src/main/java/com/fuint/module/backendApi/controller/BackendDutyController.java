@@ -209,9 +209,6 @@ public class BackendDutyController extends BaseController {
         String description = param.get("description").toString();
 
         AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
-        if (accountInfo == null) {
-            return getFailureResult(1001, "请先登录");
-        }
 
         if (StringUtil.isEmpty(id)) {
             return getFailureResult(201, "信息提交有误");
@@ -254,9 +251,6 @@ public class BackendDutyController extends BaseController {
     public ResponseObject deleteRole(HttpServletRequest request, @PathVariable("roleId") Long roleId) throws BusinessCheckException {
         String token = request.getHeader("Access-Token");
         AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
-        if (accountInfo == null) {
-            return getFailureResult(1001, "请先登录");
-        }
         tDutyService.deleteDuty(accountInfo.getMerchantId(), roleId);
         return getSuccessResult(true);
     }
@@ -274,9 +268,6 @@ public class BackendDutyController extends BaseController {
     public ResponseObject changeStatus(HttpServletRequest request, @RequestBody DutyStatusRequest dutyStatusRequest) throws BusinessCheckException {
         String token = request.getHeader("Access-Token");
         AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
-        if (accountInfo == null) {
-            return getFailureResult(1001, "请先登录");
-        }
         tDutyService.updateStatus(accountInfo.getMerchantId(), dutyStatusRequest);
         return getSuccessResult(true);
     }

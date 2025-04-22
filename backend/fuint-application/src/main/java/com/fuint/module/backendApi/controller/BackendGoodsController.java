@@ -151,11 +151,9 @@ public class BackendGoodsController extends BaseController {
         String token = request.getHeader("Access-Token");
 
         AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
-        if (accountInfo == null) {
-            return getFailureResult(1001, "请先登录");
-        }
         String operator = accountInfo.getAccountName();
         goodsService.deleteGoods(goodsId, operator);
+
         return getSuccessResult(true);
     }
 
@@ -174,17 +172,16 @@ public class BackendGoodsController extends BaseController {
         Integer id = params.get("id") == null ? 0 : Integer.parseInt(params.get("id").toString());
 
         AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
-        if (accountInfo == null) {
-            return getFailureResult(1001, "请先登录");
-        }
 
         MtGoods mtGoods = goodsService.queryGoodsById(id);
         if (mtGoods == null) {
             return getFailureResult(201, "该商品不存在");
         }
+        if (accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0 && !mtGoods.getMerchantId().equals(accountInfo.getMerchantId())) {
+            return getFailureResult(1004);
+        }
 
         String operator = accountInfo.getAccountName();
-
         MtGoods goodsInfo = new MtGoods();
         goodsInfo.setOperator(operator);
         goodsInfo.setId(id);
@@ -209,9 +206,6 @@ public class BackendGoodsController extends BaseController {
         String token = request.getHeader("Access-Token");
 
         AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
-        if (accountInfo == null) {
-            return getFailureResult(1001, "请先登录");
-        }
         Integer storeId = accountInfo.getStoreId();
         GoodsDto goods = goodsService.getGoodsDetail(goodsId, false);
 

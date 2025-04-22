@@ -71,12 +71,7 @@ public class BackendBookCateController extends BaseController {
         String searchStoreId = request.getParameter("storeId");
 
         AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
-        Integer storeId;
-        if (accountInfo == null) {
-            return getFailureResult(1001, "请先登录");
-        } else {
-            storeId = accountInfo.getStoreId();
-        }
+        Integer storeId = accountInfo.getStoreId();
 
         PaginationRequest paginationRequest = new PaginationRequest();
         paginationRequest.setCurrentPage(page);
@@ -136,9 +131,6 @@ public class BackendBookCateController extends BaseController {
         Integer cateId = params.get("cateId") == null ? 0 : Integer.parseInt(params.get("cateId").toString());
 
         AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
-        if (accountInfo == null) {
-            return getFailureResult(1001, "请先登录");
-        }
 
         MtBookCate mtBookCate = bookCateService.getBookCateById(cateId);
         if (mtBookCate == null) {
@@ -175,10 +167,6 @@ public class BackendBookCateController extends BaseController {
         String sort = (params.get("sort") == null || StringUtil.isEmpty(params.get("sort").toString())) ? "0" : params.get("sort").toString();
 
         AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
-        if (accountInfo == null) {
-            return getFailureResult(1001, "请先登录");
-        }
-
         if (accountInfo.getMerchantId() == null || accountInfo.getMerchantId() < 1) {
             throw new BusinessCheckException("平台方帐号无法执行该操作，请使用商户帐号操作");
         }
@@ -213,13 +201,7 @@ public class BackendBookCateController extends BaseController {
     @RequestMapping(value = "/info/{id}", method = RequestMethod.GET)
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('book:index')")
-    public ResponseObject info(HttpServletRequest request, @PathVariable("id") Integer id) throws BusinessCheckException {
-        String token = request.getHeader("Access-Token");
-        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
-        if (accountInfo == null) {
-            return getFailureResult(1001, "请先登录");
-        }
-
+    public ResponseObject info(@PathVariable("id") Integer id) throws BusinessCheckException {
         MtBookCate bookCateInfo = bookCateService.getBookCateById(id);
         String imagePath = settingService.getUploadBasePath();
 

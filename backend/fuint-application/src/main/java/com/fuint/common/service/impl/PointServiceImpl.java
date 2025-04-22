@@ -169,6 +169,10 @@ public class PointServiceImpl extends ServiceImpl<MtPointMapper, MtPoint> implem
         }
 
         MtUser mtUser = mtUserMapper.selectById(mtPoint.getUserId());
+        if (!mtPoint.getMerchantId().equals(mtUser.getMerchantId())) {
+            throw new BusinessCheckException("充值积分出错，权限不足");
+        }
+
         Integer newAmount = mtUser.getPoint() + mtPoint.getAmount();
         if (newAmount < 0) {
             return;
