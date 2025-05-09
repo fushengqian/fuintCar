@@ -101,10 +101,4 @@ public interface CouponGroupService extends IService<MtCouponGroup> {
      * */
      String saveExcelFile(MultipartFile file, HttpServletRequest request) throws Exception;
 
-    /**
-     * 获取分组统计数据
-     *
-     * @param groupId 分组ID
-     * */
-    GroupDataDto getGroupData(Integer groupId, HttpServletRequest request, Model model) throws BusinessCheckException;
 }

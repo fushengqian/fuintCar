@@ -2,6 +2,7 @@ package com.fuint.common.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fuint.common.dto.StoreDto;
+import com.fuint.common.dto.StoreInfo;
 import com.fuint.framework.exception.BusinessCheckException;
 import com.fuint.framework.pagination.PaginationRequest;
 import com.fuint.framework.pagination.PaginationResponse;
@@ -86,6 +87,16 @@ public interface StoreService extends IService<MtStore> {
     List<MtStore> queryStoresByParams(Map<String, Object> params) throws BusinessCheckException;
 
     /**
+     * 获取我的店铺列表
+     *
+     * @param merchantId 商户ID
+     * @param storeId 店铺ID
+     * @param status 状态
+     * @return
+     * */
+    List<MtStore> getMyStoreList(Integer merchantId, Integer storeId, String status) throws BusinessCheckException;
+
+    /**
      * 根据距离远近查找店铺
      *
      * @param merchantNo 商户号
@@ -94,7 +105,7 @@ public interface StoreService extends IService<MtStore> {
      * @param longitude 经度
      * @return
      * */
-    List<MtStore> queryByDistance(String merchantNo, String keyword, String latitude, String longitude) throws BusinessCheckException;
+    List<StoreInfo> queryByDistance(String merchantNo, String keyword, String latitude, String longitude) throws BusinessCheckException;
 
     /**
      * 获取店铺名称
@@ -103,5 +114,13 @@ public interface StoreService extends IService<MtStore> {
      * @return
      * */
     String getStoreNames(String storeIds);
+
+    /**
+     * 根据商户ID删除店铺信息
+     *
+     * @param merchantId 商户ID
+     * @return
+     * */
+    void deleteStoreByMerchant(Integer merchantId);
 
 }
