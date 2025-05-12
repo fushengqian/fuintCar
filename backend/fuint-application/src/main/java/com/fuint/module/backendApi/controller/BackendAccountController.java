@@ -163,7 +163,7 @@ public class BackendAccountController extends BaseController {
         if (accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0) {
             params.put("merchantId", accountInfo.getMerchantId());
         }
-        List<MtStore> stores = storeService.queryStoresByParams(params);
+        List<MtStore> stores = storeService.getMyStoreList(accountInfo.getMerchantId(), accountInfo.getStoreId(), StatusEnum.ENABLED.getKey());
         result.put("stores", stores);
 
         List<MtMerchant> merchants = merchantService.queryMerchantByParams(params);
