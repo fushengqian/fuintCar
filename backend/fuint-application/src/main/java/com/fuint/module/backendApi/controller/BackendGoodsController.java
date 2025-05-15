@@ -318,6 +318,7 @@ public class BackendGoodsController extends BaseController {
         String goodsNo = param.get("goodsNo") == null ? "" : param.get("goodsNo").toString();
         String price = param.get("price") == null ? "" : param.get("price").toString();
         String linePrice = param.get("linePrice") == null ? "" : param.get("linePrice").toString();
+        String costPrice = param.get("costPrice") == null ? "" : param.get("costPrice").toString();
         String weight = param.get("weight") == null ? "" : param.get("weight").toString();
         Integer initSale = param.get("initSale") == null ? 0 : Integer.parseInt(param.get("initSale").toString());
         String salePoint = param.get("salePoint") == null ? "" : param.get("salePoint").toString();
@@ -414,6 +415,12 @@ public class BackendGoodsController extends BaseController {
             }
             sku.setLinePrice(skuLinePrice);
 
+            BigDecimal skuCostPrice = new BigDecimal("0");
+            if (skuDto.get("costPrice") != null && StringUtil.isNotEmpty(skuDto.get("costPrice").toString())) {
+                skuCostPrice = new BigDecimal(skuDto.get("costPrice").toString());
+            }
+            sku.setCostPrice(skuCostPrice);
+
             BigDecimal skuWeight = new BigDecimal("0");
             if (skuDto.get("weight") != null && StringUtil.isNotEmpty(skuDto.get("weight").toString())) {
                 skuWeight = new BigDecimal(skuDto.get("weight").toString());
@@ -431,6 +438,7 @@ public class BackendGoodsController extends BaseController {
         if (skuList.size() > 0 && isSingleSpec.equals(YesOrNoEnum.NO.getKey())) {
             price = skuList.get(0).get("price").toString();
             linePrice = skuList.get(0).get("linePrice").toString();
+            costPrice = skuList.get(0).get("costPrice").toString();
             weight = skuList.get(0).get("weight").toString();
             // 库存等于所有sku库存相加
             Integer allStock = 0;
@@ -481,6 +489,9 @@ public class BackendGoodsController extends BaseController {
         }
         if (StringUtil.isNotEmpty(linePrice)) {
             mtGoods.setLinePrice(new BigDecimal(linePrice));
+        }
+        if (StringUtil.isNotEmpty(costPrice)) {
+            mtGoods.setCostPrice(new BigDecimal(costPrice));
         }
         if (StringUtil.isNotEmpty(weight)) {
             mtGoods.setWeight(new BigDecimal(weight));

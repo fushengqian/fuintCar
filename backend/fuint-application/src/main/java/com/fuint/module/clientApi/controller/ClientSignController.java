@@ -148,7 +148,7 @@ public class ClientSignController extends BaseController {
         Integer merchantId = merchantService.getMerchantId(merchantNo);
         JSONObject userInfo = weixinService.getWxOpenId(merchantId, param.get("code").toString());
 
-        logger.error("公众号授权登录, userInfo:{}，param:{}", userInfo, param);
+        logger.info("公众号授权登录, userInfo:{}，param:{}", userInfo, param);
 
         if (userInfo == null) {
             return getFailureResult(201, "微信公众号授权失败");
