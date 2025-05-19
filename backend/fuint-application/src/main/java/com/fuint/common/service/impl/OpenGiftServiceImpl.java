@@ -288,6 +288,7 @@ public class OpenGiftServiceImpl extends ServiceImpl<MtOpenGiftMapper, MtOpenGif
                // 加积分
                if (item.getPoint() > 0) {
                    MtPoint reqPointDto = new MtPoint();
+                   reqPointDto.setMerchantId(user.getMerchantId());
                    reqPointDto.setUserId(userId);
                    reqPointDto.setAmount(item.getPoint());
                    reqPointDto.setDescription("开卡赠送"+ item.getPoint() +"积分");

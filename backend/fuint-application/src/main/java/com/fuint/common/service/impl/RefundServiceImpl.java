@@ -498,6 +498,7 @@ public class RefundServiceImpl extends ServiceImpl<MtRefundMapper, MtRefund> imp
         // 返还积分
         if (orderInfo.getUsePoint() != null && orderInfo.getUsePoint() > 0) {
             MtPoint reqPointDto = new MtPoint();
+            reqPointDto.setMerchantId(orderInfo.getMerchantId());
             reqPointDto.setUserId(orderInfo.getUserId());
             reqPointDto.setAmount(orderInfo.getUsePoint());
             reqPointDto.setDescription("售后订单" + orderInfo.getOrderSn() + "退回"+ orderInfo.getUsePoint() +"积分");
