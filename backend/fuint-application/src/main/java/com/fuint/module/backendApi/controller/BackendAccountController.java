@@ -24,6 +24,7 @@ import com.fuint.utils.StringUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.AllArgsConstructor;
+import org.springframework.beans.BeanUtils;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
@@ -155,18 +156,10 @@ public class BackendAccountController extends BaseController {
         }
         result.put("roles", roles);
 
-        Map<String, Object> params = new HashMap<>();
-        params.put("status", StatusEnum.ENABLED.getKey());
-        if (accountInfo.getStoreId() != null && accountInfo.getStoreId() > 0) {
-            params.put("storeId", accountInfo.getStoreId());
-        }
-        if (accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0) {
-            params.put("merchantId", accountInfo.getMerchantId());
-        }
         List<MtStore> stores = storeService.getMyStoreList(accountInfo.getMerchantId(), accountInfo.getStoreId(), StatusEnum.ENABLED.getKey());
         result.put("stores", stores);
 
-        List<MtMerchant> merchants = merchantService.queryMerchantByParams(params);
+        List<MtMerchant> merchants = merchantService.getMyMerchantList(accountInfo.getMerchantId(), accountInfo.getStoreId(), StatusEnum.ENABLED.getKey());
         result.put("merchants", merchants);
 
         AccountDto accountDto = null;
@@ -174,24 +167,15 @@ public class BackendAccountController extends BaseController {
             TAccount tAccount = tAccountService.getAccountInfoById(userId.intValue());
             accountDto = new AccountDto();
             accountDto.setId(tAccount.getAcctId());
-            accountDto.setAccountKey(tAccount.getAccountKey());
-            accountDto.setAccountName(tAccount.getAccountName());
-            accountDto.setAccountStatus(tAccount.getAccountStatus());
-            accountDto.setCreateDate(tAccount.getCreateDate());
-            accountDto.setRealName(tAccount.getRealName());
-            accountDto.setModifyDate(tAccount.getModifyDate());
-            accountDto.setStaffId(tAccount.getStaffId());
-            accountDto.setMerchantId(tAccount.getMerchantId());
-            if (tAccount.getStoreId() > 0) {
-                accountDto.setStoreId(tAccount.getStoreId());
-            }
-            if (tAccount.getStoreId() > 0) {
+            BeanUtils.copyProperties(tAccount, accountDto);
+            BeanUtils.copyProperties(tAccount, accountDto);
+            if (tAccount.getStoreId() != null && tAccount.getStoreId() > 0) {
                 MtStore mtStore = storeService.queryStoreById(tAccount.getStoreId());
                 if (mtStore != null) {
                     accountDto.setStoreName(mtStore.getName());
                 }
             }
-            if (tAccount != null) {
+            if (tAccount.getAcctId() != null) {
                 List<Long> roleIds = tAccountService.getRoleIdsByAccountId(tAccount.getAcctId());
                 result.put("roleIds", roleIds);
             }

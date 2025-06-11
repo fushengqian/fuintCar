@@ -7,10 +7,7 @@ import com.fuint.common.enums.StatusEnum;
 import com.fuint.common.enums.UserSettingEnum;
 import com.fuint.common.enums.YesOrNoEnum;
 import com.fuint.common.service.*;
-import com.fuint.common.util.CommonUtil;
-import com.fuint.common.util.DateUtil;
-import com.fuint.common.util.PhoneFormatCheckUtils;
-import com.fuint.common.util.TokenUtil;
+import com.fuint.common.util.*;
 import com.fuint.framework.exception.BusinessCheckException;
 import com.fuint.framework.pagination.PaginationRequest;
 import com.fuint.framework.pagination.PaginationResponse;
@@ -24,9 +21,13 @@ import lombok.AllArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.MultipartHttpServletRequest;
 import weixin.popular.util.JsonUtil;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.text.ParseException;
 import java.util.*;
 
@@ -71,6 +72,11 @@ public class BackendMemberController extends BaseController {
      * 微信相关接口
      * */
     private WeixinService weixinService;
+
+    /**
+     * 上传文件服务接口
+     * */
+    private UploadService uploadService;
 
     /**
      * 查询会员列表
@@ -554,5 +560,39 @@ public class BackendMemberController extends BaseController {
 
         List<GroupMemberDto> memberList = memberService.searchMembers(accountInfo.getMerchantId(), keyword, groupIds,1, Constants.MAX_ROWS);
         return getSuccessResult(memberList);
+    }
+
+    /**
+     * 下载会员导入模板
+     *
+     * @return
+     */
+    @ApiOperation(value = "下载会员导入模板")
+    @RequestMapping(value = "/downloadTemplate", method = RequestMethod.GET)
+    @CrossOrigin
+    public void downloadTemplate(HttpServletResponse response) throws IOException {
+        ExcelUtil.downLoadTemplate(response, "MemberTemplate.xlsx");
+    }
+
+    /**
+     * 上传会员导入文件
+     *
+     * @param request
+     * @throws
+     */
+    @ApiOperation(value = "上传会员导入文件")
+    @RequestMapping(value = "/uploadMemberFile", method = RequestMethod.POST)
+    @CrossOrigin
+    public ResponseObject uploadMemberFile(HttpServletRequest request) throws Exception {
+        String token = request.getHeader("Access-Token");
+        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
+
+        MultipartHttpServletRequest multipartRequest = (MultipartHttpServletRequest) request;
+        MultipartFile file = multipartRequest.getFile("file");
+        String filePath = uploadService.saveUploadFile(request, file);
+
+        Boolean result = memberService.importMember(file, accountInfo, filePath);
+
+        return getSuccessResult(result);
     }
 }

@@ -7,7 +7,6 @@ import com.fuint.framework.pagination.PaginationRequest;
 import com.fuint.framework.pagination.PaginationResponse;
 import com.fuint.repository.model.MtGoodsCate;
 import java.util.List;
-import java.util.Map;
 
 /**
  * 商品分类业务接口
@@ -61,10 +60,24 @@ public interface CateService extends IService<MtGoodsCate> {
     MtGoodsCate updateCate(MtGoodsCate reqDto) throws BusinessCheckException;
 
     /**
-     * 根据条件搜索分类
+     * 获取分类列表
      *
-     * @param params 查询参数
+     * @param merchantId 商户
+     * @param storeId 店铺ID
+     * @param name 店铺名称
+     * @param status 状态
      * @return
      * */
-    List<MtGoodsCate> queryCateListByParams(Map<String, Object> params) throws BusinessCheckException;
+    List<MtGoodsCate> getCateList(Integer merchantId, Integer storeId, String name, String status) throws BusinessCheckException;
+
+    /**
+     * 获取分类ID
+     *
+     * @param merchantId 商户ID
+     * @param storeId 店铺ID
+     * @param name 分类名称
+     * @return
+     * */
+    Integer getGoodsCateId(Integer merchantId, Integer storeId, String name);
+
 }

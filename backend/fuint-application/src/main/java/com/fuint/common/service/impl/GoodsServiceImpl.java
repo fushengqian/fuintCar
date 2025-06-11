@@ -1,16 +1,20 @@
 package com.fuint.common.service.impl;
 
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fuint.common.Constants;
+import com.fuint.common.dto.AccountInfo;
 import com.fuint.common.dto.GoodsDto;
 import com.fuint.common.dto.GoodsSpecValueDto;
 import com.fuint.common.dto.GoodsTopDto;
 import com.fuint.common.enums.GoodsTypeEnum;
+import com.fuint.common.enums.PlatformTypeEnum;
 import com.fuint.common.enums.StatusEnum;
 import com.fuint.common.enums.YesOrNoEnum;
 import com.fuint.common.service.*;
+import com.fuint.common.util.XlsUtil;
 import com.fuint.framework.annoation.OperationServiceLog;
 import com.fuint.framework.exception.BusinessCheckException;
 import com.fuint.framework.pagination.PaginationRequest;
@@ -27,12 +31,17 @@ import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import lombok.AllArgsConstructor;
 import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -46,6 +55,8 @@ import java.util.stream.Collectors;
 @Service
 @AllArgsConstructor(onConstructor_= {@Lazy})
 public class GoodsServiceImpl extends ServiceImpl<MtGoodsMapper, MtGoods> implements GoodsService {
+
+    private static final Logger logger = LoggerFactory.getLogger(GoodsServiceImpl.class);
 
     private MtGoodsMapper mtGoodsMapper;
 
@@ -132,6 +143,25 @@ public class GoodsServiceImpl extends ServiceImpl<MtGoodsMapper, MtGoods> implem
         if (StringUtils.isNotBlank(hasPrice)) {
             if (hasPrice.equals(YesOrNoEnum.YES.getKey())) {
                 lambdaQueryWrapper.gt(MtGoods::getPrice, 0);
+            }
+        }
+        String platform = paginationRequest.getSearchParams().get("platform") == null ? "" : paginationRequest.getSearchParams().get("platform").toString();
+        if (StringUtils.isNotBlank(platform)) {
+            if (platform.equals(PlatformTypeEnum.H5.getCode()) || platform.equals(PlatformTypeEnum.MP_WEIXIN.getCode())) {
+                // 会员端
+                lambdaQueryWrapper.in(MtGoods::getPlatform, new ArrayList<>(Arrays.asList("0", "1")));
+            } else if(platform.equals(PlatformTypeEnum.PC.getCode())) {
+                // PC端
+                lambdaQueryWrapper.in(MtGoods::getPlatform, new ArrayList<>(Arrays.asList("0", "2")));
+            } else if(platform.equals("0")) {
+                // 不限制
+                lambdaQueryWrapper.eq(MtGoods::getPlatform, 0);
+            } else if(platform.equals("1")) {
+                // 仅会员端
+                lambdaQueryWrapper.eq(MtGoods::getPlatform, 1);
+            } else if (platform.equals("2")) {
+                // 仅PC端
+                lambdaQueryWrapper.eq(MtGoods::getPlatform, 2);
             }
         }
         String sortType = paginationRequest.getSearchParams().get("sortType") == null ? "" : paginationRequest.getSearchParams().get("sortType").toString();
@@ -320,6 +350,9 @@ public class GoodsServiceImpl extends ServiceImpl<MtGoodsMapper, MtGoods> implem
         }
         if (!mtGoods.getType().equals(GoodsTypeEnum.COUPON.getKey())) {
             mtGoods.setCouponIds("");
+        }
+        if (reqDto.getPlatform() != null) {
+            mtGoods.setPlatform(reqDto.getPlatform());
         }
         if (mtGoods.getCouponIds() != null && StringUtil.isNotEmpty(mtGoods.getCouponIds())) {
             String couponIds[] = mtGoods.getCouponIds().split(",");
@@ -540,6 +573,7 @@ public class GoodsServiceImpl extends ServiceImpl<MtGoodsMapper, MtGoods> implem
      *
      * @param storeId 店铺ID
      * @param keyword 关键字
+     * @param platform 平台
      * @param cateId 分类ID
      * @param page 当前页码
      * @param pageSize 每页页数
@@ -547,7 +581,7 @@ public class GoodsServiceImpl extends ServiceImpl<MtGoodsMapper, MtGoods> implem
      * @return
      * */
     @Override
-    public Map<String, Object> getStoreGoodsList(Integer storeId, String keyword, Integer cateId, Integer page, Integer pageSize) throws BusinessCheckException {
+    public Map<String, Object> getStoreGoodsList(Integer storeId, String keyword, String platform, Integer cateId, Integer page, Integer pageSize) throws BusinessCheckException {
         MtStore mtStore = storeService.queryStoreById(storeId);
         if (mtStore == null) {
             Map<String, Object> result = new HashMap<>();
@@ -568,9 +602,9 @@ public class GoodsServiceImpl extends ServiceImpl<MtGoodsMapper, MtGoods> implem
         } else {
             pageHelper = PageHelper.startPage(page, pageSize);
             if (keyword != null && StringUtil.isNotEmpty(keyword)) {
-                goodsList = mtGoodsMapper.searchStoreGoodsList(merchantId, storeId, keyword);
+                goodsList = mtGoodsMapper.searchStoreGoodsList(merchantId, storeId, keyword, platform);
             } else {
-                goodsList = mtGoodsMapper.getStoreGoodsList(merchantId, storeId, cateId);
+                goodsList = mtGoodsMapper.getStoreGoodsList(merchantId, storeId, cateId, platform);
             }
         }
         List<MtGoods> dataList = new ArrayList<>();
@@ -783,5 +817,170 @@ public class GoodsServiceImpl extends ServiceImpl<MtGoodsMapper, MtGoods> implem
             storeIds.add("0");
         }
         return storeIds.stream().collect(Collectors.joining(","));
+    }
+
+    /**
+     * 导入商品
+     *
+     * @param file excel文件
+     * @param accountInfo 操作者
+     * @param filePath 文件路径
+     * @return
+     * */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    @OperationServiceLog(description = "导入商品列表")
+    public Boolean importGoods(MultipartFile file, AccountInfo accountInfo, String filePath) throws BusinessCheckException {
+        String originalFileName = file.getOriginalFilename();
+        boolean isExcel2003 = XlsUtil.isExcel2003(originalFileName);
+        boolean isExcel2007 = XlsUtil.isExcel2007(originalFileName);
+
+        if (!isExcel2003 && !isExcel2007) {
+            logger.error("importGoods->uploadFile：{}", "文件类型不正确");
+            throw new BusinessCheckException("文件类型不正确");
+        }
+
+        if (accountInfo == null || accountInfo.getMerchantId() == null || accountInfo.getMerchantId() <= 0) {
+            throw new BusinessCheckException("没有操作权限");
+        }
+
+        // 1、录入商品信息
+        List<List<String>> goodsList = new ArrayList<>();
+        List<List<String>> skuList = new ArrayList<>();
+        try {
+            goodsList = XlsUtil.readExcelContent(file.getInputStream(), isExcel2003, 0, 1, null, null, null);
+            skuList = XlsUtil.readExcelContent(file.getInputStream(), isExcel2003, 1, 1, null, null, null);
+        } catch (IOException e) {
+            logger.error("GoodsServiceImpl->parseExcelContent{}", e);
+            throw new BusinessCheckException("商品导入失败" + e.getMessage());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        if (goodsList != null && goodsList.size() > 0) {
+            if (goodsList.size() > 1000) {
+                throw new BusinessCheckException("商品导入失败，单次导入商品数量不能大于1000");
+            }
+            for (int i = 0; i < goodsList.size(); i++) {
+                List<String> goods = goodsList.get(0);
+                MtGoods mtGoods = new MtGoods();
+                mtGoods.setId(0);
+                mtGoods.setName(goods.get(0));
+                mtGoods.setType(GoodsTypeEnum.getKey(goods.get(1)));
+                mtGoods.setGoodsNo(goods.get(2));
+                mtGoods.setMerchantId(accountInfo.getMerchantId());
+                mtGoods.setStoreId(accountInfo.getStoreId());
+                Integer cateId = cateService.getGoodsCateId(accountInfo.getMerchantId(), accountInfo.getStoreId(), goods.get(3));
+                mtGoods.setCateId(cateId);
+                mtGoods.setOperator(accountInfo.getAccountName());
+                String storeIds = storeService.getStoreIds(accountInfo.getMerchantId(), goods.get(4));
+                String images = goods.get(5);
+                if (StringUtil.isNotEmpty(images)) {
+                    String[] imgArr = images.split(",");
+                    if (imgArr.length > 0) {
+                        mtGoods.setLogo(imgArr[0]);
+                        String imagesJson = JSONObject.toJSONString(images.split(","));
+                        mtGoods.setImages(imagesJson);
+                    }
+                }
+                mtGoods.setSort(Integer.parseInt(goods.get(6)));
+                mtGoods.setCanUsePoint(YesOrNoEnum.getKey(goods.get(7)));
+                mtGoods.setIsMemberDiscount(YesOrNoEnum.getKey(goods.get(8)));
+                if (goods.get(9).equals(YesOrNoEnum.YES.getKey())) {
+                    mtGoods.setIsSingleSpec(YesOrNoEnum.YES.getKey());
+                } else {
+                    mtGoods.setIsSingleSpec(YesOrNoEnum.NO.getKey());
+                }
+                mtGoods.setInitSale(Integer.parseInt(goods.get(10)));
+                mtGoods.setSalePoint(goods.get(11));
+                mtGoods.setDescription(goods.get(12));
+                mtGoods.setPrice(new BigDecimal("0"));
+                mtGoods.setLinePrice(new BigDecimal("0"));
+                mtGoods.setStock(0);
+                mtGoods.setStatus(StatusEnum.FORBIDDEN.getKey());
+                saveGoods(mtGoods, storeIds);
+            }
+        }
+
+        // 2、录入规格信息
+        if (skuList != null && skuList.size() > 0) {
+            for (int j = 0; j < skuList.size(); j++) {
+                List<String> sku = skuList.get(j);
+                List<MtGoods> goodsList1 = mtGoodsMapper.getByGoodsName(accountInfo.getMerchantId(), sku.get(0));
+                MtGoods mtGoods = null;
+                if (goodsList1.size() == 1) {
+                    mtGoods = goodsList1.get(0);
+                } else if (goodsList1.size() > 1) {
+                    throw new BusinessCheckException("商品导入失败，存在重复商品名称：" + sku.get(0));
+                }
+                if (mtGoods != null) {
+                    // 单规格
+                    if (mtGoods.getIsSingleSpec().equals(YesOrNoEnum.YES.getKey())) {
+                        mtGoods.setPrice(new BigDecimal(sku.get(4)));
+                        mtGoods.setLinePrice(new BigDecimal(sku.get(5)));
+                        mtGoods.setStock(Integer.parseInt(sku.get(6)));
+                        mtGoods.setWeight(new BigDecimal(sku.get(7)));
+                        mtGoodsMapper.updateById(mtGoods);
+                    }
+                    // 多规格
+                    if (mtGoods.getIsSingleSpec().equals(YesOrNoEnum.NO.getKey())) {
+                        List<String> specIds = new ArrayList<>();
+                        if (StringUtil.isNotEmpty(sku.get(2)) && StringUtil.isNotEmpty(sku.get(3))) {
+                            String[] specNameList = sku.get(2).split(",");
+                            String[] specValueList = sku.get(3).split(",");
+                            if (specNameList.length == specValueList.length) {
+                                for (int y = 0; y < specNameList.length; y++) {
+                                    Integer specId = getSpecId(mtGoods.getId(), specNameList[y], specValueList[y]);
+                                    specIds.add(specId.toString());
+                                }
+                            }
+                        }
+                        if (StringUtil.isNotEmpty(sku.get(1))) {
+                            MtGoodsSku mtGoodsSku = new MtGoodsSku();
+                            mtGoodsSku.setSkuNo(sku.get(1));
+                            mtGoodsSku.setGoodsId(mtGoods.getId());
+                            mtGoodsSku.setSpecIds(String.join("-", specIds));
+                            mtGoodsSku.setPrice(new BigDecimal(sku.get(4)));
+                            mtGoodsSku.setLinePrice(new BigDecimal(sku.get(5)));
+                            mtGoodsSku.setStock(Integer.parseInt(sku.get(6)));
+                            mtGoodsSku.setWeight(new BigDecimal(sku.get(7)));
+                            mtGoodsSku.setStatus(StatusEnum.ENABLED.getKey());
+                            mtGoodsSkuMapper.insert(mtGoodsSku);
+                        }
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
+    /**
+     * 获取规格ID
+     *
+     * @param goodsId 商品ID
+     * @param specName 规格名称
+     * @param specValue 规格值
+     * */
+    @Override
+    public Integer getSpecId(Integer goodsId, String specName, String specValue) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("goods_id", goodsId);
+        params.put("name", specName);
+        params.put("value", specValue);
+        params.put("status", StatusEnum.ENABLED.getKey());
+        Integer specId;
+        List<MtGoodsSpec> specList = mtGoodsSpecMapper.selectByMap(params);
+        if (specList != null && specList.size() > 0) {
+            specId = specList.get(0).getId();
+        } else {
+            MtGoodsSpec mtGoodsSpec = new MtGoodsSpec();
+            mtGoodsSpec.setGoodsId(goodsId);
+            mtGoodsSpec.setName(specName);
+            mtGoodsSpec.setValue(specValue);
+            mtGoodsSpec.setStatus(StatusEnum.ENABLED.getKey());
+            mtGoodsSpecMapper.insert(mtGoodsSpec);
+            specId = mtGoodsSpec.getId();
+        }
+        return specId;
     }
 }

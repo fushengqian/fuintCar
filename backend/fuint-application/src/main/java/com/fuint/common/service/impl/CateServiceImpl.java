@@ -234,31 +234,53 @@ public class CateServiceImpl extends ServiceImpl<MtGoodsCateMapper, MtGoodsCate>
         return mtCate;
     }
 
+    /**
+     * 获取分类列表
+     *
+     * @param merchantId 商户
+     * @param storeId 店铺ID
+     * @param name 店铺名称
+     * @param status 状态
+     * @return
+     * */
     @Override
-    public List<MtGoodsCate> queryCateListByParams(Map<String, Object> params) {
+    public List<MtGoodsCate> getCateList(Integer merchantId, Integer storeId, String name, String status) {
         LambdaQueryWrapper<MtGoodsCate> lambdaQueryWrapper = Wrappers.lambdaQuery();
         lambdaQueryWrapper.ne(MtGoodsCate::getStatus, StatusEnum.DISABLE.getKey());
-        String storeId =  params.get("storeId") == null ? "" : params.get("storeId").toString();
-        String merchantId =  params.get("merchantId") == null ? "" : params.get("merchantId").toString();
-        if (StringUtils.isNotBlank(merchantId)) {
+        if (merchantId != null && merchantId > 0) {
             lambdaQueryWrapper.eq(MtGoodsCate::getMerchantId, merchantId);
         }
-        String name =  params.get("name") == null ? "" : params.get("name").toString();
         if (StringUtils.isNotBlank(name)) {
             lambdaQueryWrapper.like(MtGoodsCate::getName, name);
         }
-        String status =  params.get("status") == null ? StatusEnum.ENABLED.getKey(): params.get("status").toString();
         if (StringUtils.isNotBlank(status)) {
             lambdaQueryWrapper.eq(MtGoodsCate::getStatus, status);
         }
-        if (StringUtils.isNotBlank(storeId)) {
+        if (storeId != null && storeId > 0) {
             lambdaQueryWrapper.and(wq -> wq
                     .eq(MtGoodsCate::getStoreId, 0)
                     .or()
                     .eq(MtGoodsCate::getStoreId, storeId));
         }
         lambdaQueryWrapper.orderByAsc(MtGoodsCate::getSort);
-        List<MtGoodsCate> dataList = cateMapper.selectList(lambdaQueryWrapper);
-        return dataList;
+        return cateMapper.selectList(lambdaQueryWrapper);
+    }
+
+    /**
+     * 获取分类ID
+     *
+     * @param merchantId 商户ID
+     * @param storeId 店铺ID
+     * @param name 分类名称
+     * @return
+     * */
+    @Override
+    public Integer getGoodsCateId(Integer merchantId, Integer storeId, String name) {
+        Integer cateId = 0;
+        List<MtGoodsCate> cateList = getCateList(merchantId, storeId, name, StatusEnum.ENABLED.getKey());
+        if (cateList != null && cateList.size() > 0) {
+            cateId = cateList.get(0).getId();
+        }
+        return cateId;
     }
 }

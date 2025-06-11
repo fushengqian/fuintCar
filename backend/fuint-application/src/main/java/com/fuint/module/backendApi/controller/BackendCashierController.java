@@ -122,27 +122,12 @@ public class BackendCashierController extends BaseController {
         if (userId != null && userId > 0) {
             memberInfo = memberService.queryMemberById(userId);
         }
-        Map<String, Object> param = new HashMap<>();
-        param.put("status", StatusEnum.ENABLED.getKey());
-        if (accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0) {
-            param.put("merchantId", accountInfo.getMerchantId());
-        } else {
-            param.put("merchantId", 0);
-        }
-        if (storeId > 0) {
-            param.put("storeId", storeId);
-        } else {
-            param.put("storeId", 0);
-        }
-        List<MtGoodsCate> cateList = cateService.queryCateListByParams(param);
 
-        param.put("status", StatusEnum.ENABLED.getKey());
-        Map<String, Object> goodsData = goodsService.getStoreGoodsList(storeId, "", cateId, page, pageSize);
-
-        String imagePath = settingService.getUploadBasePath();
+        List<MtGoodsCate> cateList = cateService.getCateList(accountInfo.getMerchantId(), storeId, null, StatusEnum.ENABLED.getKey());
+        Map<String, Object> goodsData = goodsService.getStoreGoodsList(storeId, "", PlatformTypeEnum.PC.getCode(), cateId, page, pageSize);
 
         Map<String, Object> result = new HashMap<>();
-        result.put("imagePath", imagePath);
+        result.put("imagePath", settingService.getUploadBasePath());
         result.put("storeInfo", storeInfo);
         result.put("memberInfo", memberInfo);
         result.put("accountInfo", accountDto);
@@ -183,7 +168,7 @@ public class BackendCashierController extends BaseController {
             }
         }
 
-        Map<String, Object> goodsData = goodsService.getStoreGoodsList(storeId, keyword, 0, 1, 100);
+        Map<String, Object> goodsData = goodsService.getStoreGoodsList(storeId, keyword, "",0,1, 100);
         return getSuccessResult(goodsData.get("goodsList"));
     }
 

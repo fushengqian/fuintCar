@@ -17,6 +17,7 @@ import com.fuint.framework.pagination.PaginationRequest;
 import com.fuint.framework.pagination.PaginationResponse;
 import com.fuint.repository.bean.StoreDistanceBean;
 import com.fuint.repository.mapper.MtMerchantMapper;
+import com.fuint.repository.mapper.MtStoreGoodsMapper;
 import com.fuint.repository.mapper.MtStoreMapper;
 import com.fuint.repository.model.MtMerchant;
 import com.fuint.repository.model.MtStore;
@@ -51,6 +52,8 @@ public class StoreServiceImpl extends ServiceImpl<MtStoreMapper, MtStore> implem
     private MtStoreMapper mtStoreMapper;
 
     private MtMerchantMapper mtMerchantMapper;
+
+    private MtStoreGoodsMapper mtStoreGoodsMapper;
 
     /**
      * 商户接口
@@ -326,6 +329,11 @@ public class StoreServiceImpl extends ServiceImpl<MtStoreMapper, MtStore> implem
         mtStore.setUpdateTime(new Date());
         mtStore.setOperator(operator);
 
+        // 删除店铺
+        if (status.equals(StatusEnum.DISABLE.getKey())) {
+            mtStoreGoodsMapper.removeStoreGoods(id);
+        }
+
         mtStoreMapper.updateById(mtStore);
     }
 
@@ -441,6 +449,31 @@ public class StoreServiceImpl extends ServiceImpl<MtStoreMapper, MtStore> implem
            }
        }
        return String.join(",", storeNames);
+    }
+
+    /**
+     * 获取店铺名称
+     *
+     * @param merchantId 商户ID
+     * @param storeNames 店铺名称
+     * @return
+     * */
+    @Override
+    public String getStoreIds(Integer merchantId, String storeNames) {
+        if (StringUtil.isEmpty(storeNames)) {
+            return "";
+        }
+        String[] names = storeNames.split(",");
+        List<String> storeIds = new ArrayList<>();
+        if (names.length > 0) {
+            for (int i = 0; i < names.length; i++) {
+                MtStore mtStore = mtStoreMapper.queryStoreByName(names[i]);
+                if (mtStore != null) {
+                    storeIds.add(mtStore.getId().toString());
+                }
+            }
+        }
+        return String.join(",", storeIds);
     }
 
     /**

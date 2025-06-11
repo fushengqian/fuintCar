@@ -2,6 +2,7 @@ package com.fuint.common.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.alibaba.fastjson.JSONObject;
+import com.fuint.common.dto.AccountInfo;
 import com.fuint.common.dto.GroupMemberDto;
 import com.fuint.common.dto.MemberTopDto;
 import com.fuint.common.dto.UserDto;
@@ -10,7 +11,10 @@ import com.fuint.framework.pagination.PaginationRequest;
 import com.fuint.framework.pagination.PaginationResponse;
 import com.fuint.repository.model.MtUser;
 import com.fuint.repository.model.MtUserGrade;
+import org.springframework.web.multipart.MultipartFile;
+
 import javax.servlet.http.HttpServletRequest;
+import java.text.ParseException;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -255,4 +259,14 @@ public interface MemberService extends IService<MtUser> {
      * @return
      * */
     List<Integer> getUserIdList(Integer merchantId, Integer storeId);
+
+    /**
+     * 导入会员
+     *
+     * @param file excel文件
+     * @param accountInfo 操作者
+     * @param filePath 文件地址
+     * */
+    Boolean importMember(MultipartFile file, AccountInfo accountInfo, String filePath) throws BusinessCheckException, ParseException;
+
 }

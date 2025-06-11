@@ -1,5 +1,6 @@
 package com.fuint.common.service;
 
+import com.fuint.common.dto.AccountInfo;
 import com.fuint.common.dto.GoodsDto;
 import com.fuint.common.dto.GoodsSpecValueDto;
 import com.fuint.common.dto.GoodsTopDto;
@@ -9,6 +10,8 @@ import com.fuint.framework.pagination.PaginationResponse;
 import com.fuint.repository.model.MtGoods;
 import com.fuint.repository.model.MtGoodsSku;
 import com.fuint.repository.model.MtGoodsSpec;
+import org.springframework.web.multipart.MultipartFile;
+
 import java.lang.reflect.InvocationTargetException;
 import java.util.Date;
 import java.util.List;
@@ -90,14 +93,15 @@ public interface GoodsService {
     /**
      * 获取店铺的商品列表
      *
-     * @param storeId
-     * @param keyword
-     * @param cateId
-     * @param page
-     * @param pageSize
+     * @param storeId 店铺ID
+     * @param keyword 关键字
+     * @param platform 平台
+     * @param cateId 分类ID
+     * @param page 当前页码
+     * @param pageSize 每页数量
      * @return
      * */
-    Map<String, Object> getStoreGoodsList(Integer storeId, String keyword, Integer cateId, Integer page, Integer pageSize) throws BusinessCheckException;
+    Map<String, Object> getStoreGoodsList(Integer storeId, String keyword, String platform, Integer cateId, Integer page, Integer pageSize) throws BusinessCheckException;
 
     /**
      * 根据skuId获取规格列表
@@ -150,4 +154,22 @@ public interface GoodsService {
      * @return
      * */
     String getStoreIds(Integer goodsId);
+
+    /**
+     * 导入商品
+     *
+     * @param file excel文件
+     * @param accountInfo 操作者
+     * @param filePath 文件地址
+     * */
+    Boolean importGoods(MultipartFile file, AccountInfo accountInfo, String filePath) throws BusinessCheckException;
+
+    /**
+     * 获取规格ID
+     *
+     * @param goodsId 商品ID
+     * @param specName 规格名称
+     * @param specValue 规格值
+     * */
+    Integer getSpecId(Integer goodsId, String specName, String specValue);
 }
