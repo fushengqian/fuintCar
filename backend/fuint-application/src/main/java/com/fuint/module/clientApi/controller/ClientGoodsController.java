@@ -27,10 +27,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * 商品类controller
@@ -72,7 +69,7 @@ public class ClientGoodsController extends BaseController {
     @CrossOrigin
     public ResponseObject cateList(HttpServletRequest request) throws BusinessCheckException {
         String merchantNo = request.getHeader("merchantNo") == null ? "" : request.getHeader("merchantNo");
-        Integer storeId = request.getHeader("storeId") == null ? 0 : Integer.parseInt(request.getHeader("storeId"));
+        Integer storeId = StringUtil.isEmpty(request.getHeader("storeId")) ? 0 : Integer.parseInt(request.getHeader("storeId"));
         String platform = request.getHeader("platform") == null ? "" : request.getHeader("platform");
 
         Integer merchantId = merchantService.getMerchantId(merchantNo);
@@ -91,7 +88,9 @@ public class ClientGoodsController extends BaseController {
             ResCateDto dto = new ResCateDto();
             dto.setCateId(cate.getId());
             dto.setName(cate.getName());
-            dto.setLogo(baseImage + cate.getLogo());
+            if (StringUtil.isNotEmpty(cate.getLogo())) {
+                dto.setLogo(baseImage + cate.getLogo());
+            }
             List<MtGoods> goodsArr = new ArrayList<>();
             for (MtGoods goods : goodsList) {
                 if (goods.getCateId().compareTo(cate.getId()) == 0) {
@@ -99,9 +98,11 @@ public class ClientGoodsController extends BaseController {
                 }
             }
             dto.setGoodsList(goodsArr);
+            dto.setSort((goodsArr.size() > 0) ? 1 : 0);
             result.add(dto);
         }
-
+        // 商品数量为0就排在后面
+        Collections.sort(result, (p1, p2) -> Integer.compare(p2.getSort(), p1.getSort()));
         return getSuccessResult(result);
     }
 
@@ -112,7 +113,7 @@ public class ClientGoodsController extends BaseController {
     @RequestMapping(value = "/list", method = RequestMethod.GET)
     @CrossOrigin
     public ResponseObject list(HttpServletRequest request) throws BusinessCheckException {
-        Integer storeId = request.getHeader("storeId") == null ? 0 : Integer.parseInt(request.getHeader("storeId"));
+        Integer storeId = StringUtil.isEmpty(request.getHeader("storeId")) ? 0 : Integer.parseInt(request.getHeader("storeId"));
         String platform = request.getHeader("platform") == null ? "" : request.getHeader("platform");
         Map<String, Object> goodsData = goodsService.getStoreGoodsList(storeId, "", platform, 0,1, 200);
         return getSuccessResult(goodsData.get("goodsList"));
@@ -125,7 +126,7 @@ public class ClientGoodsController extends BaseController {
     @RequestMapping(value = "/search", method = RequestMethod.POST)
     @CrossOrigin
     public ResponseObject search(HttpServletRequest request, @RequestBody Map<String, Object> params) throws BusinessCheckException {
-        Integer storeId = request.getHeader("storeId") == null ? 0 : Integer.parseInt(request.getHeader("storeId"));
+        Integer storeId = StringUtil.isEmpty(request.getHeader("storeId")) ? 0 : Integer.parseInt(request.getHeader("storeId"));
         String merchantNo = request.getHeader("merchantNo") == null ? "" : request.getHeader("merchantNo");
         String platform = request.getHeader("platform") == null ? "" : request.getHeader("platform");
         Integer page = params.get("page") == null ? 1 : Integer.parseInt(params.get("page").toString());

@@ -145,7 +145,7 @@ public class ClientVehicleController extends BaseController {
     public ResponseObject submitOrder(HttpServletRequest request, @RequestBody VehicleOrderRequest requestParam) throws BusinessCheckException {
         String token = request.getHeader("Access-Token");
         String merchantNo = request.getHeader("merchantNo") == null ? "" : request.getHeader("merchantNo");
-        Integer storeId = request.getHeader("storeId") == null ? 0 : Integer.parseInt(request.getHeader("storeId"));
+        Integer storeId = StringUtil.isEmpty(request.getHeader("storeId")) ? 0 : Integer.parseInt(request.getHeader("storeId"));
         Integer merchantId = merchantService.getMerchantId(merchantNo);
 
         UserInfo mtUser = TokenUtil.getUserInfoByToken(token);

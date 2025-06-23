@@ -147,7 +147,7 @@ public class BackendBookController extends BaseController {
 
         AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
 
-        BookDto bookDto = bookService.getBookById(id);
+        BookDto bookDto = bookService.getBookById(id, false);
         if (bookDto == null) {
             return getFailureResult(201);
         }
@@ -249,7 +249,7 @@ public class BackendBookController extends BaseController {
         String token = request.getHeader("Access-Token");
         AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
 
-        BookDto bookDto = bookService.getBookById(id);
+        BookDto bookDto = bookService.getBookById(id, false);
         if (accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0) {
             if (!bookDto.getMerchantId().equals(accountInfo.getMerchantId())) {
                 return getFailureResult(1004);

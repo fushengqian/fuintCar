@@ -665,7 +665,7 @@ public class OrderServiceImpl extends ServiceImpl<MtOrderMapper, MtOrder> implem
     public Map<String, Object> doSettle(HttpServletRequest request, SettlementParam param) throws BusinessCheckException {
         String token = request.getHeader("Access-Token");
         String isWechat = request.getHeader("isWechat") == null ? YesOrNoEnum.NO.getKey() : request.getHeader("isWechat");
-        Integer storeId = request.getHeader("storeId") == null ? 0 : Integer.parseInt(request.getHeader("storeId"));
+        Integer storeId = StringUtil.isEmpty(request.getHeader("storeId")) ? 0 : Integer.parseInt(request.getHeader("storeId"));
         String platform = request.getHeader("platform") == null ? "" : request.getHeader("platform");
         String merchantNo = request.getHeader("merchantNo") == null ? "" : request.getHeader("merchantNo");
         String cartIds = param.getCartIds() == null ? "" : param.getCartIds();
@@ -2262,7 +2262,7 @@ public class OrderServiceImpl extends ServiceImpl<MtOrderMapper, MtOrder> implem
      * */
     @Override
     public MtOrder doRecharge(HttpServletRequest request, RechargeParam rechargeParam) throws BusinessCheckException {
-        Integer storeId = request.getHeader("storeId") == null ? 0 : Integer.parseInt(request.getHeader("storeId"));
+        Integer storeId = StringUtil.isEmpty(request.getHeader("storeId")) ? 0 : Integer.parseInt(request.getHeader("storeId"));
         String platform = request.getHeader("platform") == null ? "" : request.getHeader("platform");
         String merchantNo = request.getHeader("merchantNo") == null ? "" : request.getHeader("merchantNo");
 
