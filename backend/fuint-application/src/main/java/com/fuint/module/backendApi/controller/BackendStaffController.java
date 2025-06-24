@@ -23,7 +23,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -148,7 +147,7 @@ public class BackendStaffController extends BaseController {
         AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
 
         if (accountInfo.getMerchantId() == null || accountInfo.getMerchantId() <= 0) {
-            return getFailureResult(201, "平台方帐号无法执行该操作，请使用商户帐号操作");
+            return getFailureResult(5002);
         }
 
         MtStaff mtStaff = new MtStaff();
@@ -251,9 +250,7 @@ public class BackendStaffController extends BaseController {
     @PreAuthorize("@pms.hasPermission('staff:list')")
     public ResponseObject deleteStaff(HttpServletRequest request, @PathVariable("id") Integer id) throws BusinessCheckException {
         String token = request.getHeader("Access-Token");
-
         AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
-
         staffService.updateAuditedStatus(id, StatusEnum.DISABLE.getKey(), accountInfo.getAccountName());
         return getSuccessResult(true);
     }

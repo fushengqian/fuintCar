@@ -23,6 +23,9 @@ public class UserVehicleParam implements Serializable {
     @ApiModelProperty(value="会员会员号", name="userNo")
     private String userNo;
 
+    @ApiModelProperty(value="会员手机号", name="mobile")
+    private String mobile;
+
     @ApiModelProperty(value="车牌号", name="vehiclePlateNo")
     private String vehiclePlateNo;
 

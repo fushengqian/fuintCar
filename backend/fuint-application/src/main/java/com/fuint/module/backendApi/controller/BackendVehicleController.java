@@ -4,80 +4,68 @@ import com.fuint.common.dto.AccountInfo;
 import com.fuint.common.dto.VehicleDto;
 import com.fuint.common.enums.StatusEnum;
 import com.fuint.common.param.UserVehicleParam;
-import com.fuint.common.service.AccountService;
+import com.fuint.common.service.MemberService;
 import com.fuint.common.service.VehicleService;
 import com.fuint.common.util.TokenUtil;
 import com.fuint.framework.exception.BusinessCheckException;
 import com.fuint.framework.pagination.PaginationResponse;
 import com.fuint.framework.web.BaseController;
 import com.fuint.framework.web.ResponseObject;
+import com.fuint.repository.model.MtUser;
 import com.fuint.repository.model.MtVehicle;
-import com.fuint.repository.model.TAccount;
+import com.fuint.utils.StringUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-
 import javax.servlet.http.HttpServletRequest;
 import java.util.Map;
 
 @Api(tags="后台管理-车辆相关接口")
 @RestController
+@AllArgsConstructor
 @RequestMapping(value = "/backendApi/vehicle")
 public class BackendVehicleController extends BaseController {
 
-    @Autowired
-    private AccountService accountService;
-
-    @Autowired
+    /**
+     * 会员车辆服务接口
+     * */
     private VehicleService vehicleService;
+
+    /**
+     * 会员服务接口
+     * */
+    private MemberService memberService;
 
     @ApiOperation(value="查询车辆列表", notes="查询车辆列表")
     @RequestMapping(value = "/list", method = RequestMethod.GET)
     @CrossOrigin
     public ResponseObject list(HttpServletRequest request) throws BusinessCheckException {
-        String token = request.getHeader("Access-Token");
-
-        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
-        TAccount account = accountService.getAccountInfoById(accountInfo.getId());
-        if (account == null) {
-            return getFailureResult(1002, "账号不存在");
-        }
-
         PaginationResponse<VehicleDto> paginationResponse = vehicleService.getUserVehicleListByPagination(request);
-
         return getSuccessResult(paginationResponse);
     }
 
-    @ApiOperation(value="查询车辆信息", notes="查询车辆信息")
+    @ApiOperation(value="查询车辆信息", notes="查询会员车辆信息")
     @RequestMapping(value = "/info/{id}", method = RequestMethod.GET)
     @CrossOrigin
     public ResponseObject info(HttpServletRequest request, @PathVariable("id") Integer id) throws BusinessCheckException {
         String token = request.getHeader("Access-Token");
-
         AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
-
-        TAccount account = accountService.getAccountInfoById(accountInfo.getId());
-        if (account == null) {
-            return getFailureResult(1002, "账号不存在");
-        }
-
         VehicleDto vehicleDto = vehicleService.getVehicleById(id);
-
+        if (accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0) {
+            if (!accountInfo.getMerchantId().equals(vehicleDto.getMerchantId())) {
+                throw new BusinessCheckException("您没有查看权限");
+            }
+        }
         return getSuccessResult(vehicleDto);
     }
 
-    @ApiOperation(value="更新车辆信息", notes="更新会员车辆信息")
-    @RequestMapping(value = "/update", method = RequestMethod.POST)
+    @ApiOperation(value="保存车辆信息", notes="保存会员车辆信息")
+    @RequestMapping(value = "/save", method = RequestMethod.POST)
     @CrossOrigin
-    public ResponseObject update(HttpServletRequest request, @RequestBody UserVehicleParam param) {
+    public ResponseObject saveHandle(HttpServletRequest request, @RequestBody UserVehicleParam param) throws BusinessCheckException {
         String token = request.getHeader("Access-Token");
-
         AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
-        TAccount account = accountService.getAccountInfoById(accountInfo.getId());
-        if (account == null) {
-            return getFailureResult(1002, "账号不存在");
-        }
 
         String vehiclePlateNo = param.getVehiclePlateNo();
         String vehicleType  = param.getVehicleType();
@@ -85,9 +73,38 @@ public class BackendVehicleController extends BaseController {
         String vehicleBrand = param.getVehicleBrand();
         String vehicleModel = param.getVehicleModel();
 
+        if (accountInfo.getMerchantId() == null || accountInfo.getMerchantId() <= 0) {
+            return getFailureResult(5002);
+        }
+
         MtVehicle mtVehicle = vehicleService.queryVehicleById(param.getId());
-        if(mtVehicle == null) {
-            return getSuccessResult(false);
+        if (mtVehicle == null) {
+            mtVehicle = new MtVehicle();
+        }
+
+        MtUser mtUser = new MtUser();
+        if (StringUtil.isNotEmpty(param.getUserNo())) {
+            mtUser = memberService.queryMemberByUserNo(accountInfo.getMerchantId(), param.getUserNo());
+            if (mtUser == null) {
+                mtUser.setUserNo(param.getUserNo());
+                mtUser.setName(param.getName());
+                mtUser.setMobile(param.getMobile());
+                mtUser.setMerchantId(accountInfo.getMerchantId());
+                mtUser.setStoreId(accountInfo.getStoreId());
+                mtUser.setStatus(StatusEnum.ENABLED.getKey());
+                mtUser = memberService.addMember(mtUser);
+            }
+        } else if (StringUtil.isNotEmpty(param.getMobile())) {
+            mtUser = memberService.queryMemberByMobile(accountInfo.getMerchantId(), param.getMobile());
+            if (mtUser == null) {
+                mtUser.setName(param.getName());
+                mtUser.setMobile(param.getMobile());
+                mtUser.setUserNo(param.getUserNo());
+                mtUser.setMerchantId(accountInfo.getMerchantId());
+                mtUser.setStoreId(accountInfo.getStoreId());
+                mtUser.setStatus(StatusEnum.ENABLED.getKey());
+                mtUser = memberService.addMember(mtUser);
+            }
         }
 
         mtVehicle.setVehiclePlateNo(vehiclePlateNo);
@@ -95,9 +112,10 @@ public class BackendVehicleController extends BaseController {
         mtVehicle.setVehicleColor(vehicleColor);
         mtVehicle.setVehicleBrand(vehicleBrand);
         mtVehicle.setVehicleModel(vehicleModel);
+        mtVehicle.setMerchantId(accountInfo.getMerchantId());
+        mtVehicle.setUserId(mtUser.getId());
 
-        vehicleService.updateVehicle(mtVehicle);
-
+        vehicleService.saveVehicle(mtVehicle);
         return getSuccessResult(true);
     }
 

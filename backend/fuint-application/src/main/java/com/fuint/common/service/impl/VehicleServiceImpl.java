@@ -4,11 +4,13 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fuint.common.Constants;
+import com.fuint.common.dto.AccountInfo;
 import com.fuint.common.dto.VehicleDto;
 import com.fuint.common.enums.StatusEnum;
 import com.fuint.common.enums.YesOrNoEnum;
 import com.fuint.common.service.MemberService;
 import com.fuint.common.service.VehicleService;
+import com.fuint.common.util.TokenUtil;
 import com.fuint.framework.annoation.OperationServiceLog;
 import com.fuint.framework.exception.BusinessCheckException;
 import com.fuint.framework.pagination.PaginationResponse;
@@ -18,41 +20,42 @@ import com.fuint.repository.model.MtVehicle;
 import com.fuint.utils.StringUtil;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
 
-@Service
 @Slf4j
+@Service
+@AllArgsConstructor(onConstructor_= {@Lazy})
 public class VehicleServiceImpl extends ServiceImpl<MtVehicleMapper, MtVehicle> implements VehicleService {
 
-    @Resource
     private MtVehicleMapper mtVehicleMapper;
 
-    @Autowired
     private MemberService memberService;
 
     @Override
     @OperationServiceLog(description = "查询用户车辆列表")
     public PaginationResponse<VehicleDto> getUserVehicleListByPagination(HttpServletRequest request) throws BusinessCheckException {
+        String token = request.getHeader("Access-Token");
+        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
 
         String userNo = request.getParameter("userNo");
         String mobile = request.getParameter("mobile");
         String plate = request.getParameter("plate");
         String status = request.getParameter("status");
         String type = request.getParameter("vtype");
+        Integer merchantId = accountInfo.getMerchantId();
 
-        int page =  request.getParameter("page") == null ? Constants.PAGE_NUMBER : Integer.parseInt(request.getParameter("page"));
-        int pageSize = request.getParameter("pageSize") == null ? Constants.PAGE_SIZE : Integer.parseInt(request.getParameter("pageSize"));
+        Integer page =  request.getParameter("page") == null ? Constants.PAGE_NUMBER : Integer.parseInt(request.getParameter("page"));
+        Integer pageSize = request.getParameter("pageSize") == null ? Constants.PAGE_SIZE : Integer.parseInt(request.getParameter("pageSize"));
 
         String userId = null;
         if (StringUtils.isNotEmpty(userNo)) {
@@ -74,12 +77,12 @@ public class VehicleServiceImpl extends ServiceImpl<MtVehicleMapper, MtVehicle> 
         Page<MtVehicle> pageHelper = PageHelper.startPage(page, pageSize);
         LambdaQueryWrapper<MtVehicle> lambdaQueryWrapper = Wrappers.lambdaQuery();
 
-        if (StringUtils.isEmpty(status)){
+        if (StringUtils.isEmpty(status)) {
             lambdaQueryWrapper.eq(MtVehicle::getStatus, StatusEnum.ENABLED.getKey());
         } else {
             lambdaQueryWrapper.eq(MtVehicle::getStatus, status);
         }
-        if (StringUtils.isNotEmpty(type)){
+        if (StringUtils.isNotEmpty(type)) {
             lambdaQueryWrapper.eq(MtVehicle::getVehicleType, type);
         }
         if (StringUtils.isNotEmpty(userId)) {
@@ -88,35 +91,34 @@ public class VehicleServiceImpl extends ServiceImpl<MtVehicleMapper, MtVehicle> 
         if (StringUtils.isNotEmpty(plate)) {
             lambdaQueryWrapper.eq(MtVehicle::getVehiclePlateNo, plate);
         }
+        if (merchantId != null && merchantId > 0) {
+            lambdaQueryWrapper.eq(MtVehicle::getMerchantId, merchantId);
+        }
         lambdaQueryWrapper.orderByDesc(MtVehicle::getId);
         List<MtVehicle> dataList = mtVehicleMapper.selectList(lambdaQueryWrapper);
         List<VehicleDto> vehicleDtoList = new ArrayList<>();
         for (MtVehicle mtVehicle : dataList) {
-            VehicleDto vehicleDto = new VehicleDto();
-            BeanUtils.copyProperties(mtVehicle, vehicleDto);
-            MtUser mtUser = memberService.queryMemberById(mtVehicle.getUserId());
-            if (mtUser != null) {
+             VehicleDto vehicleDto = new VehicleDto();
+             BeanUtils.copyProperties(mtVehicle, vehicleDto);
+             MtUser mtUser = memberService.queryMemberById(mtVehicle.getUserId());
+             if (mtUser != null) {
                 vehicleDto.setUserNo(mtUser.getUserNo());
                 vehicleDto.setMobile(mtUser.getMobile());
                 vehicleDto.setName(mtUser.getName());
-                if(!mtUser.getStatus().equals(StatusEnum.ENABLED.getKey())) {
+                if (!mtUser.getStatus().equals(StatusEnum.ENABLED.getKey())) {
                     continue;
                 }
-            }
-            vehicleDtoList.add(vehicleDto);
+             }
+             vehicleDtoList.add(vehicleDto);
         }
 
-
         PageRequest pageRequest = PageRequest.of(page, pageSize);
-
         PageImpl<VehicleDto> pageImpl = new PageImpl(vehicleDtoList, pageRequest, pageHelper.getTotal());
         PaginationResponse<VehicleDto> paginationResponse = new PaginationResponse(pageImpl, MtVehicle.class);
         paginationResponse.setTotalPages(pageHelper.getPages());
         paginationResponse.setTotalElements(pageHelper.getTotal());
 
-
         paginationResponse.setContent(vehicleDtoList);
-
         return paginationResponse;
     }
 

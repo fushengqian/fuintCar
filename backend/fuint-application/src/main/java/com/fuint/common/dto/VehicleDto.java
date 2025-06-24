@@ -17,6 +17,9 @@ public class VehicleDto implements Serializable {
     @TableId(value = "ID", type = IdType.AUTO)
     private Integer id;
 
+    @ApiModelProperty("所属商户ID")
+    private Integer merchantId;
+
     @ApiModelProperty("用户ID")
     private Integer userId;
 
