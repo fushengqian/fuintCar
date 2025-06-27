@@ -47,6 +47,9 @@ public class VehicleDto implements Serializable {
     @ApiModelProperty("车辆品牌")
     private String vehicleBrand;
 
+    @ApiModelProperty("车架号")
+    private String vin;
+
     @ApiModelProperty("是否默认")
     private String isDefault;
 

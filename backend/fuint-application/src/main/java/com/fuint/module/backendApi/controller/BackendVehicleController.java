@@ -54,7 +54,7 @@ public class BackendVehicleController extends BaseController {
         VehicleDto vehicleDto = vehicleService.getVehicleById(id);
         if (accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0) {
             if (!accountInfo.getMerchantId().equals(vehicleDto.getMerchantId())) {
-                throw new BusinessCheckException("您没有查看权限");
+                return getFailureResult(1004);
             }
         }
         return getSuccessResult(vehicleDto);
@@ -72,6 +72,7 @@ public class BackendVehicleController extends BaseController {
         String vehicleColor = param.getVehicleColor();
         String vehicleBrand = param.getVehicleBrand();
         String vehicleModel = param.getVehicleModel();
+        String vin = param.getVin();
 
         if (accountInfo.getMerchantId() == null || accountInfo.getMerchantId() <= 0) {
             return getFailureResult(5002);
@@ -86,6 +87,7 @@ public class BackendVehicleController extends BaseController {
         if (StringUtil.isNotEmpty(param.getUserNo())) {
             mtUser = memberService.queryMemberByUserNo(accountInfo.getMerchantId(), param.getUserNo());
             if (mtUser == null) {
+                mtUser = new MtUser();
                 mtUser.setUserNo(param.getUserNo());
                 mtUser.setName(param.getName());
                 mtUser.setMobile(param.getMobile());
@@ -97,6 +99,7 @@ public class BackendVehicleController extends BaseController {
         } else if (StringUtil.isNotEmpty(param.getMobile())) {
             mtUser = memberService.queryMemberByMobile(accountInfo.getMerchantId(), param.getMobile());
             if (mtUser == null) {
+                mtUser = new MtUser();
                 mtUser.setName(param.getName());
                 mtUser.setMobile(param.getMobile());
                 mtUser.setUserNo(param.getUserNo());
@@ -114,6 +117,7 @@ public class BackendVehicleController extends BaseController {
         mtVehicle.setVehicleModel(vehicleModel);
         mtVehicle.setMerchantId(accountInfo.getMerchantId());
         mtVehicle.setUserId(mtUser.getId());
+        mtVehicle.setVin(vin);
 
         vehicleService.saveVehicle(mtVehicle);
         return getSuccessResult(true);

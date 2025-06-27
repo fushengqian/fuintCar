@@ -50,4 +50,7 @@ public class UserVehicleParam implements Serializable {
     @ApiModelProperty(value="所在地址", name="address")
     private String address;
 
+    @ApiModelProperty(value="车架号", name="vin")
+    private String vin;
+
 }

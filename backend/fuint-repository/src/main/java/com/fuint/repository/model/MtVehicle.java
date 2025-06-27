@@ -43,6 +43,9 @@ public class MtVehicle implements Serializable {
     @ApiModelProperty("车辆品牌")
     private String vehicleBrand;
 
+    @ApiModelProperty("车架号")
+    private String vin;
+
     @ApiModelProperty("状态：A：未使用；B：已使用；C：已过期; D：已删除；E：未领取")
     private String status;
 

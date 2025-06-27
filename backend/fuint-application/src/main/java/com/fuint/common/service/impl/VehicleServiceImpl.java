@@ -49,9 +49,11 @@ public class VehicleServiceImpl extends ServiceImpl<MtVehicleMapper, MtVehicle> 
 
         String userNo = request.getParameter("userNo");
         String mobile = request.getParameter("mobile");
-        String plate = request.getParameter("plate");
+        String plateNo = request.getParameter("plate");
         String status = request.getParameter("status");
         String type = request.getParameter("vtype");
+        String vin = request.getParameter("vin");
+        String name = request.getParameter("name");
         Integer merchantId = accountInfo.getMerchantId();
 
         Integer page =  request.getParameter("page") == null ? Constants.PAGE_NUMBER : Integer.parseInt(request.getParameter("page"));
@@ -59,14 +61,21 @@ public class VehicleServiceImpl extends ServiceImpl<MtVehicleMapper, MtVehicle> 
 
         String userId = null;
         if (StringUtils.isNotEmpty(userNo)) {
-            MtUser userInfo = memberService.queryMemberByUserNo(0, userNo);
+            MtUser userInfo = memberService.queryMemberByUserNo(merchantId, userNo);
             if (userInfo != null) {
                 userId = userInfo.getId() + "";
             } else {
                 userId = "0";
             }
         } else if (StringUtils.isNotEmpty(mobile)) {
-            MtUser userInfo = memberService.queryMemberByMobile(0, mobile);
+            MtUser userInfo = memberService.queryMemberByMobile(merchantId, mobile);
+            if (userInfo != null) {
+                userId = userInfo.getId() + "";
+            } else {
+                userId = "0";
+            }
+        }  else if (StringUtils.isNotEmpty(name)) {
+            MtUser userInfo = memberService.queryMemberByName(merchantId, name);
             if (userInfo != null) {
                 userId = userInfo.getId() + "";
             } else {
@@ -88,11 +97,14 @@ public class VehicleServiceImpl extends ServiceImpl<MtVehicleMapper, MtVehicle> 
         if (StringUtils.isNotEmpty(userId)) {
             lambdaQueryWrapper.eq(MtVehicle::getUserId, userId);
         }
-        if (StringUtils.isNotEmpty(plate)) {
-            lambdaQueryWrapper.eq(MtVehicle::getVehiclePlateNo, plate);
+        if (StringUtils.isNotEmpty(plateNo)) {
+            lambdaQueryWrapper.eq(MtVehicle::getVehiclePlateNo, plateNo);
         }
         if (merchantId != null && merchantId > 0) {
             lambdaQueryWrapper.eq(MtVehicle::getMerchantId, merchantId);
+        }
+        if (StringUtil.isNotEmpty(vin)) {
+            lambdaQueryWrapper.eq(MtVehicle::getVin, vin);
         }
         lambdaQueryWrapper.orderByDesc(MtVehicle::getId);
         List<MtVehicle> dataList = mtVehicleMapper.selectList(lambdaQueryWrapper);
@@ -187,6 +199,9 @@ public class VehicleServiceImpl extends ServiceImpl<MtVehicleMapper, MtVehicle> 
             if (StringUtils.isNotEmpty(mtVehicle.getVehicleType())) {
                 vehicle.setVehicleType(mtVehicle.getVehicleType());
             }
+            if (StringUtils.isNotEmpty(mtVehicle.getVin())) {
+                vehicle.setVin(mtVehicle.getVin());
+            }
             if (StringUtils.isNotEmpty(mtVehicle.getIsDefault())) {
                 vehicle.setIsDefault(mtVehicle.getIsDefault());
             }
@@ -263,7 +278,6 @@ public class VehicleServiceImpl extends ServiceImpl<MtVehicleMapper, MtVehicle> 
         if (StringUtil.isNotEmpty(vehiclePlateNo)) {
             lambdaQueryWrapper.eq(MtVehicle::getVehiclePlateNo, vehiclePlateNo);
         }
-        List<MtVehicle> vehicleList = mtVehicleMapper.selectList(lambdaQueryWrapper);
-        return vehicleList;
+        return mtVehicleMapper.selectList(lambdaQueryWrapper);
     }
 }
