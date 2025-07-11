@@ -57,9 +57,6 @@ public class BackendSettlementController extends BaseController {
 
     /**
      * 结算列表查询
-     *
-     * @param  request HttpServletRequest对象
-     * @return 余额明细列表
      */
     @ApiOperation(value = "结算列表查询")
     @RequestMapping(value = "/list", method = RequestMethod.GET)
@@ -117,8 +114,6 @@ public class BackendSettlementController extends BaseController {
 
     /**
      * 获取结算单详情
-     * @param request HttpServletRequest对象
-     * @return
      * */
     @ApiOperation(value = "获取结算单详情")
     @RequestMapping(value = "/info", method = RequestMethod.GET)
@@ -149,9 +144,6 @@ public class BackendSettlementController extends BaseController {
 
     /**
      * 提交结算
-     *
-     * @param request HttpServletRequest对象
-     * @return
      */
     @ApiOperation(value = "提交结算")
     @RequestMapping(value = "/doSubmit", method = RequestMethod.POST)
@@ -160,34 +152,28 @@ public class BackendSettlementController extends BaseController {
     public ResponseObject doSubmit(HttpServletRequest request, @RequestBody SettlementRequest requestParam) throws BusinessCheckException {
         String token = request.getHeader("Access-Token");
         AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
-        String operator = accountInfo.getAccountName();
         if (accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0) {
             requestParam.setMerchantId(accountInfo.getMerchantId());
         }
-        requestParam.setOperator(operator);
+        requestParam.setOperator(accountInfo.getAccountName());
         settlementService.submitSettlement(requestParam);
         return getSuccessResult(true);
     }
 
     /**
      * 确认结算
-     *
-     * @param request HttpServletRequest对象
-     * @return
      */
     @ApiOperation(value = "确认结算")
     @RequestMapping(value = "/doConfirm", method = RequestMethod.POST)
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('settlement:doConfirm')")
-    public ResponseObject doConfirm(HttpServletRequest request, @RequestBody Map<String, Object> param) throws BusinessCheckException {
-        String token = request.getHeader("Access-Token");
-        String settlementId = StringUtil.isEmpty(param.get("settlementId").toString())? "" : param.get("settlementId").toString();
-        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
-        if (StringUtil.isEmpty(settlementId)) {
+    public ResponseObject doConfirm(HttpServletRequest request, @RequestBody SettlementRequest param) throws BusinessCheckException {
+        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
+        Integer settlementId = param.getSettlementId();
+        if (settlementId == null) {
             return getFailureResult(201, "参数有误");
         }
-        String operator = accountInfo.getAccountName();
-        settlementService.doConfirm(Integer.parseInt(settlementId), operator);
+        settlementService.doConfirm(settlementId, accountInfo.getAccountName());
         return getSuccessResult(true);
     }
 }

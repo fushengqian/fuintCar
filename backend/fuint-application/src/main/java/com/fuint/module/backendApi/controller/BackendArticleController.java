@@ -55,9 +55,6 @@ public class BackendArticleController extends BaseController {
 
     /**
      * 文章列表查询
-     *
-     * @param request HttpServletRequest对象
-     * @return 文章列表
      */
     @ApiOperation(value = "文章列表查询")
     @RequestMapping(value = "/list", method = RequestMethod.GET)
@@ -109,8 +106,6 @@ public class BackendArticleController extends BaseController {
 
     /**
      * 更新文章状态
-     *
-     * @return
      */
     @ApiOperation(value = "更新文章状态")
     @RequestMapping(value = "/updateStatus", method = RequestMethod.POST)
@@ -120,18 +115,14 @@ public class BackendArticleController extends BaseController {
         String token = request.getHeader("Access-Token");
         String status = params.get("status") != null ? params.get("status").toString() : StatusEnum.ENABLED.getKey();
         Integer id = params.get("id") == null ? 0 : Integer.parseInt(params.get("id").toString());
-
         AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
-
         MtArticle mtArticle = articleService.queryArticleById(id);
         if (mtArticle == null) {
             return getFailureResult(201);
         }
 
-        String operator = accountInfo.getAccountName();
-
         ArticleDto article = new ArticleDto();
-        article.setOperator(operator);
+        article.setOperator(accountInfo.getAccountName());
         article.setId(id);
         article.setStatus(status);
         articleService.updateArticle(article);
@@ -141,9 +132,6 @@ public class BackendArticleController extends BaseController {
 
     /**
      * 保存文章
-     *
-     * @param request  HttpServletRequest对象
-     * @return
      */
     @ApiOperation(value = "保存文章")
     @RequestMapping(value = "/save", method = RequestMethod.POST)
@@ -194,9 +182,6 @@ public class BackendArticleController extends BaseController {
 
     /**
      * 获取文章详情
-     *
-     * @param id
-     * @return
      */
     @ApiOperation(value = "获取文章详情")
     @RequestMapping(value = "/info/{id}", method = RequestMethod.GET)

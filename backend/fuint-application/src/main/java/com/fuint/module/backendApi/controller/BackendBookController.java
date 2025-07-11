@@ -63,9 +63,6 @@ public class BackendBookController extends BaseController {
 
     /**
      * 预约项目列表查询
-     *
-     * @param  request HttpServletRequest对象
-     * @return 预约项目列表
      */
     @ApiOperation(value = "预约项目列表查询")
     @RequestMapping(value = "/list", method = RequestMethod.GET)
@@ -133,8 +130,6 @@ public class BackendBookController extends BaseController {
 
     /**
      * 更新预约项目状态
-     *
-     * @return
      */
     @ApiOperation(value = "更新预约项目状态")
     @RequestMapping(value = "/updateStatus", method = RequestMethod.POST)
@@ -152,11 +147,10 @@ public class BackendBookController extends BaseController {
             return getFailureResult(201);
         }
 
-        String operator = accountInfo.getAccountName();
         MtBook mtBook = new MtBook();
         BeanUtils.copyProperties(bookDto, mtBook);
 
-        mtBook.setOperator(operator);
+        mtBook.setOperator(accountInfo.getAccountName());
         mtBook.setStatus(status);
         bookService.updateBook(mtBook);
 
@@ -165,9 +159,6 @@ public class BackendBookController extends BaseController {
 
     /**
      * 保存预约项目
-     *
-     * @param request HttpServletRequest对象
-     * @return
      */
     @ApiOperation(value = "保存预约项目")
     @RequestMapping(value = "/save", method = RequestMethod.POST)
@@ -236,9 +227,6 @@ public class BackendBookController extends BaseController {
 
     /**
      * 获取预约项目详情
-     *
-     * @param id 预约ID
-     * @return
      */
     @ApiOperation(value = "获取预约项目详情")
     @RequestMapping(value = "/info/{id}", method = RequestMethod.GET)

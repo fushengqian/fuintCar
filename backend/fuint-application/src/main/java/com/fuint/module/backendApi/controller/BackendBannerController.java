@@ -55,9 +55,6 @@ public class BackendBannerController extends BaseController {
 
     /**
      * 焦点图列表查询
-     *
-     * @param  request HttpServletRequest对象
-     * @return banner列表
      */
     @ApiOperation(value = "焦点图列表查询")
     @RequestMapping(value = "/list", method = RequestMethod.GET)
@@ -109,8 +106,6 @@ public class BackendBannerController extends BaseController {
 
     /**
      * 更新焦点图状态
-     *
-     * @return
      */
     @ApiOperation(value = "更新焦点图状态")
     @RequestMapping(value = "/updateStatus", method = RequestMethod.POST)
@@ -128,10 +123,8 @@ public class BackendBannerController extends BaseController {
             return getFailureResult(201);
         }
 
-        String operator = accountInfo.getAccountName();
-
         BannerDto bannerDto = new BannerDto();
-        bannerDto.setOperator(operator);
+        bannerDto.setOperator(accountInfo.getAccountName());
         bannerDto.setId(id);
         bannerDto.setStatus(status);
         bannerService.updateBanner(bannerDto);
@@ -141,9 +134,6 @@ public class BackendBannerController extends BaseController {
 
     /**
      * 保存焦点图
-     *
-     * @param request HttpServletRequest对象
-     * @return
      */
     @ApiOperation(value = "保存焦点图")
     @RequestMapping(value = "/save", method = RequestMethod.POST)
@@ -186,9 +176,6 @@ public class BackendBannerController extends BaseController {
 
     /**
      * 获取焦点图详情
-     *
-     * @param id
-     * @return
      */
     @ApiOperation(value = "获取焦点图详情")
     @RequestMapping(value = "/info/{id}", method = RequestMethod.GET)

@@ -1,5 +1,8 @@
 package com.fuint.common.service.impl;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -21,6 +24,7 @@ import com.fuint.repository.mapper.MtStoreGoodsMapper;
 import com.fuint.repository.mapper.MtStoreMapper;
 import com.fuint.repository.model.MtMerchant;
 import com.fuint.repository.model.MtStore;
+import com.fuint.utils.HttpUtil;
 import com.fuint.utils.StringUtil;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
@@ -34,8 +38,16 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.core.env.Environment;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
+import java.net.MalformedURLException;
 import java.util.*;
+import java.net.URL;
+import java.net.URLConnection;
 
 /**
  * 店铺管理业务实现类
@@ -54,6 +66,11 @@ public class StoreServiceImpl extends ServiceImpl<MtStoreMapper, MtStore> implem
     private MtMerchantMapper mtMerchantMapper;
 
     private MtStoreGoodsMapper mtStoreGoodsMapper;
+
+    /**
+     * 系统环境变量
+     * */
+    private Environment env;
 
     /**
      * 商户接口
@@ -488,5 +505,113 @@ public class StoreServiceImpl extends ServiceImpl<MtStoreMapper, MtStore> implem
             return;
         }
         mtStoreMapper.deleteStoreByMerchant(merchantId);
+    }
+
+    /**
+     * 根据地址获取经纬度
+     *
+     * @param addr 地址
+     * @return
+     * */
+    public Map<String, Object> getLatAndLngByAddress(String addr) {
+        String key = env.getProperty("amap.key");
+        Map<String, Object> map = new HashMap<>();
+        if (StringUtil.isEmpty(key) || key.length() < 10) {
+            map.put("lat", "");
+            map.put("lng", "");
+            return map;
+        }
+
+        String address = "";
+        try {
+            address = java.net.URLEncoder.encode(addr,"UTF-8");
+        } catch (UnsupportedEncodingException e1) {
+            e1.printStackTrace();
+        }
+
+        // key如果失效了就去高德地图官网申请
+        String url =  "https://restapi.amap.com/v3/geocode/geo?address="+address+"&output=JSON&key="+key;
+
+        URL myURL = null;
+        URLConnection httpsConn;
+        // 进行转码
+        try {
+            myURL = new URL(url);
+        } catch (MalformedURLException e) {
+            // empty
+        }
+        StringBuffer sb = new StringBuffer();
+        try {
+            httpsConn = myURL.openConnection();
+            if (httpsConn != null) {
+                InputStreamReader insr = new InputStreamReader(httpsConn.getInputStream(), "UTF-8");
+                BufferedReader br = new BufferedReader(insr);
+                String data = null;
+                while ((data = br.readLine()) != null) {
+                    sb.append(data);
+                }
+                insr.close();
+            }
+        } catch (IOException e) {
+            logger.error("根据地址获取经纬度失败：{}", e.getMessage());
+        }
+
+        JSONObject resultJson = JSON.parseObject(sb.toString());
+        JSONArray geocodes = resultJson.getJSONArray("geocodes");
+
+        String lat = "";
+        String lng = "";
+
+        if (geocodes != null) {
+            JSONObject jsonObject = geocodes.getJSONObject(0);
+            String location = jsonObject.getString("location");
+            if (org.apache.commons.lang.StringUtils.isNotEmpty(location)) {
+                String latAndLng[] = location.split(",");
+                if (latAndLng.length == 2) {
+                    lat = latAndLng[1];
+                    lng = latAndLng[0];
+                }
+            }
+        }
+
+        map.put("lat", lat);
+        map.put("lng", lng);
+
+        return map;
+    }
+
+    /**
+     * 测量步行距离
+     *
+     * @param origin 起点经纬度 格式如：116.434446,39.90816
+     * @param destination 终点经纬度 格式如：116.434307,39.90909
+     * @return
+     * */
+    public Double getDistance(String origin, String destination) {
+        String key = env.getProperty("amap.key");
+        if (StringUtil.isEmpty(key)) {
+            return 0d;
+        }
+        String url = "https://restapi.amap.com/v3/direction/walking?origin="+origin+"&destination="+destination+"&key="+key;
+        String response = HttpUtil.sendRequest(url);
+        if (StringUtil.isEmpty(response)) {
+            return 0d;
+        }
+        JSONObject resultJson = JSON.parseObject(response);
+        if (resultJson != null && "1".equals(resultJson.getString("status"))) {
+            JSONObject route = resultJson.getJSONObject("route");
+            if (route != null) {
+                JSONArray paths = route.getJSONArray("paths");
+                if (paths != null && paths.size() > 0) {
+                    JSONObject path = paths.getJSONObject(0);
+                    String distance = path.getString("distance");
+                    if (distance != null) {
+                        return Double.parseDouble(distance)/1000;
+                    }
+                }
+            }
+
+        }
+        return 0d;
     }
 }

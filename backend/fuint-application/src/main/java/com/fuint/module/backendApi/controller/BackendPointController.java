@@ -164,9 +164,6 @@ public class BackendPointController extends BaseController {
 
     /**
      * 提交积分设置
-     *
-     * @param request HttpServletRequest对象
-     * @return
      */
     @ApiOperation(value = "提交积分设置")
     @RequestMapping(value = "/saveSetting", method = RequestMethod.POST)
@@ -189,8 +186,6 @@ public class BackendPointController extends BaseController {
             return getFailureResult(5002);
         }
 
-        String operator = accountInfo.getAccountName();
-
         PointSettingEnum[] settingList = PointSettingEnum.values();
         for (PointSettingEnum setting : settingList) {
             MtSetting info = new MtSetting();
@@ -211,7 +206,7 @@ public class BackendPointController extends BaseController {
 
             info.setDescription(setting.getValue());
             info.setStatus(status);
-            info.setOperator(operator);
+            info.setOperator(accountInfo.getAccountName());
             info.setUpdateTime(new Date());
 
             settingService.saveSetting(info);
@@ -222,9 +217,6 @@ public class BackendPointController extends BaseController {
 
     /**
      * 提交积分充值
-     *
-     * @param request HttpServletRequest对象
-     * @return
      */
     @ApiOperation(value = "提交积分充值")
     @RequestMapping(value = "/doRecharge", method = RequestMethod.POST)

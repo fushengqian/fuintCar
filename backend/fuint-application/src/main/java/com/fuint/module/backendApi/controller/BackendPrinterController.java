@@ -132,14 +132,12 @@ public class BackendPrinterController extends BaseController {
         Integer id = params.get("id") == null ? 0 : Integer.parseInt(params.get("id").toString());
 
         AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
-
         MtPrinter mtPrinter = printerService.queryPrinterById(id);
         if (mtPrinter == null) {
             return getFailureResult(201);
         }
 
-        String operator = accountInfo.getAccountName();
-        mtPrinter.setOperator(operator);
+        mtPrinter.setOperator(accountInfo.getAccountName());
         mtPrinter.setStatus(status);
         printerService.updatePrinter(mtPrinter);
 

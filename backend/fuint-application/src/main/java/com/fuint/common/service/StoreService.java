@@ -1,5 +1,8 @@
 package com.fuint.common.service;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fuint.common.dto.StoreDto;
 import com.fuint.common.dto.StoreInfo;
@@ -131,5 +134,22 @@ public interface StoreService extends IService<MtStore> {
      * @return
      * */
     void deleteStoreByMerchant(Integer merchantId);
+
+    /**
+     * 根据地址获取经纬度
+     *
+     * @param addr 地址
+     * @return
+     * */
+    Map<String, Object> getLatAndLngByAddress(String addr);
+
+    /**
+     * 获取步行距离
+     *
+     * @param origin 起点经纬度 格式如：116.434446,39.90816
+     * @param destination 终点经纬度 格式如：116.434307,39.90909
+     * @return
+     * */
+    Double getDistance(String origin, String destination);
 
 }

@@ -27,6 +27,7 @@ import org.apache.commons.lang.StringUtils;
 import com.github.pagehelper.Page;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeanUtils;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -122,16 +123,8 @@ public class PointServiceImpl extends ServiceImpl<MtPointMapper, MtPoint> implem
                 userInfo.setMobile(CommonUtil.hidePhone(userInfo.getMobile()));
             }
             PointDto item = new PointDto();
-            item.setId(point.getId());
-            item.setAmount(point.getAmount());
-            item.setDescription(point.getDescription());
-            item.setCreateTime(point.getCreateTime());
-            item.setUpdateTime(point.getUpdateTime());
-            item.setUserId(point.getUserId());
+            BeanUtils.copyProperties(point, item);
             item.setUserInfo(userInfo);
-            item.setOrderSn(point.getOrderSn());
-            item.setOperator(point.getOperator());
-            item.setStatus(point.getStatus());
             dataList.add(item);
         }
         PageRequest pageRequest = PageRequest.of(paginationRequest.getCurrentPage(), paginationRequest.getPageSize());

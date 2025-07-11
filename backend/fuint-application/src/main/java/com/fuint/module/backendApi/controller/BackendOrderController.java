@@ -337,9 +337,6 @@ public class BackendOrderController extends BaseController {
 
     /**
      * 删除订单
-     *
-     * @param request
-     * @return
      */
     @ApiOperation(value = "删除订单")
     @RequestMapping(value = "/delete/{id}", method = RequestMethod.GET)
@@ -348,18 +345,12 @@ public class BackendOrderController extends BaseController {
     public ResponseObject delete(HttpServletRequest request, @PathVariable("id") Integer id) throws BusinessCheckException {
         String token = request.getHeader("Access-Token");
         AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
-
-        String operator = accountInfo.getAccountName();
-        orderService.deleteOrder(id, operator);
-
+        orderService.deleteOrder(id, accountInfo.getAccountName());
         return getSuccessResult(true);
     }
 
     /**
      * 订单设置详情
-     *
-     * @param request
-     * @return
      */
     @ApiOperation(value = "订单设置详情")
     @RequestMapping(value = "/setting", method = RequestMethod.GET)
@@ -398,9 +389,6 @@ public class BackendOrderController extends BaseController {
 
     /**
      * 保存订单设置
-     *
-     * @param request HttpServletRequest对象
-     * @return
      */
     @ApiOperation(value = "保存订单设置")
     @RequestMapping(value = "/saveSetting", method = RequestMethod.POST)
@@ -414,8 +402,6 @@ public class BackendOrderController extends BaseController {
         String payOffLine = param.get("payOffLine") != null ? param.get("payOffLine").toString() : "off";
 
         AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
-        String operator = accountInfo.getAccountName();
-
         OrderSettingEnum[] settingList = OrderSettingEnum.values();
         for (OrderSettingEnum setting : settingList) {
             MtSetting info = new MtSetting();
@@ -436,7 +422,7 @@ public class BackendOrderController extends BaseController {
             info.setStoreId(accountInfo.getStoreId());
             info.setDescription(setting.getValue());
             info.setStatus(StatusEnum.ENABLED.getKey());
-            info.setOperator(operator);
+            info.setOperator(accountInfo.getAccountName());
             info.setUpdateTime(new Date());
 
             settingService.saveSetting(info);
@@ -447,8 +433,6 @@ public class BackendOrderController extends BaseController {
 
     /**
      * 导出订单
-     *
-     * @return
      */
     @ApiOperation(value = "导出订单")
     @RequestMapping(value = "/export", method = RequestMethod.GET)

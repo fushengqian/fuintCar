@@ -1,7 +1,3 @@
-CREATE DATABASE /*!32312 IF NOT EXISTS*/`fuint-db` /*!40100 DEFAULT CHARACTER SET utf8 */ /*!80016 DEFAULT ENCRYPTION='N' */;
-
-USE `fuint-db`;
-
 /*Table structure for table `mt_address` */
 
 DROP TABLE IF EXISTS `mt_address`;
@@ -442,17 +438,19 @@ DROP TABLE IF EXISTS `mt_goods`;
 
 CREATE TABLE `mt_goods` (
   `ID` int NOT NULL AUTO_INCREMENT COMMENT '自增ID',
-  `TYPE` varchar(30) DEFAULT 'product' COMMENT '商品类别',
+  `TYPE` varchar(30) DEFAULT 'goods' COMMENT '商品类别',
   `MERCHANT_ID` int DEFAULT '0' COMMENT '所属商户ID',
   `STORE_ID` int DEFAULT '0' COMMENT '所属店铺ID',
   `NAME` varchar(100) DEFAULT '' COMMENT '商品名称',
   `CATE_ID` int DEFAULT '0' COMMENT '分类ID',
   `GOODS_NO` varchar(100) DEFAULT '' COMMENT '商品编码',
+  `PLATFORM` int DEFAULT '0' COMMENT '可用平台，0：不限，1：仅会员端（小程序和h5）；2：仅收银端',
   `IS_SINGLE_SPEC` char(1) NOT NULL DEFAULT 'Y' COMMENT '是否单规格',
   `LOGO` varchar(200) DEFAULT '' COMMENT '主图地址',
   `IMAGES` varchar(1000) DEFAULT '' COMMENT '图片地址',
   `PRICE` decimal(10,2) unsigned DEFAULT '0.00' COMMENT '价格',
   `LINE_PRICE` decimal(10,2) unsigned DEFAULT '0.00' COMMENT '划线价格',
+  `COST_PRICE` decimal(10,2) DEFAULT '0.00' COMMENT '成本价格',
   `STOCK` int unsigned DEFAULT '0' COMMENT '库存',
   `WEIGHT` decimal(10,2) DEFAULT '0.00' COMMENT '重量',
   `COUPON_IDS` varchar(500) DEFAULT '' COMMENT '关联卡券ID',
@@ -468,7 +466,7 @@ CREATE TABLE `mt_goods` (
   `OPERATOR` varchar(30) DEFAULT NULL COMMENT '最后操作人',
   `STATUS` char(1) DEFAULT 'A' COMMENT 'A：正常；D：删除',
   PRIMARY KEY (`ID`)
-) ENGINE=InnoDB AUTO_INCREMENT=486 DEFAULT CHARSET=utf8 COMMENT='商品表';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='商品表';
 
 /*Table structure for table `mt_goods_cate` */
 

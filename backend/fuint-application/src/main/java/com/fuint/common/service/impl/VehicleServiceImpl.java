@@ -21,8 +21,9 @@ import com.fuint.utils.StringUtil;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.PageImpl;
@@ -32,10 +33,11 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
 
-@Slf4j
 @Service
 @AllArgsConstructor(onConstructor_= {@Lazy})
 public class VehicleServiceImpl extends ServiceImpl<MtVehicleMapper, MtVehicle> implements VehicleService {
+
+    private static final Logger logger = LoggerFactory.getLogger(VehicleServiceImpl.class);
 
     private MtVehicleMapper mtVehicleMapper;
 
@@ -157,7 +159,7 @@ public class VehicleServiceImpl extends ServiceImpl<MtVehicleMapper, MtVehicle> 
         mtVehicle.setUpdateTime(new Date());
 
         Boolean result = updateById(mtVehicle);
-        log.info("更新车辆信息结果：{}", result);
+        logger.info("更新车辆信息结果：{}", result);
 
         return mtVehicle;
     }
@@ -238,13 +240,16 @@ public class VehicleServiceImpl extends ServiceImpl<MtVehicleMapper, MtVehicle> 
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void deleteVehicle(Integer id, String operator) throws BusinessCheckException {
         MtVehicle mtVehicle = mtVehicleMapper.selectById(id);
-        if(mtVehicle == null) {
+        if (mtVehicle == null) {
             throw new BusinessCheckException("车辆不存在");
         }
         mtVehicle.setStatus(StatusEnum.DISABLE.getKey());
         mtVehicle.setUpdateTime(new Date());
+        logger.info("删除会员车辆，ID {},operator {}", id, operator);
+
         updateById(mtVehicle);
     }
 

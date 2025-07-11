@@ -371,6 +371,12 @@
       }
     },
     {
+      "path": "pages/merchant/book/index",
+      "style": {
+        "navigationBarTitleText": "预约管理"
+      }
+    },
+    {
       "path": "pages/article/index",
       "style": {
         "navigationBarTitleText": "文章列表"

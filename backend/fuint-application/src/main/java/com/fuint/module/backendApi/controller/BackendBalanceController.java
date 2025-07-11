@@ -59,9 +59,6 @@ public class BackendBalanceController extends BaseController {
 
     /**
      * 余额明细列表查询
-     *
-     * @param request HttpServletRequest对象
-     * @return 余额明细列表
      */
     @ApiOperation(value = "余额明细列表查询")
     @RequestMapping(value = "/list", method = RequestMethod.GET)
@@ -116,9 +113,6 @@ public class BackendBalanceController extends BaseController {
 
     /**
      * 提交充值（单个会员）
-     *
-     * @param request HttpServletRequest对象
-     * @return
      */
     @ApiOperation(value = "提交充值")
     @RequestMapping(value = "/doRecharge", method = RequestMethod.POST)
@@ -140,9 +134,7 @@ public class BackendBalanceController extends BaseController {
             return getFailureResult(201, "充值会员信息不能为空");
         }
 
-        String operator = accountInfo.getAccountName();
         MtBalance mtBalance = new MtBalance();
-
         MtUser userInfo = memberService.queryMemberById(userId);
 
         // 扣减余额
@@ -157,7 +149,7 @@ public class BackendBalanceController extends BaseController {
         mtBalance.setMerchantId(accountInfo.getMerchantId());
         mtBalance.setDescription(remark);
         mtBalance.setUserId(userId);
-        mtBalance.setOperator(operator);
+        mtBalance.setOperator(accountInfo.getAccountName());
         mtBalance.setOrderSn("");
 
         balanceService.addBalance(mtBalance, true);
@@ -166,9 +158,6 @@ public class BackendBalanceController extends BaseController {
 
     /**
      * 发放余额
-     *
-     * @param request HttpServletRequest对象
-     * @return
      */
     @ApiOperation(value = "发放余额")
     @RequestMapping(value = "/distribute", method = RequestMethod.POST)
@@ -189,9 +178,6 @@ public class BackendBalanceController extends BaseController {
 
     /**
      * 充值设置详情
-     *
-     * @param request
-     * @return
      */
     @ApiOperation(value = "充值设置详情")
     @RequestMapping(value = "/setting", method = RequestMethod.GET)
@@ -238,9 +224,6 @@ public class BackendBalanceController extends BaseController {
 
     /**
      * 保存充值设置
-     *
-     * @param request HttpServletRequest对象
-     * @return
      */
     @ApiOperation(value = "保存充值设置")
     @RequestMapping(value = "/saveSetting", method = RequestMethod.POST)

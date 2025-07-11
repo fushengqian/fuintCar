@@ -47,10 +47,6 @@ public class BackendMemberGroupController extends BaseController {
 
     /**
      * 查询会员分组列表
-     *
-     * @param  request
-     * @return
-     * @throws BusinessCheckException
      */
     @ApiOperation(value = "查询会员分组列表")
     @RequestMapping(value = "/list", method = RequestMethod.GET)
@@ -98,10 +94,6 @@ public class BackendMemberGroupController extends BaseController {
 
     /**
      * 保存会员分组
-     *
-     * @param request
-     * @param memberGroupDto
-     * @return
      */
     @ApiOperation(value = "保存会员分组")
     @RequestMapping(value = "/save", method = RequestMethod.POST)
@@ -128,9 +120,6 @@ public class BackendMemberGroupController extends BaseController {
 
     /**
      * 删除会员分组
-     *
-     * @param request
-     * @return
      */
     @ApiOperation(value = "删除会员分组")
     @RequestMapping(value = "/delete/{id}", method = RequestMethod.GET)
@@ -156,8 +145,6 @@ public class BackendMemberGroupController extends BaseController {
 
     /**
      * 更新分组状态
-     *
-     * @return
      */
     @ApiOperation(value = "更新分组状态")
     @RequestMapping(value = "/updateStatus", method = RequestMethod.POST)
@@ -170,9 +157,8 @@ public class BackendMemberGroupController extends BaseController {
 
         AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
 
-        String operator = accountInfo.getAccountName();
         MemberGroupDto groupDto = new MemberGroupDto();
-        groupDto.setOperator(operator);
+        groupDto.setOperator(accountInfo.getAccountName());
         groupDto.setId(id);
         groupDto.setStatus(status);
         memberGroupService.updateMemberGroup(groupDto);
@@ -182,9 +168,6 @@ public class BackendMemberGroupController extends BaseController {
 
     /**
      * 获取分组详情
-     *
-     * @param groupId
-     * @return
      */
     @ApiOperation(value = "获取分组详情")
     @RequestMapping(value = "/info/{id}", method = RequestMethod.GET)

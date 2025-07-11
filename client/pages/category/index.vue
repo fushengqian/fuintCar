@@ -197,7 +197,7 @@
          const app = this
          settingApi.systemConfig()
            .then(result => {
-               app.storeInfo = result.data.storeInfo
+               app.storeInfo = result.data.storeInfo;
            })
        },
       

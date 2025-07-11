@@ -71,6 +71,9 @@ public class StoreInfo implements Serializable {
     @ApiModelProperty("统一社会信用代码")
     private String creditCode;
 
+    @ApiModelProperty("是否单店铺")
+    private String single;
+
     @ApiModelProperty("创建时间")
     private Date createTime;
 

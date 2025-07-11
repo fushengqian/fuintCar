@@ -80,10 +80,6 @@ public class BackendCouponController extends BaseController {
 
     /**
      * 查询卡券列表
-     *
-     * @param  request
-     * @return
-     * @throws BusinessCheckException
      */
     @ApiOperation(value = "查询卡券列表")
     @RequestMapping(value = "/list", method = RequestMethod.GET)
@@ -205,9 +201,6 @@ public class BackendCouponController extends BaseController {
 
     /**
      * 删除卡券
-     *
-     * @param request
-     * @return
      */
     @ApiOperation(value = "删除卡券")
     @RequestMapping(value = "/delete/{id}", method = RequestMethod.GET)
@@ -216,18 +209,12 @@ public class BackendCouponController extends BaseController {
     public ResponseObject delete(HttpServletRequest request, @PathVariable("id") Long id) throws BusinessCheckException {
         String token = request.getHeader("Access-Token");
         AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
-
-        String operator = accountInfo.getAccountName();
-        couponService.deleteCoupon(id, operator);
-
+        couponService.deleteCoupon(id, accountInfo.getAccountName());
         return getSuccessResult(true);
     }
 
     /**
      * 保存卡券
-     *
-     * @param request HttpServletRequest对象
-     * @return
      */
     @ApiOperation(value = "保存卡券")
     @RequestMapping(value = "/save", method = RequestMethod.POST)
@@ -266,9 +253,6 @@ public class BackendCouponController extends BaseController {
 
     /**
      * 卡券详情
-     *
-     * @param couponId
-     * @return
      */
     @ApiOperation(value = "卡券详情")
     @RequestMapping(value = "/info/{id}", method = RequestMethod.GET)
@@ -360,9 +344,6 @@ public class BackendCouponController extends BaseController {
 
     /**
      * 发放卡券
-     *
-     * @param request
-     * @return
      */
     @ApiOperation(value = "发放卡券")
     @RequestMapping(value = "/sendCoupon", method = RequestMethod.GET)

@@ -88,10 +88,6 @@ public class BackendGoodsController extends BaseController {
 
     /**
      * 分页查询商品列表
-     *
-     * @param request
-     * @throws BusinessCheckException
-     * @return
      */
     @ApiOperation(value = "分页查询商品列表")
     @RequestMapping(value = "/list", method = RequestMethod.POST)
@@ -138,8 +134,6 @@ public class BackendGoodsController extends BaseController {
 
     /**
      * 更新商品状态
-     *
-     * @return
      */
     @ApiOperation(value = "更新商品状态")
     @RequestMapping(value = "/updateStatus", method = RequestMethod.POST)
@@ -172,10 +166,6 @@ public class BackendGoodsController extends BaseController {
 
     /**
      * 获取商品详情
-     *
-     * @param request
-     * @param goodsId
-     * @return
      */
     @ApiOperation(value = "获取商品详情")
     @RequestMapping(value = "/info/{id}", method = RequestMethod.GET)
@@ -274,9 +264,6 @@ public class BackendGoodsController extends BaseController {
 
     /**
      * 保存商品信息
-     *
-     * @param request HttpServletRequest对象
-     * @return
      */
     @ApiOperation(value = "保存商品信息")
     @RequestMapping(value = "/save", method = RequestMethod.POST)
@@ -512,8 +499,6 @@ public class BackendGoodsController extends BaseController {
 
     /**
      * 保存商品规格
-     *
-     * @param request HttpServletRequest对象
      */
     @ApiOperation(value = "保存商品规格")
     @RequestMapping(value = "/saveSpecName", method = RequestMethod.POST)
@@ -560,9 +545,6 @@ public class BackendGoodsController extends BaseController {
 
     /**
      * 保存商品规格值
-     *
-     * @param param 规格参数
-     * @return
      */
     @ApiOperation(value = "保存商品规格值")
     @RequestMapping(value = "/saveSpecValue", method = RequestMethod.POST)
@@ -642,9 +624,6 @@ public class BackendGoodsController extends BaseController {
 
     /**
      * 删除商品规格
-     *
-     * @param request HttpServletRequest对象
-     * @return
      */
     @ApiOperation(value = "删除商品规格")
     @RequestMapping(value = "/deleteSpec", method = RequestMethod.GET)
@@ -674,8 +653,6 @@ public class BackendGoodsController extends BaseController {
 
     /**
      * 删除商品规格值
-     *
-     * @param request HttpServletRequest对象
      */
     @ApiOperation(value = "删除商品规格值")
     @RequestMapping(value = "/deleteSpecValue", method = RequestMethod.GET)
@@ -715,9 +692,6 @@ public class BackendGoodsController extends BaseController {
 
     /**
      * 获取选择商品列表
-     *
-     * @param request HttpServletRequest对象
-     * @return
      */
     @ApiOperation(value = "获取选择商品列表")
     @RequestMapping(value = "/selectGoods", method = RequestMethod.POST)
@@ -743,8 +717,6 @@ public class BackendGoodsController extends BaseController {
 
     /**
      * 下载商品导入模板
-     *
-     * @return
      */
     @ApiOperation(value = "下载商品导入模板")
     @RequestMapping(value = "/downloadTemplate", method = RequestMethod.GET)
@@ -755,9 +727,6 @@ public class BackendGoodsController extends BaseController {
 
     /**
      * 上传商品导入文件
-     *
-     * @param request
-     * @throws
      */
     @ApiOperation(value = "上传商品导入文件")
     @RequestMapping(value = "/uploadGoodsFile", method = RequestMethod.POST)

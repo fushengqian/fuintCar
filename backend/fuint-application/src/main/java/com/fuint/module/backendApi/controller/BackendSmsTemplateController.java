@@ -139,14 +139,11 @@ public class BackendSmsTemplateController extends BaseController {
     public ResponseObject delete(HttpServletRequest request, @PathVariable("id") Integer id) throws BusinessCheckException {
         String token = request.getHeader("Access-Token");
         AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
-
         MtSmsTemplate mtSmsTemplate = smsTemplateService.querySmsTemplateById(id.intValue());
         if (accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0 && !mtSmsTemplate.getMerchantId().equals(accountInfo.getMerchantId())) {
             return getFailureResult(1004);
         }
-        String operator = accountInfo.getAccountName();
-        smsTemplateService.deleteTemplate(id, operator);
-
+        smsTemplateService.deleteTemplate(id, accountInfo.getAccountName());
         return getSuccessResult(true);
     }
 }
