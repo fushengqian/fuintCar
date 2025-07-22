@@ -79,7 +79,7 @@ public class ClientSignController extends BaseController {
 
     /**
      * 微信授权登录（小程序）
-     * */
+     */
     @ApiOperation(value = "微信授权登录（小程序）")
     @RequestMapping(value = "/mpWxLogin", method = RequestMethod.POST)
     @ResponseBody
@@ -135,7 +135,7 @@ public class ClientSignController extends BaseController {
 
     /**
      * 微信授权登录（公众号）
-     * */
+     */
     @ApiOperation(value = "微信授权登录（公众号）")
     @RequestMapping(value = "/mpWxAuth", method = RequestMethod.POST)
     @ResponseBody
@@ -182,7 +182,7 @@ public class ClientSignController extends BaseController {
 
     /**
      * 通过账号密码注册
-     * */
+     */
     @ApiOperation(value = "通过账号密码注册")
     @RequestMapping(value = "/register", method = RequestMethod.POST)
     @CrossOrigin

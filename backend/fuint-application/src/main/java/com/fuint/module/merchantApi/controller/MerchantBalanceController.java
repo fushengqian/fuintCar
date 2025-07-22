@@ -62,15 +62,7 @@ public class MerchantBalanceController extends BaseController {
         String token = request.getHeader("Access-Token");
         String merchantNo = request.getHeader("merchantNo") == null ? "" : request.getHeader("merchantNo");
         Integer merchantId = merchantService.getMerchantId(merchantNo);
-        if (StringUtil.isEmpty(token)) {
-            return getFailureResult(1001);
-        }
-
         UserInfo userInfo = TokenUtil.getUserInfoByToken(token);
-        if (null == userInfo) {
-            return getFailureResult(1001);
-        }
-
         MtStaff staffInfo = null;
         MtUser mtUser = memberService.queryMemberById(userInfo.getId());
         if (mtUser != null && mtUser.getMobile() != null) {

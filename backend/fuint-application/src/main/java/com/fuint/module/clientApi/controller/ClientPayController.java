@@ -91,7 +91,7 @@ public class ClientPayController extends BaseController {
 
     /**
      * 支付前查询
-     * */
+     */
     @ApiOperation(value = "支付前查询")
     @RequestMapping(value = "/prePay", method = RequestMethod.GET)
     @CrossOrigin
@@ -158,7 +158,7 @@ public class ClientPayController extends BaseController {
 
     /**
      * 发起支付
-     * */
+     */
     @ApiOperation(value = "发起支付")
     @RequestMapping(value = "/doPay", method = RequestMethod.GET)
     @CrossOrigin

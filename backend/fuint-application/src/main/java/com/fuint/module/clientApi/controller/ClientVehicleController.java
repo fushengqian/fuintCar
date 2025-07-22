@@ -18,7 +18,7 @@ import com.fuint.repository.model.MtVehicleOrder;
 import com.fuint.utils.StringUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
 import java.util.HashMap;
@@ -33,25 +33,23 @@ import java.util.Map;
  */
 @Api(tags="会员端-会员车辆相关接口")
 @RestController
+@AllArgsConstructor
 @RequestMapping(value = "/clientApi/vehicle")
 public class ClientVehicleController extends BaseController {
 
     /**
      * 车辆服务接口
      * */
-    @Autowired
     private VehicleService vehicleService;
 
     /**
      * 车辆服务单接口
      * */
-    @Autowired
     private VehicleOrderService vehicleOrderService;
 
     /**
      * 商户服务接口
      */
-    @Autowired
     private MerchantService merchantService;
 
     /**

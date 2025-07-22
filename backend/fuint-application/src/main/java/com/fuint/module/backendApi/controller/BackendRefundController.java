@@ -23,7 +23,6 @@ import lombok.AllArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -62,9 +61,6 @@ public class BackendRefundController extends BaseController {
 
     /**
      * 退款列表查询
-     *
-     * @param request HttpServletRequest对象
-     * @return
      */
     @ApiOperation(value = "退款列表查询")
     @RequestMapping(value = "/list", method = RequestMethod.GET)
@@ -144,8 +140,6 @@ public class BackendRefundController extends BaseController {
 
     /**
      * 查询退款详情
-     * @param request HttpServletRequest对象
-     * @return
      * */
     @ApiOperation(value = "查询退款详情")
     @RequestMapping(value = "/info/{refundId}", method = RequestMethod.GET)
@@ -176,7 +170,6 @@ public class BackendRefundController extends BaseController {
 
     /**
      * 保存售后订单
-     * @return
      */
     @ApiOperation(value = "保存售后订单")
     @RequestMapping(value = "save", method = RequestMethod.POST)
@@ -215,7 +208,6 @@ public class BackendRefundController extends BaseController {
 
     /**
      * 发起退款
-     * @return
      */
     @ApiOperation(value = "发起退款")
     @RequestMapping(value = "doRefund", method = RequestMethod.POST)

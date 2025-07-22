@@ -83,9 +83,6 @@ public class BackendOrderController extends BaseController {
 
     /**
      * 订单列表查询
-     *
-     * @param request HttpServletRequest对象
-     * @return
      */
     @ApiOperation(value = "订单列表查询")
     @RequestMapping(value = "/list", method = RequestMethod.POST)
@@ -139,9 +136,7 @@ public class BackendOrderController extends BaseController {
 
     /**
      * 获取订单详情
-     * @param orderId 订单ID
-     * @return
-     * */
+     */
     @ApiOperation(value = "获取订单详情")
     @RequestMapping(value = "/info/{orderId}", method = RequestMethod.GET)
     @CrossOrigin
@@ -164,9 +159,7 @@ public class BackendOrderController extends BaseController {
 
     /**
      * 确认发货
-     * @param request HttpServletRequest对象
-     * @return
-     * */
+     */
     @ApiOperation(value = "确认发货")
     @RequestMapping(value = "/delivered", method = RequestMethod.POST)
     @CrossOrigin
@@ -225,9 +218,7 @@ public class BackendOrderController extends BaseController {
 
     /**
      * 修改订单
-     * @param request HttpServletRequest对象
-     * @return
-     * */
+     */
     @ApiOperation(value = "修改订单")
     @RequestMapping(value = "/save", method = RequestMethod.POST)
     @CrossOrigin
@@ -270,9 +261,7 @@ public class BackendOrderController extends BaseController {
 
     /**
      * 验证并核销订单
-     * @param request HttpServletRequest对象
-     * @return
-     * */
+     */
     @ApiOperation(value = "验证并核销订单")
     @RequestMapping(value = "/verify", method = RequestMethod.POST)
     @CrossOrigin
@@ -305,8 +294,6 @@ public class BackendOrderController extends BaseController {
 
     /**
      * 最新订单列表查询
-     * @param request HttpServletRequest对象
-     * @return
      */
     @ApiOperation(value = "最新订单列表查询")
     @RequestMapping(value = "/latest", method = RequestMethod.POST)

@@ -81,9 +81,6 @@ public class BackendMemberController extends BaseController {
 
     /**
      * 查询会员列表
-     *
-     * @param request  HttpServletRequest对象
-     * @return 会员列表
      */
     @ApiOperation(value = "查询会员列表")
     @RequestMapping(value = "/list", method = RequestMethod.GET)
@@ -188,8 +185,6 @@ public class BackendMemberController extends BaseController {
 
     /**
      * 更新会员状态
-     *
-     * @return
      */
     @ApiOperation(value = "更新会员状态")
     @RequestMapping(value = "/updateStatus", method = RequestMethod.POST)
@@ -278,9 +273,6 @@ public class BackendMemberController extends BaseController {
 
     /**
      * 获取会员详情
-     *
-     * @param request
-     * @return
      */
     @ApiOperation(value = "获取会员详情")
     @RequestMapping(value = "/info/{id}", method = RequestMethod.GET)
@@ -323,9 +315,6 @@ public class BackendMemberController extends BaseController {
 
     /**
      * 获取会员设置
-     *
-     * @param request
-     * @return
      */
     @ApiOperation(value = "获取会员设置")
     @RequestMapping(value = "/setting", method = RequestMethod.GET)
@@ -372,9 +361,6 @@ public class BackendMemberController extends BaseController {
 
     /**
      * 保存会员设置
-     *
-     * @param request HttpServletRequest对象
-     * @return
      */
     @ApiOperation(value = "保存会员设置")
     @RequestMapping(value = "/saveSetting", method = RequestMethod.POST)
@@ -441,8 +427,6 @@ public class BackendMemberController extends BaseController {
 
     /**
      * 重置会员密码
-     *
-     * @return
      */
     @ApiOperation(value = "重置会员密码")
     @RequestMapping(value = "/resetPwd", method = RequestMethod.POST)
@@ -478,9 +462,6 @@ public class BackendMemberController extends BaseController {
 
     /**
      * 获取会员分组
-     *
-     * @param request
-     * @return
      */
     @ApiOperation(value = "获取会员分组")
     @RequestMapping(value = "/groupList", method = RequestMethod.GET)
@@ -509,9 +490,6 @@ public class BackendMemberController extends BaseController {
 
     /**
      * 查找会员列表
-     *
-     * @param request
-     * @return
      */
     @ApiOperation(value = "查找会员列表")
     @RequestMapping(value = "/searchMembers", method = RequestMethod.GET)
@@ -528,8 +506,6 @@ public class BackendMemberController extends BaseController {
 
     /**
      * 下载会员导入模板
-     *
-     * @return
      */
     @ApiOperation(value = "下载会员导入模板")
     @RequestMapping(value = "/downloadTemplate", method = RequestMethod.GET)
@@ -540,9 +516,6 @@ public class BackendMemberController extends BaseController {
 
     /**
      * 上传会员导入文件
-     *
-     * @param request
-     * @throws
      */
     @ApiOperation(value = "上传会员导入文件")
     @RequestMapping(value = "/uploadMemberFile", method = RequestMethod.POST)

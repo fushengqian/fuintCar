@@ -121,7 +121,7 @@ public class ClientGoodsController extends BaseController {
 
     /**
      * 搜索商品
-     * */
+     */
     @ApiOperation(value = "搜索商品")
     @RequestMapping(value = "/search", method = RequestMethod.POST)
     @CrossOrigin
@@ -294,7 +294,7 @@ public class ClientGoodsController extends BaseController {
 
     /**
      * 通过sku编码获取商品信息
-     * */
+     */
     @ApiOperation(value = "通过sku编码获取商品信息")
     @RequestMapping(value = "/getGoodsInfoBySkuNo", method = RequestMethod.POST)
     @CrossOrigin

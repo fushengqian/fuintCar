@@ -50,7 +50,7 @@ public class MerchantCouponController extends BaseController {
 
     /**
      * 充值余额
-     * */
+     */
     @RequestMapping(value = "/sendCoupon", method = RequestMethod.POST)
     @CrossOrigin
     public ResponseObject sendCoupon(HttpServletRequest request, @RequestBody CouponReceiveParam receiveParam) throws BusinessCheckException {

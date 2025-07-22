@@ -63,10 +63,6 @@ public class BackendCouponGroupController extends BaseController {
 
     /**
      * 查询卡券分组列表
-     *
-     * @param request
-     * @return
-     * @throws BusinessCheckException
      */
     @ApiOperation(value = "查询卡券分组列表")
     @RequestMapping(value = "/list", method = RequestMethod.GET)
@@ -145,10 +141,6 @@ public class BackendCouponGroupController extends BaseController {
 
     /**
      * 保存卡券分组信息
-     *
-     * @param request
-     * @param reqCouponGroupDto
-     * @return
      */
     @ApiOperation(value = "保存卡券分组信息")
     @RequestMapping(value = "/save", method = RequestMethod.POST)
@@ -170,9 +162,6 @@ public class BackendCouponGroupController extends BaseController {
 
     /**
      * 删除卡券分组
-     *
-     * @param request
-     * @return
      */
     @ApiOperation(value = "删除卡券分组")
     @RequestMapping(value = "/delete/{id}", method = RequestMethod.GET)
@@ -198,8 +187,6 @@ public class BackendCouponGroupController extends BaseController {
 
     /**
      * 更新分组状态
-     *
-     * @return
      */
     @ApiOperation(value = "更新分组状态")
     @RequestMapping(value = "/updateStatus", method = RequestMethod.POST)
@@ -224,9 +211,6 @@ public class BackendCouponGroupController extends BaseController {
 
     /**
      * 获取分组详情
-     *
-     * @param groupId
-     * @return
      */
     @ApiOperation(value = "获取分组详情")
     @RequestMapping(value = "/info/{id}", method = RequestMethod.GET)
@@ -243,10 +227,6 @@ public class BackendCouponGroupController extends BaseController {
 
     /**
      * 导出模板文件
-     *
-     * @param request
-     * @param response
-     * @throws BusinessCheckException
      */
     @ApiOperation(value = "导出模板文件")
     @RequestMapping(value = "/exportTemplate", method = RequestMethod.GET)
@@ -274,9 +254,6 @@ public class BackendCouponGroupController extends BaseController {
 
     /**
      * 上传文件
-     *
-     * @param request
-     * @throws
      */
     @ApiOperation(value = "上传文件")
     @RequestMapping(value = "/upload/", method = RequestMethod.POST, produces = "text/html;charset=UTF-8")

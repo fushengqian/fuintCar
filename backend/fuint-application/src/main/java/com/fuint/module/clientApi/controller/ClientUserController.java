@@ -351,7 +351,7 @@ public class ClientUserController extends BaseController {
 
     /**
      * 获取会员二维码
-     * */
+     */
     @ApiOperation(value = "获取会员二维码")
     @RequestMapping(value = "/qrCode", method = RequestMethod.GET)
     @CrossOrigin

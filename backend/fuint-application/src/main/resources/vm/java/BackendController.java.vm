@@ -118,9 +118,6 @@ public class Backend${tableClass}Controller extends BaseController {
 
     /**
      * 保存${moduleName}
-     *
-     * @param request HttpServletRequest对象
-     * @return
      */
     @ApiOperation(value = "保存${moduleName}")
     @RequestMapping(value = "/save", method = RequestMethod.POST)

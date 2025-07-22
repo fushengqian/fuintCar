@@ -20,8 +20,8 @@ import com.fuint.repository.model.MtVehicleOrder;
 import com.fuint.repository.model.TAccount;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import lombok.AllArgsConstructor;
 import org.apache.commons.lang.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
 import java.util.HashMap;
@@ -30,16 +30,23 @@ import java.util.Map;
 
 @Api(tags="后台管理-车辆服务单相关接口")
 @RestController
+@AllArgsConstructor
 @RequestMapping(value = "/backendApi/vehicleOrder")
 public class BackendVehicleOrderController extends BaseController {
 
-    @Autowired
+    /**
+     * 帐号服务接口
+     * */
     private AccountService accountService;
 
-    @Autowired
+    /**
+     * 服务订单接口
+     * */
     private VehicleOrderService vehicleOrderService;
 
-    @Autowired
+    /**
+     * 店铺接口
+     * */
     private StoreService storeService;
 
     @ApiOperation(value="车辆服务单列表", notes="查询车辆服务单列表")
