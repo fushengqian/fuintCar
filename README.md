@@ -31,7 +31,7 @@ fuint汽车美容4S店会员系统是一套开源的汽车行业会员管理和�
 2.1 Vue2<br>
 2.2 Uniapp<br>
 2.3 Element UI
-2.4 Nodejs 14或16版本 
+2.4 Nodejs
 
 后端使用技术<br>
 1.1 SpringBoot 2.5<br>
@@ -49,7 +49,7 @@ fuint汽车美容4S店会员系统是一套开源的汽车行业会员管理和�
 
 
 #### 安装步骤
-推荐软件环境版本：jdk 1.8、mysql 5.8
+推荐软件环境版本：jdk 1.8、jdk11、jdk17、mysql 5.7、mysql 5.8，nodejs 16.20 redis版本不限
 1. 导入db目录下的数据库文件。
 2. 修改config目录下的配置文件。
 3. 将工程打包，把jar包上传并执行。
