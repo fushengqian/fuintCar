@@ -85,6 +85,7 @@ public class MerchantOrderController extends BaseController {
         String token = request.getHeader("Access-Token");
 
         UserInfo userInfo = TokenUtil.getUserInfoByToken(token);
+
         MtUser mtUser = memberService.queryMemberById(userInfo.getId());
         MtStaff mtStaff = staffService.queryStaffByMobile(mtUser.getMobile());
         if (mtStaff == null) {
@@ -123,6 +124,7 @@ public class MerchantOrderController extends BaseController {
 
         MtUser userInfo = memberService.queryMemberById(mtUser.getId());
         MtStaff staffInfo = staffService.queryStaffByMobile(userInfo.getMobile());
+
         if (staffInfo == null || (staffInfo.getStoreId() != null && staffInfo.getStoreId() > 0 && !staffInfo.getStoreId().equals(orderDto.getStoreInfo().getId()))) {
             return getFailureResult(1004);
         }

@@ -16,6 +16,12 @@ public class MemberListParam extends PageParam implements Serializable {
     @ApiModelProperty(value="ID", name="id")
     private String id;
 
+    @ApiModelProperty(value="商户ID", name="merchantId")
+    private Integer merchantId;
+
+    @ApiModelProperty(value="店铺ID", name="storeId")
+    private Integer storeId;
+
     @ApiModelProperty(value="手机号", name="mobile")
     private String mobile;
 

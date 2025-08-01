@@ -47,10 +47,6 @@ public class ClientVehicleOrderController extends BaseController {
         String token = request.getHeader("Access-Token");
         UserInfo userInfo = TokenUtil.getUserInfoByToken(token);
 
-        if (userInfo == null) {
-            return getFailureResult(1001, "用户未登录");
-        }
-
         PaginationRequest paginationRequest = new PaginationRequest();
         paginationRequest.setCurrentPage(orderListParam.getPage());
         paginationRequest.setPageSize(orderListParam.getPageSize());
@@ -71,18 +67,10 @@ public class ClientVehicleOrderController extends BaseController {
     @RequestMapping(value = "/detail", method = RequestMethod.GET)
     @CrossOrigin
     public ResponseObject detail(HttpServletRequest request) throws BusinessCheckException {
-        String token = request.getHeader("Access-Token");
-        UserInfo userInfo = TokenUtil.getUserInfoByToken(token);
-
-        if (userInfo == null) {
-            return getFailureResult(1001, "用户未登录");
-        }
-
         String orderId = request.getParameter("orderId");
         if (StringUtil.isEmpty(orderId)) {
             return getFailureResult(2000, "服务单ID不能为空");
         }
-
         MtVehicleOrder orderInfo = vehicleOrderService.getVehicleOrderById(Integer.parseInt(orderId));
         return getSuccessResult(orderInfo);
     }

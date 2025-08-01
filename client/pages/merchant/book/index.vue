@@ -17,21 +17,23 @@
 
     <!-- 预约列表 -->
     <view class="book-list">
-      <view class="book-item" v-for="(item, index) in list.content" :key="index" @click="onView(item.id)">
+      <view class="book-item" v-for="(item, index) in list.content" :key="index">
         <block>
           <view class="flex-box">
             <view class="book-item-title">
               <text>{{ item.bookName }}</text>
             </view>
             <view class="book-content">
-                <view class="contacts">姓名：{{ item.contact }}</view>
-                <view class="time">时间：{{ item.serviceDate }} {{ item.serviceTime }}</view>
+                <view class="item">姓名：{{ item.contact }}</view>
+                <view class="item">时间：{{ item.serviceDate }} {{ item.serviceTime }}</view>
+                <view class="item">状态：{{ item.statusName }}</view>
             </view>
             <view class="book-item-footer m-top10">
               <text class="book-views f-24 col-8">{{ item.createTime | timeFormat('yyyy-mm-dd hh:MM') }}</text>
-              <view class="btn-cancel" v-if="item.status == 'A'" @click="doConfirm(item.id)">确认</view>
-              <view class="btn-cancel" v-if="item.status == 'A'" @click="doCancel(item.id)">取消</view>
-              <view class="btn-view" @click="onView(item.id)">详情</view>
+              <view class="btn btn-operate" v-if="item.status == 'A'" @click="onConfirm(item.id, 'B')">确认</view>
+              <view class="btn btn-operate" v-if="item.status == 'A'" @click="onCancel(item.id)">取消</view>
+              <view class="btn btn-operate" v-if="item.status == 'B'" @click="onConfirm(item.id, 'E')">完成</view>
+              <view class="btn btn-view" @click="onView(item.id)">详情</view>
             </view>
           </view>
         </block>
@@ -147,22 +149,40 @@
         const app = this;
         BookApi.cancel(bookId)
           .then(result => {
-            app.getPageData()
+              app.$success("取消成功！")
+              setTimeout(() => {
+                  app.getBookList(1);
+              }, 1500)
           })
       },
       
       // 确认预约
-      doconfirm(bookId) {
+      onConfirm(bookId, action) {
+         const app = this;
+         uni.showModal({
+           title: "提示",
+           content: "您确认操作该预约状态吗?",
+           success({ confirm }) {
+             confirm && app.doConfirm(bookId, action)
+           }
+         });
+      },
+      
+      // 确认预约
+      doConfirm(bookId, action) {
         const app = this;
-        BookApi.confirm(bookId)
+        BookApi.confirm(bookId, action)
           .then(result => {
-            app.getPageData()
+              app.$success("操作成功！")
+              setTimeout(() => {
+                  app.getBookList(1);
+              }, 1500)
           })
       },
 
       // 跳转详情页
-      onView(bookId) {
-        this.$navTo('pages/book/bookDetail', { bookId });
+      onView(myBookId) {
+        this.$navTo('pages/book/bookDetail', { myBookId });
       }
     }
 
@@ -174,6 +194,7 @@
 
   .container {
     min-height: 100vh;
+    background: #333;
   }
 
   .tabs-wrapper {
@@ -197,7 +218,7 @@
     height: 87rpx;
     line-height: 88rpx;
     box-sizing: border-box;
-
+    
     .value {
       height: 100%;
     }
@@ -217,11 +238,12 @@
   }
 
   .book-item {
-    margin: 0rpx 10rpx 20rpx 10rpx;
+    margin: 0rpx 20rpx 20rpx 20rpx;
     padding: 30rpx;
     background: #fff;
-    border-radius: 20rpx;
-    min-height: 280rpx;
+    min-height: 330rpx;
+    border-radius: 10rpx;
+    border: solid 1rpx #f5f5f5;
     &:last-child {
       margin-bottom: 0;
     }
@@ -234,32 +256,29 @@
     }
     .book-content {
         margin: 30rpx 0rpx 30rpx 0rpx;
-        .contacts {
+        .item {
             margin-bottom: 20rpx;
         }
     }
 
     .book-item-footer {
-      .btn-cancel {
-          width: 100rpx;
-          border-radius: 8rpx;
-          padding: 10rpx 14rpx;
+      .btn {
+          width: 120rpx;
+          border-radius: 10rpx;
+          padding: 18rpx;
           font-size: 28rpx;
           color: #fff;
           text-align: center;
+          align-items: center;
           border: 1rpx solid #fff;
           float: right;
-          background: #f9211c;
+          border: solid 1rpx #fff;
+          margin-left: 10rpx;
+      }
+      .btn-operate {
+          background: linear-gradient(to right, #f9211c, #ff6335);
       }
       .btn-view {
-          width: 100rpx;
-          border-radius: 8rpx;
-          padding: 10rpx 14rpx;
-          font-size: 28rpx;
-          color: #fff;
-          text-align: center;
-          border: 1rpx solid #fff;
-          float: right;
           background: $fuint-theme;
       }
     }

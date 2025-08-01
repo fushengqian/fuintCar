@@ -17,7 +17,7 @@
 
     <!-- 预约列表 -->
     <view class="book-list">
-      <view class="book-item" v-for="(item, index) in list.content" :key="index" @click="onView(item.id)">
+      <view class="book-item" v-for="(item, index) in list.content" :key="index">
         <block>
           <view class="flex-box">
             <view class="book-item-title">
@@ -29,8 +29,8 @@
             </view>
             <view class="book-item-footer m-top10">
               <text class="book-views f-24 col-8">{{ item.createTime | timeFormat('yyyy-mm-dd hh:MM') }}</text>
-              <view class="btn-cancel" v-if="item.status == 'A'" @click="onView(item.id)">取消</view>
-              <view class="btn-view" @click="onView(item.id)">详情</view>
+              <view class="btn btn-operate" v-if="item.status == 'A'" @click="onCancel(item.id)">取消</view>
+              <view class="btn btn-view" @click="onView(item.id)">详情</view>
             </view>
           </view>
         </block>
@@ -147,7 +147,10 @@
         const app = this;
         BookApi.cancel(myBookId)
           .then(result => {
-            app.getPageData()
+            app.$success("取消成功！")
+            setTimeout(() => {
+                app.getMyBookList(1);
+            }, 1500)
           })
       },
 
@@ -162,9 +165,9 @@
 
 <style lang="scss" scoped>
   /* 顶部选项卡 */
-
   .container {
     min-height: 100vh;
+    background: #333;
   }
 
   .tabs-wrapper {
@@ -213,6 +216,7 @@
     background: #fff;
     border-radius: 20rpx;
     min-height: 280rpx;
+    border: solid 1rpx #f5f5f5;
     &:last-child {
       margin-bottom: 0;
     }
@@ -231,26 +235,23 @@
     }
 
     .book-item-footer {
-      .btn-cancel {
-          width: 100rpx;
-          border-radius: 8rpx;
-          padding: 10rpx 14rpx;
+      .btn {
+          width: 120rpx;
+          border-radius: 10rpx;
+          padding: 18rpx;
           font-size: 28rpx;
           color: #fff;
           text-align: center;
+          align-items: center;
           border: 1rpx solid #fff;
           float: right;
-          background: #f9211c;
+          border: solid 1rpx #fff;
+          margin-left: 10rpx;
+      }
+      .btn-operate {
+          background: linear-gradient(to right, #f9211c, #ff6335);
       }
       .btn-view {
-          width: 100rpx;
-          border-radius: 8rpx;
-          padding: 10rpx 14rpx;
-          font-size: 28rpx;
-          color: #fff;
-          text-align: center;
-          border: 1rpx solid #fff;
-          float: right;
           background: $fuint-theme;
       }
     }

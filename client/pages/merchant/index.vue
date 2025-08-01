@@ -119,7 +119,7 @@
   const orderNavbar = [
     { id: 'confirm', name: '核销订单', icon: 'dingdan', count: 1, url:'pages/merchant/order/index?dataType=todo' },
     { id: 'refund', name: '售后审核', icon: 'daifukuan', count: 1, url:'pages/merchant/refund/index?dataType=todo' },
-    { id: 'book', name: '预约确认', icon: 'daishouhuo', count: 3, url:'pages/merchant/book/index??dataType=todo' },
+    { id: 'book', name: '预约管理', icon: 'daishouhuo', count: 3, url:'pages/merchant/book/index??dataType=todo' },
   ]
 
   /**
@@ -420,6 +420,7 @@
 
       .item-name {
         margin-top: 10rpx;
+        background: red;
       }
 
       .item-name text {
