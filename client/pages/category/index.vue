@@ -9,43 +9,55 @@
     <view class="cate-content dis-flex" v-if="list.length > 0">
       <!-- 左侧 分类 -->
       <scroll-view class="cate-left f-28" scroll-y :show-scrollbar="false" :enhanced="true" :style="{ height: `${scrollHeight}px` }">
-        <view v-for="(item, index) in list" :key="index">
-            <text class="cart-badge" v-if="item.total">{{ item.total }}</text>
-            <view class="type-nav" :class="{ selected: curIndex == index }" @click="handleSelectNav(index)">
-                <image class="logo" lazy-load :lazy-load-margin="0" :src="item.logo ? item.logo : '/static/empty-02.png'"></image>
-                <view class="name">{{ item.name }}</view>
-            </view>
-        </view>
+          <view v-for="(item, index) in list" :key="index">
+              <text class="cart-badge" v-if="item.total">{{ item.total }}</text>
+              <view class="type-nav" :class="{ selected: curIndex == index }" @click="handleSelectNav(index)">
+                  <image class="logo" lazy-load :lazy-load-margin="0" :src="item.logo ? item.logo : '/static/empty-02.png'"></image>
+                  <view class="name">{{ item.name }}</view>
+              </view>
+          </view>
       </scroll-view>
 
       <!-- 右侧 商品 -->
-      <scroll-view class="cate-right b-f" :scroll-top="scrollTop" :scroll-y="true" :style="{ height: `${scrollHeight}px` }">
+      <scroll-view 
+        class="cate-right b-f" 
+        :scroll-top="scrollTop" 
+        :scroll-y="true" 
+        :style="{ height: `${scrollHeight}px` }"
+        @scroll="handleScroll"
+        scroll-with-animation
+        :scroll-into-view="scrollIntoView"
+      >
         <view v-if="list[curIndex]">
           <view class="cate-right-cont">
             <view class="cate-two-box">
               <view v-if="list[curIndex].goodsList.length" class="cate-cont-box">
-                <view class="flex-five item" v-for="(item, idx) in list[curIndex].goodsList" :key="idx">
-                  <view class="cate-img">
-                    <image v-if="item.logo" lazy-load :lazy-load-margin="0" :src="item.logo" @click="onTargetGoods(item.id)"></image>
-                  </view>
-                  <view class="cate-info">
-                    <view class="base">
-                       <text class="name text">{{ item.name }}</text>
-                       <text class="stock text">库存:{{ item.stock ? item.stock : 0 }} 已售:{{ item.initSale ? item.initSale : 0 }}</text>
+                <!-- 为每个分类添加锚点 -->
+                <view v-for="(category, catIndex) in list" :key="catIndex" :id="`category-${catIndex}`">
+                  <view class="category-title">{{category.name}}</view>
+                  <view class="flex-five item" v-for="(item, idx) in category.goodsList" :key="idx">
+                    <view class="cate-img">
+                      <image v-if="item.logo" lazy-load :lazy-load-margin="0" :src="item.logo" @click="onTargetGoods(item.id)"></image>
                     </view>
-                    <view class="action">
-                        <text class="price">￥{{ item.price ? item.price : 0 }}</text>
-                        <view class="cart">
-                            <view v-if="item.isSingleSpec === 'Y'" class="singleSpec">
-                                <view class="ii do-minus" v-if="item.buyNum" @click="onSaveCart(item.id, '-')"></view>
-                                <view class="ii num" v-if="item.buyNum">{{ (item.buyNum != undefined) ? item.buyNum : 0 }}</view>
-                                <view class="ii do-add" v-if="item.stock > 0" @click="onSaveCart(item.id, '+')"></view>
-                            </view>
-                            <view v-if="item.isSingleSpec === 'N'" class="multiSpec">
-                                <text class="num-badge" v-if="item.buyNum">{{ item.buyNum }}</text>
-                                <view class="select-spec" @click="onShowSkuPopup(2, item.id)">选规格</view>
-                            </view>
-                        </view>
+                    <view class="cate-info">
+                      <view class="base">
+                        <text class="name text">{{ item.name }}</text>
+                        <text class="stock text">库存:{{ item.stock ? item.stock : 0 }} 已售:{{ item.initSale ? item.initSale : 0 }}</text>
+                      </view>
+                      <view class="action">
+                          <text class="price">￥{{ item.price ? item.price : 0 }}</text>
+                          <view class="cart">
+                              <view v-if="item.isSingleSpec === 'Y'" class="singleSpec">
+                                  <view class="ii do-minus" v-if="item.buyNum" @click="onSaveCart(item.id, '-')"></view>
+                                  <view class="ii num" v-if="item.buyNum">{{ (item.buyNum != undefined) ? item.buyNum : 0 }}</view>
+                                  <view class="ii do-add" v-if="item.stock > 0" @click="onSaveCart(item.id, '+')"></view>
+                              </view>
+                              <view v-if="item.isSingleSpec === 'N'" class="multiSpec">
+                                  <text class="num-badge" v-if="item.buyNum">{{ item.buyNum }}</text>
+                                  <view class="select-spec" @click="onShowSkuPopup(2, item.id)">选规格</view>
+                              </view>
+                          </view>
+                      </view>
                     </view>
                   </view>
                 </view>
@@ -55,7 +67,6 @@
           </view>
         </view>
       </scroll-view>
-    
     </view>
     
     <!-- 商品SKU弹窗 -->
@@ -114,25 +125,25 @@
         showSkuPopup: false,
         skuMode: 1,
         goods: {},
-        storeInfo: null
+        storeInfo: null,
+        // 用于自动滚动定位
+        scrollIntoView: '',
+        // 存储每个分类的位置信息
+        categoryPositions: [],
+        // 防抖计时器
+        scrollTimer: null,
+        // 是否正在手动切换分类
+        isManualSelect: false
       }
     },
 
-    /**
-     * 生命周期函数--监听页面加载
-     */
     onLoad() {
       const app = this
-      // 设置分类列表高度
       app.setListHeight()
     },
 
-    /**
-     * 生命周期函数--监听页面显示
-     */
     onShow() {
       const app = this;
-      // 获取页面数据
       app.getPageData();
       app.onGetStoreInfo();
       uni.getLocation({
@@ -149,25 +160,24 @@
     },
 
     methods: {
-      /**
-       * 获取页面数据
-       */
       getPageData() {
         const app = this
         app.isLoading = true
         Promise.all([
-            // 获取分类列表
             GoodsApi.cateList(),
-            // 获取购物车列表
             CartApi.list()
           ])
           .then(result => {
-            // 初始化分类列表数据
             app.list = result[0].data;
             app.totalNum = result[1].data.totalNum;
             app.goodsCart = result[1].data.list;
             setCartTotalNum(app.totalNum);
             setCartTabBadge();
+            
+            // 数据加载完成后，计算分类位置
+            this.$nextTick(() => {
+              this.calculateCategoryPositions();
+            });
           })
           .finally(() => {
               app.isLoading = false
@@ -190,10 +200,69 @@
           })
       },
       
-      /**
-       * 获取默认店铺
-       * */
-       onGetStoreInfo() {
+      // 计算每个分类的位置信息
+      calculateCategoryPositions() {
+        const query = uni.createSelectorQuery().in(this);
+        this.categoryPositions = [];
+        
+        this.list.forEach((item, index) => {
+          query.select(`#category-${index}`).boundingClientRect();
+        });
+        
+        query.exec(res => {
+          res.forEach((rect, index) => {
+            if (rect) {
+              this.categoryPositions.push({
+                index,
+                top: rect.top,
+                height: rect.height
+              });
+            }
+          });
+        });
+      },
+      
+      // 滚动事件处理
+      handleScroll(e) {
+        if (this.isManualSelect) {
+          this.isManualSelect = false;
+          return;
+        }
+        
+        // 防抖处理
+        clearTimeout(this.scrollTimer);
+        this.scrollTimer = setTimeout(() => {
+          const scrollTop = e.detail.scrollTop;
+          this.updateActiveCategory(scrollTop);
+        }, 50);
+      },
+      
+      // 根据滚动位置更新当前激活的分类
+      updateActiveCategory(scrollTop) {
+        if (!this.categoryPositions.length) return;
+        
+        // 增加一个偏移量，提前切换分类
+        const offset = 100;
+        const adjustedScrollTop = scrollTop + offset;
+        
+        // 找到当前应该激活的分类
+        let activeIndex = 0;
+        for (let i = 0; i < this.categoryPositions.length; i++) {
+          const position = this.categoryPositions[i];
+          if (adjustedScrollTop >= position.top) {
+            activeIndex = position.index;
+          } else {
+            break;
+          }
+        }
+        
+        // 更新当前激活的分类
+        if (this.curIndex !== activeIndex) {
+          this.curIndex = activeIndex;
+        }
+      },
+      
+      onGetStoreInfo() {
          const app = this
          settingApi.systemConfig()
            .then(result => {
@@ -201,16 +270,10 @@
            })
        },
       
-      /**
-       * 跳转商品详情
-       */
       onTargetGoods(goodsId) {
         this.$navTo(`pages/goods/detail`, { goodsId })
       },
 
-      /**
-       * 设置分类列表高度
-       */
       setListHeight() {
         const app = this
         uni.getSystemInfo({
@@ -222,12 +285,14 @@
 
       // 一级分类：选中分类
       handleSelectNav(index) {
-        const app = this;
-        app.curIndex = index;
-        app.scrollTop = 0;
+        this.isManualSelect = true;
+        this.curIndex = index;
+        this.scrollIntoView = `category-${index}`;
+        setTimeout(() => {
+          this.scrollIntoView = '';
+        }, 500);
       },
       
-      // 更新购物车
       onSaveCart(goodsId, action) {
         const app = this
         return new Promise((resolve, reject) => {
@@ -241,12 +306,12 @@
             })
         })
       },
-      // 更新购物车数量
+      
       onAddCart(total) {
         this.getPageData();
         this.$toast("添加购物车成功");
       },
-      // 结算
+      
       doSubmit() {
         if (this.totalPrice > 0) {
             this.$navTo('pages/cart/index')
@@ -254,6 +319,7 @@
             this.$error("请先选择商品")
         }
       },
+      
       onShowSkuPopup(skuMode, goodsId) {
         const app = this
         app.isLoading = true
@@ -272,11 +338,7 @@
               app.goods = goodsData
               app.skuMode = skuMode
               app.showSkuPopup = !app.showSkuPopup
-              
-              console.log(app.skuMode)
-              
               app.isLoading = false
-              
               resolve(result)
             })
             .catch(err => reject(err))
@@ -284,9 +346,6 @@
       },
     },
 
-    /**
-     * 设置分享内容
-     */
     onShareAppMessage() {
       const app = this
       return {
@@ -295,11 +354,6 @@
       }
     },
 
-    /**
-     * 分享到朋友圈
-     * 本接口为 Beta 版本，暂只在 Android 平台支持，详见分享到朋友圈 (Beta)
-     * https://developers.weixin.qq.com/miniprogram/dev/framework/open-ability/share-timeline.html
-     */
     onShareTimeline() {
       const app = this
       return {
@@ -307,7 +361,6 @@
         path: '/pages/category/index?' + app.$getShareUrlParams()
       }
     }
-
   }
 </script>
 
@@ -324,19 +377,16 @@
     margin-top: 124rpx;
     /* #endif */
   }
-
   .cate-wrapper {
     padding: 0 20rpx 20rpx 20rpx;
     box-sizing: border-box;
     overflow: hidden;
   }
-
   /* 分类内容 */
   .cate-content {
     width: 100%;
     overflow: hidden;
   }
-
   .cate-left {
     flex-direction: column;
     display: flex;
@@ -367,7 +417,6 @@
       padding: 5rpx 13rpx 5rpx 13rpx;
     }
   }
-
   .cate-right {
     display: flex;
     flex-direction: column;
@@ -432,6 +481,14 @@
         border-radius: 3rpx;
         margin-bottom: 5rpx;
     }
+    
+    .category-title {
+      font-size: 32rpx;
+      font-weight: bold;
+      padding: 20rpx;
+      background: #f8f8f8;
+      margin-bottom: 10rpx;
+    }
   }
 
   .cate-cont-box .cate-img {
@@ -445,7 +502,6 @@
     float: left;
     border-radius: 5rpx;
     display: block;
-    border: #cccccc solid 1rpx;
     margin-top: 5rpx;
   }
 
