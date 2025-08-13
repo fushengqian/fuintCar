@@ -70,14 +70,13 @@ public class BackendCateController extends BaseController {
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('goods:cate:index')")
     public ResponseObject list(HttpServletRequest request) throws BusinessCheckException {
-        String token = request.getHeader("Access-Token");
         Integer page = request.getParameter("page") == null ? Constants.PAGE_NUMBER : Integer.parseInt(request.getParameter("page"));
         Integer pageSize = request.getParameter("pageSize") == null ? Constants.PAGE_SIZE : Integer.parseInt(request.getParameter("pageSize"));
         String name = request.getParameter("name");
         String status = request.getParameter("status");
         String searchStoreId = request.getParameter("storeId");
 
-        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
+        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
         TAccount account = accountService.getAccountInfoById(accountInfo.getId());
         Integer storeId = account.getStoreId() == null ? 0 : account.getStoreId();
 
@@ -123,11 +122,10 @@ public class BackendCateController extends BaseController {
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('goods:cate:index')")
     public ResponseObject updateStatus(HttpServletRequest request, @RequestBody Map<String, Object> params) throws BusinessCheckException {
-        String token = request.getHeader("Access-Token");
         String status = params.get("status") != null ? params.get("status").toString() : StatusEnum.ENABLED.getKey();
         Integer id = params.get("id") == null ? 0 : Integer.parseInt(params.get("id").toString());
 
-        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
+        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
 
         MtGoodsCate mtCate = cateService.queryCateById(id);
         if (mtCate == null) {
@@ -155,7 +153,6 @@ public class BackendCateController extends BaseController {
     @RequestMapping(value = "/save", method = RequestMethod.POST)
     @PreAuthorize("@pms.hasPermission('goods:cate:index')")
     public ResponseObject save(HttpServletRequest request, @RequestBody Map<String, Object> params) throws BusinessCheckException {
-        String token = request.getHeader("Access-Token");
         String id = params.get("id") == null ? "" : params.get("id").toString();
         String name = params.get("name") == null ? "" : CommonUtil.replaceXSS(params.get("name").toString());
         String description = params.get("description") == null ? "" : CommonUtil.replaceXSS(params.get("description").toString());
@@ -164,7 +161,7 @@ public class BackendCateController extends BaseController {
         String status = params.get("status") == null ? StatusEnum.ENABLED.getKey() : params.get("status").toString();
         Integer storeId = (params.get("storeId") == null || StringUtil.isEmpty(params.get("storeId").toString())) ? 0 : Integer.parseInt(params.get("storeId").toString());
 
-        AccountInfo accountDto = TokenUtil.getAccountInfoByToken(token);
+        AccountInfo accountDto = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
 
         Integer myStoreId = accountDto.getStoreId();
         if (myStoreId > 0) {
@@ -200,8 +197,7 @@ public class BackendCateController extends BaseController {
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('goods:cate:index')")
     public ResponseObject info(HttpServletRequest request, @PathVariable("id") Integer id) throws BusinessCheckException {
-        String token = request.getHeader("Access-Token");
-        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
+        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
 
         MtGoodsCate mtCate = cateService.queryCateById(id);
         String imagePath = settingService.getUploadBasePath();

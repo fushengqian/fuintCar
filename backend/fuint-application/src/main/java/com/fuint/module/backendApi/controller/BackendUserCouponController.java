@@ -84,11 +84,10 @@ public class BackendUserCouponController extends BaseController {
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('coupon:userCoupon:index')")
     public ResponseObject list(HttpServletRequest request) throws BusinessCheckException {
-        String token = request.getHeader("Access-Token");
         Integer page = request.getParameter("page") == null ? Constants.PAGE_NUMBER : Integer.parseInt(request.getParameter("page"));
         Integer pageSize = request.getParameter("pageSize") == null ? Constants.PAGE_SIZE : Integer.parseInt(request.getParameter("pageSize"));
 
-        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
+        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
 
         Map<String, Object> param = new HashMap<>();
         param.put("pageNumber", page);
@@ -137,7 +136,6 @@ public class BackendUserCouponController extends BaseController {
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('coupon:userCoupon:index')")
     public ResponseObject doConfirm(HttpServletRequest request) throws BusinessCheckException {
-        String token = request.getHeader("Access-Token");
         String userCouponId = request.getParameter("userCouponId");
         MtUserCoupon mtUserCoupon = couponService.queryUserCouponById(Integer.parseInt(userCouponId));
 
@@ -145,7 +143,7 @@ public class BackendUserCouponController extends BaseController {
             throw new BusinessCheckException("错误，用户卡券不存在！");
         }
 
-        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
+        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
 
         TAccount account = accountService.getAccountInfoById(accountInfo.getId());
         Integer storeId = account.getStoreId();
@@ -167,9 +165,7 @@ public class BackendUserCouponController extends BaseController {
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('coupon:userCoupon:delete')")
     public ResponseObject delete(HttpServletRequest request, @PathVariable("id") Integer id) throws BusinessCheckException {
-        String token = request.getHeader("Access-Token");
-
-        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
+        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
 
         // 删除会员的卡券
         couponService.deleteUserCoupon(id, accountInfo.getAccountName());
@@ -207,16 +203,14 @@ public class BackendUserCouponController extends BaseController {
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('coupon:userCoupon:index')")
     public void exportList(HttpServletRequest request, HttpServletResponse response) throws Exception {
-        String token = request.getParameter("token");
         String mobile = request.getParameter("mobile") == null ? "" : request.getParameter("mobile");
         String userId = request.getParameter("userId") == null ? "" : request.getParameter("userId");
         String couponId = request.getParameter("couponId") == null ? "" : request.getParameter("couponId");
         String status = request.getParameter("status") == null ? "" : request.getParameter("status");
         String userCouponId = request.getParameter("id") == null ? "" : request.getParameter("id");
 
-        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
+        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
         if (accountInfo == null) {
-            logger.error("导出会员卡券失败：token = {}", token);
             return;
         }
 
@@ -279,7 +273,7 @@ public class BackendUserCouponController extends BaseController {
         HSSFWorkbook wb = ExcelUtil.getHSSFWorkbook(sheetName, title, content, null);
         ExcelUtil.setResponseHeader(response, fileName, wb);
 
-        logger.info("导出会员卡券成功：token = ", token);
+        logger.info("导出会员卡券成功，accountInfo = {}", accountInfo.getAccountName());
         return;
     }
 }
