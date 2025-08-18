@@ -369,7 +369,7 @@ public class ClientSignController extends BaseController {
     @CrossOrigin
     public ResponseObject doGetUserInfo(HttpServletRequest request) {
         String token = request.getHeader("Access-Token");
-        UserInfo userInfo = TokenUtil.getUserInfoByToken(token);
+        UserInfo userInfo = TokenUtil.getUserInfoByToken(request.getHeader("Access-Token"));
         if (userInfo == null) {
             return getFailureResult(1001, "用户没登录!");
         }

@@ -44,19 +44,13 @@ public class ClientVehicleOrderController extends BaseController {
     @RequestMapping(value = "/list", method = RequestMethod.POST)
     @CrossOrigin
     public ResponseObject list(HttpServletRequest request, @RequestBody OrderListParam orderListParam) throws BusinessCheckException {
-        String token = request.getHeader("Access-Token");
-        UserInfo userInfo = TokenUtil.getUserInfoByToken(token);
+        UserInfo userInfo = TokenUtil.getUserInfoByToken(request.getHeader("Access-Token"));
 
-        PaginationRequest paginationRequest = new PaginationRequest();
-        paginationRequest.setCurrentPage(orderListParam.getPage());
-        paginationRequest.setPageSize(orderListParam.getPageSize());
         Map<String, Object> params = new HashMap<>();
-
         params.put("userId", userInfo.getId());
         params.put("status", orderListParam.getStatus());
 
-        paginationRequest.setSearchParams(params);
-        PaginationResponse<VehicleOrderDto> paginationResponse = vehicleOrderService.getVehicleOrderListByPagination(paginationRequest);
+        PaginationResponse<VehicleOrderDto> paginationResponse = vehicleOrderService.getVehicleOrderListByPagination(new PaginationRequest(orderListParam.getPage(), orderListParam.getPageSize(), params));
         return getSuccessResult(paginationResponse);
     }
 
@@ -69,7 +63,7 @@ public class ClientVehicleOrderController extends BaseController {
     public ResponseObject detail(HttpServletRequest request) throws BusinessCheckException {
         String orderId = request.getParameter("orderId");
         if (StringUtil.isEmpty(orderId)) {
-            return getFailureResult(2000, "服务单ID不能为空");
+            return getFailureResult(201, "服务单ID不能为空");
         }
         MtVehicleOrder orderInfo = vehicleOrderService.getVehicleOrderById(Integer.parseInt(orderId));
         return getSuccessResult(orderInfo);

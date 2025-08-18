@@ -59,11 +59,10 @@ public class ClientVehicleController extends BaseController {
     @RequestMapping(value = "/save", method = RequestMethod.POST)
     @CrossOrigin
     public ResponseObject save(HttpServletRequest request, @RequestBody VehicleRequest requestParam) throws BusinessCheckException {
-        String token = request.getHeader("Access-Token");
         String merchantNo = request.getHeader("merchantNo") == null ? "" : request.getHeader("merchantNo");
         Integer merchantId = merchantService.getMerchantId(merchantNo);
 
-        UserInfo mtUser = TokenUtil.getUserInfoByToken(token);
+        UserInfo mtUser = TokenUtil.getUserInfoByToken(request.getHeader("Access-Token"));
 
         String vehiclePlateNo = requestParam.getVehiclePlateNo() == null ? "" : requestParam.getVehiclePlateNo();
         String vehicleBrand = requestParam.getVehicleBrand() == null ? "" : requestParam.getVehicleBrand();
@@ -97,11 +96,8 @@ public class ClientVehicleController extends BaseController {
     @RequestMapping(value = "/list", method = RequestMethod.GET)
     @CrossOrigin
     public ResponseObject list(HttpServletRequest request) throws BusinessCheckException {
-        String token = request.getHeader("Access-Token");
         String isDefault = request.getParameter("isDefault") == null ? "" : request.getParameter("isDefault");
-
-        UserInfo mtUser = TokenUtil.getUserInfoByToken(token);
-
+        UserInfo mtUser = TokenUtil.getUserInfoByToken(request.getHeader("Access-Token"));
         List<VehicleDto> dataList = vehicleService.getVehicleByUserId(mtUser.getId(), StringUtil.isNotEmpty(isDefault) ? true : false);
         return getSuccessResult(dataList);
     }
@@ -113,10 +109,8 @@ public class ClientVehicleController extends BaseController {
     @RequestMapping(value = "/detail", method = RequestMethod.POST)
     @CrossOrigin
     public ResponseObject detail(HttpServletRequest request, @RequestBody VehicleRequest requestParam) throws BusinessCheckException {
-        String token = request.getHeader("Access-Token") == null ? "" : request.getHeader("Access-Token");
         Integer vehicleId = requestParam.getVehicleId() == null ? 0 : requestParam.getVehicleId();
-
-        UserInfo mtUser = TokenUtil.getUserInfoByToken(token);
+        UserInfo mtUser = TokenUtil.getUserInfoByToken(request.getHeader("Access-Token"));
 
         MtVehicle mtVehicle = null;
         if (vehicleId > 0) {
@@ -141,12 +135,11 @@ public class ClientVehicleController extends BaseController {
     @RequestMapping(value = "/submitOrder", method = RequestMethod.POST)
     @CrossOrigin
     public ResponseObject submitOrder(HttpServletRequest request, @RequestBody VehicleOrderRequest requestParam) throws BusinessCheckException {
-        String token = request.getHeader("Access-Token");
         String merchantNo = request.getHeader("merchantNo") == null ? "" : request.getHeader("merchantNo");
         Integer storeId = StringUtil.isEmpty(request.getHeader("storeId")) ? 0 : Integer.parseInt(request.getHeader("storeId"));
         Integer merchantId = merchantService.getMerchantId(merchantNo);
 
-        UserInfo mtUser = TokenUtil.getUserInfoByToken(token);
+        UserInfo mtUser = TokenUtil.getUserInfoByToken(request.getHeader("Access-Token"));
 
         Integer vehicleId = requestParam.getVehicleId() == null ? 0 : requestParam.getVehicleId();
         Integer couponId = requestParam.getCouponId() == null ? 0 : requestParam.getCouponId();

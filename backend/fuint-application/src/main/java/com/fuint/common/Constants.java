@@ -18,7 +18,7 @@ public class Constants {
     public static final int PAGE_SIZE = 20;
 
     // 读取数据最多行数
-    public static final int MAX_ROWS = 2000;
+    public static final int MAX_ROWS = 5000;
 
     // 读取数据全部行数
     public static final int ALL_ROWS = 1000000;
@@ -33,6 +33,6 @@ public class Constants {
     public static final int HTTP_RESPONSE_CODE_USER_LOGIN_ERROR = 403;
     public static final int HTTP_RESPONSE_CODE_NOLOGIN = 1001;
 
-    public static final String SESSION_USER = "CAR_USER";
-    public static final String SESSION_ADMIN_USER = "CAR_ADMIN_USER";
+    public static final String SESSION_USER = "FUINT_USER";
+    public static final String SESSION_ADMIN_USER = "FUINT_ADMIN_USER";
 }

@@ -93,12 +93,11 @@ public class ClientUserController extends BaseController {
     @RequestMapping(value = "/info", method = RequestMethod.GET)
     @CrossOrigin
     public ResponseObject info(HttpServletRequest request) throws BusinessCheckException {
-        String token = request.getHeader("Access-Token");
         String merchantNo = request.getHeader("merchantNo") == null ? "" : request.getHeader("merchantNo");
         String isWechat = request.getHeader("isWechat") == null ? YesOrNoEnum.NO.getKey() : request.getHeader("isWechat");
         String platform = request.getHeader("platform") == null ? "" : request.getHeader("platform");
         String userNo = request.getParameter("code") == null ? "" : request.getParameter("code");
-        UserInfo loginInfo = TokenUtil.getUserInfoByToken(token);
+        UserInfo loginInfo = TokenUtil.getUserInfoByToken(request.getHeader("Access-Token"));
 
         Integer merchantId = merchantService.getMerchantId(merchantNo);
 
@@ -181,9 +180,8 @@ public class ClientUserController extends BaseController {
     @RequestMapping(value = "/asset", method = RequestMethod.GET)
     @CrossOrigin
     public ResponseObject asset(HttpServletRequest request) throws BusinessCheckException {
-        String token = request.getHeader("Access-Token");
         String userId = request.getParameter("userId");
-        UserInfo mtUser = TokenUtil.getUserInfoByToken(token);
+        UserInfo mtUser = TokenUtil.getUserInfoByToken(request.getHeader("Access-Token"));
 
         if (StringUtil.isNotEmpty(userId)) {
             MtUser userInfo = memberService.queryMemberById(Integer.parseInt(userId));
@@ -261,7 +259,6 @@ public class ClientUserController extends BaseController {
     @RequestMapping(value = "/saveInfo", method = RequestMethod.POST)
     @CrossOrigin
     public ResponseObject saveInfo(HttpServletRequest request, @RequestBody MemberInfoRequest memberInfo) throws BusinessCheckException {
-        String token = request.getHeader("Access-Token");
         String merchantNo = request.getHeader("merchantNo") == null ? "" : request.getHeader("merchantNo");
         String name = memberInfo.getName();
         String birthday = memberInfo.getBirthday();
@@ -274,7 +271,7 @@ public class ClientUserController extends BaseController {
         String verifyCode = memberInfo.getVerifyCode();
         String mobile = "";
         Integer merchantId = merchantService.getMerchantId(merchantNo);
-        UserInfo userInfo = TokenUtil.getUserInfoByToken(token);
+        UserInfo userInfo = TokenUtil.getUserInfoByToken(request.getHeader("Access-Token"));
         boolean modifyPassword = false;
         if (userInfo == null) {
             return getFailureResult(1001);
@@ -338,8 +335,7 @@ public class ClientUserController extends BaseController {
     public ResponseObject defaultStore(HttpServletRequest request) throws BusinessCheckException {
         Integer storeId = request.getParameter("storeId") == null ? 0 : Integer.parseInt(request.getParameter("storeId"));
 
-        String token = request.getHeader("Access-Token");
-        UserInfo userInfo = TokenUtil.getUserInfoByToken(token);
+        UserInfo userInfo = TokenUtil.getUserInfoByToken(request.getHeader("Access-Token"));
         if (userInfo != null && storeId > 0) {
             MtUser mtUser = memberService.queryMemberById(userInfo.getId());
             memberService.updateMember(mtUser, false);
@@ -356,12 +352,7 @@ public class ClientUserController extends BaseController {
     @RequestMapping(value = "/qrCode", method = RequestMethod.GET)
     @CrossOrigin
     public ResponseObject qrCode(HttpServletRequest request) throws BusinessCheckException {
-        String token = request.getHeader("Access-Token");
-        UserInfo loginInfo = TokenUtil.getUserInfoByToken(token);
-
-        if (loginInfo == null) {
-            return getFailureResult(1001);
-        }
+        UserInfo loginInfo = TokenUtil.getUserInfoByToken(request.getHeader("Access-Token"));
         MtUser mtUser = memberService.queryMemberById(loginInfo.getId());
         String qrCode = "";
         try {

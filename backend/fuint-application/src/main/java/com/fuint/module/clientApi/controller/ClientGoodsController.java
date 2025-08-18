@@ -136,10 +136,6 @@ public class ClientGoodsController extends BaseController {
         String sortType = params.get("sortType") == null ? "all" : params.get("sortType").toString();
         String sortPrice = params.get("sortPrice") == null ? "0" : params.get("sortPrice").toString();
 
-        PaginationRequest paginationRequest = new PaginationRequest();
-        paginationRequest.setCurrentPage(page);
-        paginationRequest.setPageSize(pageSize);
-
         Map<String, Object> searchParams = new HashMap<>();
         searchParams.put("status", StatusEnum.ENABLED.getKey());
         searchParams.put("hasPrice", YesOrNoEnum.YES.getKey());
@@ -166,9 +162,7 @@ public class ClientGoodsController extends BaseController {
             searchParams.put("platform", platform);
         }
 
-        paginationRequest.setSearchParams(searchParams);
-        PaginationResponse<GoodsDto> paginationResponse = goodsService.queryGoodsListByPagination(paginationRequest);
-
+        PaginationResponse<GoodsDto> paginationResponse = goodsService.queryGoodsListByPagination(new PaginationRequest(page, pageSize, searchParams));
         return getSuccessResult(paginationResponse);
     }
 
@@ -181,7 +175,7 @@ public class ClientGoodsController extends BaseController {
     public ResponseObject detail(@RequestBody GoodsInfoParam goodsInfoParam) throws BusinessCheckException, InvocationTargetException, IllegalAccessException {
         String goodsId = goodsInfoParam.getGoodsId() == null ? "0" : goodsInfoParam.getGoodsId();
         if (StringUtil.isEmpty(goodsId)) {
-            return getFailureResult(2000, "商品ID不能为空");
+            return getFailureResult(201, "商品ID不能为空");
         }
 
         GoodsDto goodsDto = goodsService.getGoodsDetail(Integer.parseInt(goodsId), false);

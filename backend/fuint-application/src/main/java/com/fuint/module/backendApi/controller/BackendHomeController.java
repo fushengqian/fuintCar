@@ -58,13 +58,10 @@ public class BackendHomeController extends BaseController {
     @RequestMapping(value = "/index", method = RequestMethod.GET)
     @CrossOrigin
     public ResponseObject index(HttpServletRequest request) throws BusinessCheckException {
-        String token = request.getHeader("Access-Token");
-
         Date beginTime = DateUtil.getDayBegin();
         Date endTime = DateUtil.getDayEnd();
 
-        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
-
+        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
         Integer merchantId = accountInfo.getMerchantId();
         Integer storeId = accountInfo.getStoreId();
 
@@ -110,16 +107,13 @@ public class BackendHomeController extends BaseController {
     @RequestMapping(value = "/statistic", method = RequestMethod.GET)
     @CrossOrigin
     public ResponseObject statistic(HttpServletRequest request) throws BusinessCheckException {
-        String token = request.getHeader("Access-Token");
         String tag = request.getParameter("tag") == null ? "order,user_active" : request.getParameter("tag");
         Integer storeId = StringUtil.isEmpty(request.getParameter("storeId")) ? 0 : Integer.parseInt(request.getParameter("storeId"));
 
-        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
-
-        TAccount account = accountService.getAccountInfoById(accountInfo.getId());
-        Integer merchantId = account.getMerchantId() == null ? 0 : account.getMerchantId();
-        if (account.getStoreId() != null && account.getStoreId() > 0) {
-            storeId = account.getStoreId();
+        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
+        Integer merchantId = accountInfo.getMerchantId() == null ? 0 : accountInfo.getMerchantId();
+        if (accountInfo.getStoreId() != null && accountInfo.getStoreId() > 0) {
+            storeId = accountInfo.getStoreId();
         }
 
         ArrayList<String> days = TimeUtils.getDays(5);

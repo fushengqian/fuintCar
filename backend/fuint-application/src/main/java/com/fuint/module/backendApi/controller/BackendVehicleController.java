@@ -49,8 +49,7 @@ public class BackendVehicleController extends BaseController {
     @RequestMapping(value = "/info/{id}", method = RequestMethod.GET)
     @CrossOrigin
     public ResponseObject info(HttpServletRequest request, @PathVariable("id") Integer id) throws BusinessCheckException {
-        String token = request.getHeader("Access-Token");
-        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
+        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
         VehicleDto vehicleDto = vehicleService.getVehicleById(id);
         if (accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0) {
             if (!accountInfo.getMerchantId().equals(vehicleDto.getMerchantId())) {
@@ -64,8 +63,7 @@ public class BackendVehicleController extends BaseController {
     @RequestMapping(value = "/save", method = RequestMethod.POST)
     @CrossOrigin
     public ResponseObject saveHandle(HttpServletRequest request, @RequestBody UserVehicleParam param) throws BusinessCheckException {
-        String token = request.getHeader("Access-Token");
-        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
+        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
 
         String vehiclePlateNo = param.getVehiclePlateNo();
         String vehicleType  = param.getVehicleType();
@@ -127,11 +125,10 @@ public class BackendVehicleController extends BaseController {
     @RequestMapping(value = "/updateStatus", method = RequestMethod.POST)
     @CrossOrigin
     public ResponseObject updateStatus(HttpServletRequest request, @RequestBody Map<String, String> param) throws BusinessCheckException {
-        String token = request.getHeader("Access-Token");
         Integer vehicleId = param.get("vehicleId") == null ? 0 : Integer.parseInt(param.get("vehicleId"));
         String status = param.get("status") == null ? StatusEnum.ENABLED.getKey() : param.get("status");
 
-        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
+        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
 
         MtVehicle mtVehicle = vehicleService.queryVehicleById(vehicleId);
         if (mtVehicle == null) {

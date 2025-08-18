@@ -53,8 +53,6 @@ public class ClientAddressController extends BaseController {
     @RequestMapping(value = "/save", method = RequestMethod.POST)
     @CrossOrigin
     public ResponseObject save(HttpServletRequest request, @RequestBody AddressRequest address) throws BusinessCheckException {
-        String token = request.getHeader("Access-Token");
-
         String name = address.getName() == null ? "" : address.getName();
         String mobile = address.getMobile() == null ? "" : address.getMobile();
         Integer provinceId = address.getProvinceId() == null ? 0 : address.getProvinceId();
@@ -65,11 +63,7 @@ public class ClientAddressController extends BaseController {
         String isDefault = address.getIsDefault() == null ? "" : address.getIsDefault();
         Integer addressId = address.getAddressId() == null ? 0 : address.getAddressId();
 
-        if (StringUtil.isEmpty(token)) {
-            return getFailureResult(1001);
-        }
-
-        UserInfo mtUser = TokenUtil.getUserInfoByToken(token);
+        UserInfo mtUser = TokenUtil.getUserInfoByToken(request.getHeader("Access-Token"));
         if (null == mtUser) {
             return getFailureResult(1001);
         }
@@ -98,12 +92,10 @@ public class ClientAddressController extends BaseController {
     @RequestMapping(value = "/list", method = RequestMethod.GET)
     @CrossOrigin
     public ResponseObject list(HttpServletRequest request) throws BusinessCheckException, InvocationTargetException, IllegalAccessException {
-        String token = request.getHeader("Access-Token");
-
         Map<String, Object> result = new HashMap<>();
         Map<String, Object> param = new HashMap<>();
 
-        UserInfo mtUser = TokenUtil.getUserInfoByToken(token);
+        UserInfo mtUser = TokenUtil.getUserInfoByToken(request.getHeader("Access-Token"));
         if (null == mtUser) {
             return getFailureResult(1001);
         } else {
@@ -167,7 +159,7 @@ public class ClientAddressController extends BaseController {
         }
 
         Map<String, Object> result = new HashMap<>();
-        UserInfo mtUser = TokenUtil.getUserInfoByToken(token);
+        UserInfo mtUser = TokenUtil.getUserInfoByToken(request.getHeader("Access-Token"));
         if (null == mtUser || StringUtil.isEmpty(token)) {
             return getFailureResult(1001);
         }

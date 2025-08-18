@@ -151,7 +151,7 @@ public class TActionLogAop {
             }
             String token = request.getHeader("Access-Token");
             if (StringUtils.isNotEmpty(token)) {
-                AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
+                AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
                 if (accountInfo != null) {
                     userName = accountInfo.getAccountName();
                     merchantId = accountInfo.getMerchantId() == null ? 0 : accountInfo.getMerchantId();

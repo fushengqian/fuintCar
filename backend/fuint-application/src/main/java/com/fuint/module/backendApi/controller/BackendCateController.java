@@ -17,7 +17,6 @@ import com.fuint.framework.web.BaseController;
 import com.fuint.framework.web.ResponseObject;
 import com.fuint.repository.model.MtGoodsCate;
 import com.fuint.repository.model.MtStore;
-import com.fuint.repository.model.TAccount;
 import com.fuint.utils.StringUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -77,12 +76,7 @@ public class BackendCateController extends BaseController {
         String searchStoreId = request.getParameter("storeId");
 
         AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
-        TAccount account = accountService.getAccountInfoById(accountInfo.getId());
-        Integer storeId = account.getStoreId() == null ? 0 : account.getStoreId();
-
-        PaginationRequest paginationRequest = new PaginationRequest();
-        paginationRequest.setCurrentPage(page);
-        paginationRequest.setPageSize(pageSize);
+        Integer storeId = accountInfo.getStoreId() == null ? 0 : accountInfo.getStoreId();
 
         Map<String, Object> params = new HashMap<>();
         if (StringUtil.isNotEmpty(name)) {
@@ -101,8 +95,7 @@ public class BackendCateController extends BaseController {
             params.put("merchantId", accountInfo.getMerchantId());
         }
 
-        paginationRequest.setSearchParams(params);
-        PaginationResponse<GoodsCateDto> paginationResponse = cateService.queryCateListByPagination(paginationRequest);
+        PaginationResponse<GoodsCateDto> paginationResponse = cateService.queryCateListByPagination(new PaginationRequest(page, pageSize, params));
 
         List<MtStore> storeList = storeService.getMyStoreList(accountInfo.getMerchantId(), storeId, StatusEnum.ENABLED.getKey());
 
@@ -126,7 +119,6 @@ public class BackendCateController extends BaseController {
         Integer id = params.get("id") == null ? 0 : Integer.parseInt(params.get("id").toString());
 
         AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
-
         MtGoodsCate mtCate = cateService.queryCateById(id);
         if (mtCate == null) {
             return getFailureResult(201, "该类别不存在");
@@ -137,12 +129,7 @@ public class BackendCateController extends BaseController {
         cate.setId(id);
         cate.setStatus(status);
 
-        try {
-            cateService.updateCate(cate);
-        } catch (BusinessCheckException e) {
-            return getFailureResult(201, e.getMessage() == null ? "操作失败" : e.getMessage());
-        }
-
+        cateService.updateCate(cate);
         return getSuccessResult(true);
     }
 
@@ -161,9 +148,9 @@ public class BackendCateController extends BaseController {
         String status = params.get("status") == null ? StatusEnum.ENABLED.getKey() : params.get("status").toString();
         Integer storeId = (params.get("storeId") == null || StringUtil.isEmpty(params.get("storeId").toString())) ? 0 : Integer.parseInt(params.get("storeId").toString());
 
-        AccountInfo accountDto = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
+        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
 
-        Integer myStoreId = accountDto.getStoreId();
+        Integer myStoreId = accountInfo.getStoreId();
         if (myStoreId > 0) {
             storeId = myStoreId;
         }
@@ -174,10 +161,9 @@ public class BackendCateController extends BaseController {
         info.setLogo(logo);
         info.setSort(Integer.parseInt(sort));
         info.setStatus(status);
-        info.setMerchantId(accountDto.getMerchantId());
+        info.setMerchantId(accountInfo.getMerchantId());
         info.setStoreId(storeId);
-        String operator = accountDto.getAccountName();
-        info.setOperator(operator);
+        info.setOperator(accountInfo.getAccountName());
 
         if (StringUtil.isNotEmpty(id)) {
             info.setId(Integer.parseInt(id));

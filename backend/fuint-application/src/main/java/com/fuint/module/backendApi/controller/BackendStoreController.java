@@ -70,9 +70,6 @@ public class BackendStoreController extends BaseController {
         String storeName = request.getParameter("name");
         String storeStatus = request.getParameter("status");
         AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
-        PaginationRequest paginationRequest = new PaginationRequest();
-        paginationRequest.setCurrentPage(page);
-        paginationRequest.setPageSize(pageSize);
 
         Map<String, Object> params = new HashMap<>();
         if (accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0) {
@@ -87,8 +84,7 @@ public class BackendStoreController extends BaseController {
         if (StringUtil.isNotEmpty(storeStatus)) {
             params.put("status", storeStatus);
         }
-        paginationRequest.setSearchParams(params);
-        PaginationResponse<StoreDto> paginationResponse = storeService.queryStoreListByPagination(paginationRequest);
+        PaginationResponse<StoreDto> paginationResponse = storeService.queryStoreListByPagination(new PaginationRequest(page, pageSize, params));
 
         List<MtMerchant> merchantList = merchantService.getMyMerchantList(accountInfo.getMerchantId(), accountInfo.getStoreId(), StatusEnum.ENABLED.getKey());
 

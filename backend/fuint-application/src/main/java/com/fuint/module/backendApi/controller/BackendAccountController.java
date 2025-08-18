@@ -73,7 +73,6 @@ public class BackendAccountController extends BaseController {
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('system:account:index')")
     public ResponseObject list(HttpServletRequest request) throws BusinessCheckException {
-        String token = request.getHeader("Access-Token");
         Integer page = request.getParameter("page") == null ? Constants.PAGE_NUMBER : Integer.parseInt(request.getParameter("page"));
         Integer pageSize = request.getParameter("pageSize") == null ? Constants.PAGE_SIZE : Integer.parseInt(request.getParameter("pageSize"));
         String accountName = request.getParameter("accountName") == null ? "" : request.getParameter("accountName");
@@ -83,12 +82,7 @@ public class BackendAccountController extends BaseController {
         String storeId = request.getParameter("storeId") == null ? "" : request.getParameter("storeId");
         String staffId = request.getParameter("staffId") == null ? "" : request.getParameter("staffId");
 
-        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
-
-        PaginationRequest paginationRequest = new PaginationRequest();
-        paginationRequest.setCurrentPage(page);
-        paginationRequest.setPageSize(pageSize);
-
+        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
         Map<String, Object> searchParams = new HashMap<>();
         if (StringUtil.isNotEmpty(accountName)) {
             searchParams.put("name", accountName);
@@ -120,8 +114,7 @@ public class BackendAccountController extends BaseController {
             searchParams.put("staffId", staffId);
         }
 
-        paginationRequest.setSearchParams(searchParams);
-        PaginationResponse<AccountDto> paginationResponse = tAccountService.getAccountListByPagination(paginationRequest);
+        PaginationResponse<AccountDto> paginationResponse = tAccountService.getAccountListByPagination(new PaginationRequest(page, pageSize, searchParams));
         return getSuccessResult(paginationResponse);
     }
 
@@ -132,8 +125,7 @@ public class BackendAccountController extends BaseController {
     @RequestMapping(value = "/info/{userId}", method = RequestMethod.GET)
     @CrossOrigin
     public ResponseObject info(HttpServletRequest request, @PathVariable("userId") Long userId) throws BusinessCheckException {
-        String token = request.getHeader("Access-Token");
-        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
+        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
         Map<String, Object> result = new HashMap<>();
 
         List<TDuty> roleList = tDutyService.getAvailableRoles(accountInfo.getMerchantId(), accountInfo.getId());
@@ -188,8 +180,7 @@ public class BackendAccountController extends BaseController {
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('system:account:add')")
     public ResponseObject doCreate(HttpServletRequest request, @RequestBody Map<String, Object> param) throws BusinessCheckException {
-        String token = request.getHeader("Access-Token");
-        AccountInfo account = TokenUtil.getAccountInfoByToken(token);
+        AccountInfo account = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
 
         List<Integer> roleIds = (List) param.get("roleIds");
         String accountName = param.get("accountName").toString();
@@ -249,8 +240,6 @@ public class BackendAccountController extends BaseController {
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('system:account:edit')")
     public ResponseObject update(HttpServletRequest request, @RequestBody Map<String, Object> param) throws BusinessCheckException {
-        String token = request.getHeader("Access-Token");
-
         List<Integer> roleIds = (List) param.get("roleIds");
         String realName = param.get("realName").toString();
         String accountName = param.get("accountName").toString();
@@ -260,7 +249,7 @@ public class BackendAccountController extends BaseController {
         String merchantId = param.get("merchantId") == null ? "" : param.get("merchantId").toString();
         Long id = Long.parseLong(param.get("id").toString());
 
-        AccountInfo loginAccount = TokenUtil.getAccountInfoByToken(token);
+        AccountInfo loginAccount = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
         TAccount tAccount = tAccountService.getAccountInfoById(id.intValue());
         if (loginAccount.getMerchantId() > 0 && !tAccount.getMerchantId().equals(loginAccount.getMerchantId())) {
             return getFailureResult(1004);
@@ -314,8 +303,7 @@ public class BackendAccountController extends BaseController {
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('system:account:delete')")
     public ResponseObject deleteAccount(HttpServletRequest request, @PathVariable("userIds") String userIds) {
-        String token = request.getHeader("Access-Token");
-        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
+        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
         String ids[] = userIds.split(",");
         if (ids.length > 0) {
             for (int i = 0; i < ids.length; i++) {
@@ -348,11 +336,10 @@ public class BackendAccountController extends BaseController {
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('system:account:edit')")
     public ResponseObject updateStatus(HttpServletRequest request, @RequestBody Map<String, Object> param) throws BusinessCheckException {
-        String token = request.getHeader("Access-Token");
         Integer userId = param.get("userId") == null ? 0 : Integer.parseInt(param.get("userId").toString());
         Integer status = param.get("status") == null ? 0 : Integer.parseInt(param.get("status").toString());
 
-        AccountInfo accountDto = TokenUtil.getAccountInfoByToken(token);
+        AccountInfo accountDto = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
 
         TAccount tAccount = tAccountService.getAccountInfoById(userId.intValue());
         if (tAccount == null || accountDto == null) {
@@ -373,11 +360,10 @@ public class BackendAccountController extends BaseController {
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('system:account:edit')")
     public ResponseObject resetPwd(HttpServletRequest request, @RequestBody Map<String, Object> param) {
-        String token = request.getHeader("Access-Token");
         Integer userId = param.get("userId") == null ? 0 : Integer.parseInt(param.get("userId").toString());
         String password = param.get("password") == null ? "" : param.get("password").toString();
 
-        AccountInfo account = TokenUtil.getAccountInfoByToken(token);
+        AccountInfo account = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
 
         TAccount tAccount = tAccountService.getAccountInfoById(userId.intValue());
         if (account.getMerchantId() > 0 && !account.getMerchantId().equals(tAccount.getMerchantId())) {

@@ -98,12 +98,7 @@ public class BackendBalanceController extends BaseController {
             searchParams.put("merchantId", accountInfo.getMerchantId());
         }
 
-        PaginationRequest paginationRequest = new PaginationRequest();
-        paginationRequest.setCurrentPage(page);
-        paginationRequest.setPageSize(pageSize);
-        paginationRequest.setSearchParams(searchParams);
-
-        PaginationResponse<BalanceDto> paginationResponse = balanceService.queryBalanceListByPagination(paginationRequest);
+        PaginationResponse<BalanceDto> paginationResponse = balanceService.queryBalanceListByPagination(new PaginationRequest(page, pageSize, searchParams));
 
         Map<String, Object> result = new HashMap<>();
         result.put("paginationResponse", paginationResponse);

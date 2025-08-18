@@ -86,7 +86,7 @@ public class ClientCartController extends BaseController {
         String hangNo = saveParam.getHangNo() == null ? "" : saveParam.getHangNo();
         Integer userId = saveParam.getUserId() == null ? 0 : saveParam.getUserId(); // 指定会员ID
 
-        UserInfo userInfo = TokenUtil.getUserInfoByToken(token);
+        UserInfo userInfo = TokenUtil.getUserInfoByToken(request.getHeader("Access-Token"));
         MtUser mtUser;
         if (userInfo == null) {
             mtUser = memberService.getCurrentUserInfo(request, userId, token);
@@ -95,7 +95,7 @@ public class ClientCartController extends BaseController {
         }
 
         if (mtUser == null && StringUtil.isNotEmpty(token)) {
-            AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
+            AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
             if (accountInfo != null) {
                 return getFailureResult(201, "该管理员还未关联店铺员工，请先关联！");
             }
@@ -127,7 +127,7 @@ public class ClientCartController extends BaseController {
             merchantId = mtUser.getMerchantId();
         }
         if (merchantId <= 0) {
-            AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
+            AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
             if (accountInfo != null && accountInfo.getMerchantId() != null) {
                 merchantId = accountInfo.getMerchantId();
                 if (merchantId <= 0) {
@@ -166,7 +166,7 @@ public class ClientCartController extends BaseController {
         Integer userId = clearParam.getUserId() == null ? 0 : clearParam.getUserId();
         String hangNo = clearParam.getHangNo() == null ? "" : clearParam.getHangNo();
 
-        UserInfo userInfo = TokenUtil.getUserInfoByToken(token);
+        UserInfo userInfo = TokenUtil.getUserInfoByToken(request.getHeader("Access-Token"));
         MtUser mtUser;
         if (userInfo == null) {
             mtUser = memberService.getCurrentUserInfo(request, userId, token);
@@ -229,7 +229,7 @@ public class ClientCartController extends BaseController {
         result.put("memberDiscount", 0);
 
         Map<String, Object> param = new HashMap<>();
-        UserInfo userInfo = TokenUtil.getUserInfoByToken(token);
+        UserInfo userInfo = TokenUtil.getUserInfoByToken(request.getHeader("Access-Token"));
         MtUser mtUser;
         // 没有会员信息，则查询是否是后台收银员下单
         if (userInfo == null) {
@@ -276,6 +276,7 @@ public class ClientCartController extends BaseController {
             // 直接购买
             MtCart mtCart = new MtCart();
             mtCart.setGoodsId(goodsId);
+            mtCart.setStoreId(storeId);
 
             // 校验skuId是否正确
             if (skuId > 0) {

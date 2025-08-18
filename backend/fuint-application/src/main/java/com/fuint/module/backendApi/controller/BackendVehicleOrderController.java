@@ -17,11 +17,9 @@ import com.fuint.framework.web.BaseController;
 import com.fuint.framework.web.ResponseObject;
 import com.fuint.repository.model.MtStore;
 import com.fuint.repository.model.MtVehicleOrder;
-import com.fuint.repository.model.TAccount;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.AllArgsConstructor;
-import org.apache.commons.lang.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
 import java.util.HashMap;
@@ -53,7 +51,6 @@ public class BackendVehicleOrderController extends BaseController {
     @RequestMapping(value = "/list", method = RequestMethod.GET)
     @CrossOrigin
     public ResponseObject list(HttpServletRequest request) throws BusinessCheckException {
-        String token = request.getHeader("Access-Token");
         Integer page = request.getParameter("page") == null ? Constants.PAGE_NUMBER : Integer.parseInt(request.getParameter("page"));
         Integer pageSize = request.getParameter("pageSize") == null ? Constants.PAGE_SIZE : Integer.parseInt(request.getParameter("pageSize"));
 
@@ -67,12 +64,7 @@ public class BackendVehicleOrderController extends BaseController {
         String startTime = request.getParameter("startTime");
         String endTime = request.getParameter("endTime");
 
-        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
-        TAccount account = accountService.getAccountInfoById(accountInfo.getId());
-        if (account == null) {
-            return getFailureResult(1002, "账号不存在");
-        }
-        PaginationRequest paginationRequest = new PaginationRequest();
+        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
         Map<String, Object> params = new HashMap<>();
         params.put("userId", userId);
         params.put("vehiclePlateNo", vehiclePlateNo);
@@ -84,10 +76,7 @@ public class BackendVehicleOrderController extends BaseController {
         params.put("startTime", startTime);
         params.put("endTime", endTime);
 
-        paginationRequest.setSearchParams(params);
-        paginationRequest.setCurrentPage(page);
-        paginationRequest.setPageSize(pageSize);
-        PaginationResponse<VehicleOrderDto> paginationResponse = vehicleOrderService.getVehicleOrderListByPagination(paginationRequest);
+        PaginationResponse<VehicleOrderDto> paginationResponse = vehicleOrderService.getVehicleOrderListByPagination(new PaginationRequest(page, pageSize, params));
 
         // 店铺列表
         List<MtStore> storeList = storeService.getMyStoreList(accountInfo.getMerchantId(), accountInfo.getStoreId(), StatusEnum.ENABLED.getKey());
@@ -107,40 +96,31 @@ public class BackendVehicleOrderController extends BaseController {
     @RequestMapping(value = "/info/{id}", method = RequestMethod.GET)
     @CrossOrigin
     public ResponseObject info(HttpServletRequest request, @PathVariable("id") Integer id) throws BusinessCheckException {
-            String token = request.getHeader("Access-Token");
-
-            AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
-            TAccount account = accountService.getAccountInfoById(accountInfo.getId());
-            if (account == null) {
-                return getFailureResult(1002, "账号不存在");
-            }
-
-            MtVehicleOrder mtVehicleOrder = vehicleOrderService.getVehicleOrderById(id);
-            return getSuccessResult(mtVehicleOrder);
+        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
+        MtVehicleOrder mtVehicleOrder = vehicleOrderService.getVehicleOrderById(id);
+        if (!accountInfo.getMerchantId().equals(mtVehicleOrder.getMerchantId())) {
+            return getFailureResult(201, "您没有操作权限");
+        }
+        return getSuccessResult(mtVehicleOrder);
     }
 
     @ApiOperation(value="更新服务单信息", notes="更新车辆服务单信息")
     @RequestMapping(value = "/update", method = RequestMethod.POST)
     @CrossOrigin
     public ResponseObject update(HttpServletRequest request, @RequestBody Map<String, String> param) {
-        String token = request.getHeader("Access-Token");
-        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
-        TAccount account = accountService.getAccountInfoById(accountInfo.getId());
-        if (account == null) {
-            return getFailureResult(1002, "账号不存在");
-        }
+        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
 
         String orderId = param.get("orderId");
         String remark = param.get("remark");
         String status  = param.get("status");
 
-        if(StringUtils.isEmpty(orderId)) {
-            return getSuccessResult(false);
+        MtVehicleOrder mtVehicleOrder = vehicleOrderService.getVehicleOrderById(Integer.parseInt(orderId));
+        if (mtVehicleOrder == null) {
+            return getFailureResult(201, "服务单不存在");
         }
 
-        MtVehicleOrder mtVehicleOrder = vehicleOrderService.getVehicleOrderById(Integer.parseInt(orderId));
-        if(mtVehicleOrder == null) {
-            return getSuccessResult(false);
+        if (!accountInfo.getMerchantId().equals(mtVehicleOrder.getMerchantId())) {
+            return getFailureResult(201, "您没有操作权限");
         }
 
         mtVehicleOrder.setRemark(remark);
@@ -153,18 +133,19 @@ public class BackendVehicleOrderController extends BaseController {
     @RequestMapping(value = "/updateStatus", method = RequestMethod.POST)
     @CrossOrigin
     public ResponseObject updateStatus(HttpServletRequest request, @RequestBody Map<String, String> param) throws BusinessCheckException {
-        String token = request.getHeader("Access-Token");
         Integer vehicleId = param.get("vehicleId") == null ? 0 : Integer.parseInt(param.get("vehicleId"));
         String status = param.get("status") == null ? StatusEnum.ENABLED.getKey() : param.get("status");
 
-        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
-
+        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
         MtVehicleOrder mtVehicleOrder = vehicleOrderService.getVehicleOrderById(vehicleId);
         if (mtVehicleOrder == null) {
-            return getFailureResult(201, "会员车辆不存在");
+            return getFailureResult(201, "服务单不存在");
+        }
+
+        if (!accountInfo.getMerchantId().equals(mtVehicleOrder.getMerchantId())) {
+            return getFailureResult(201, "您没有操作权限");
         }
         mtVehicleOrder.setOperator(accountInfo.getAccountName());
-
         mtVehicleOrder.setStatus(status);
         vehicleOrderService.updateVehicleOrder(mtVehicleOrder);
 
@@ -175,11 +156,12 @@ public class BackendVehicleOrderController extends BaseController {
     @RequestMapping(value = "/delete/{id}", method = RequestMethod.GET)
     @CrossOrigin
     public ResponseObject delete(HttpServletRequest request, @PathVariable("id") Integer id) throws BusinessCheckException {
-        String token = request.getHeader("Access-Token");
-        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
-
-        String operator = accountInfo.getAccountName();
-        vehicleOrderService.deleteVehicleOrder(id, operator);
+        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
+        MtVehicleOrder mtVehicleOrder = vehicleOrderService.getVehicleOrderById(id);
+        if (!accountInfo.getMerchantId().equals(mtVehicleOrder.getMerchantId())) {
+            return getFailureResult(201, "您没有操作权限");
+        }
+        vehicleOrderService.deleteVehicleOrder(id, accountInfo.getAccountName());
         return getSuccessResult(true);
     }
 }

@@ -144,9 +144,7 @@ public class BackendUserCouponController extends BaseController {
         }
 
         AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
-
-        TAccount account = accountService.getAccountInfoById(accountInfo.getId());
-        Integer storeId = account.getStoreId();
+        Integer storeId = accountInfo.getStoreId();
 
         BigDecimal confirmAmount = mtUserCoupon.getAmount();
         if (mtUserCoupon.getType().equals(CouponTypeEnum.PRESTORE.getKey())) {
@@ -172,13 +170,9 @@ public class BackendUserCouponController extends BaseController {
 
         // 发券记录，部分作废
         MtUserCoupon userCoupon = mtUserCouponMapper.selectById(id);
-        PaginationRequest paginationRequest = new PaginationRequest();
-        paginationRequest.setCurrentPage(Constants.PAGE_NUMBER);
-        paginationRequest.setPageSize(Constants.MAX_ROWS);
         Map<String, Object> requestParams = new HashMap<>();
         requestParams.put("uuid", userCoupon.getUuid());
-        paginationRequest.setSearchParams(requestParams);
-        PaginationResponse<MtSendLog> list = sendLogService.querySendLogListByPagination(paginationRequest);
+        PaginationResponse<MtSendLog> list = sendLogService.querySendLogListByPagination(new PaginationRequest(Constants.PAGE_NUMBER, Constants.MAX_ROWS, requestParams));
         if (list.getContent().size() > 0) {
             MtSendLog sendLog = list.getContent().get(0);
             if (sendLog.getStatus().equals(UserCouponStatusEnum.UNUSED.getKey())) {
@@ -214,10 +208,6 @@ public class BackendUserCouponController extends BaseController {
             return;
         }
 
-        PaginationRequest paginationRequest = new PaginationRequest();
-        paginationRequest.setCurrentPage(1);
-        paginationRequest.setPageSize(50000);
-
         Map<String, Object> searchParams = new HashMap<>();
         if (StringUtil.isNotEmpty(userCouponId)) {
             searchParams.put("userCouponId", userCouponId);
@@ -235,8 +225,7 @@ public class BackendUserCouponController extends BaseController {
             searchParams.put("status", status);
         }
 
-        paginationRequest.setSearchParams(searchParams);
-        PaginationResponse<MtUserCoupon> result = userCouponService.queryUserCouponListByPagination(paginationRequest);
+        PaginationResponse<MtUserCoupon> result = userCouponService.queryUserCouponListByPagination(new PaginationRequest(Constants.PAGE_NUMBER, Constants.MAX_ROWS, searchParams));
 
         // excel标题
         String[] title = { "核销二维码", "卡券ID", "卡券名称", "会员手机号", "状态", "面额", "余额" };

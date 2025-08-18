@@ -16,7 +16,6 @@ import com.fuint.framework.web.ResponseObject;
 import com.fuint.repository.model.MtOrder;
 import com.fuint.repository.model.MtSetting;
 import com.fuint.repository.model.MtUser;
-import com.fuint.utils.StringUtil;
 import io.swagger.annotations.Api;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -127,8 +126,7 @@ public class ClientBalanceController extends BaseController {
         String platform = request.getHeader("platform") == null ? "" : request.getHeader("platform");
         String isWechat = request.getHeader("isWechat") == null ? "" : request.getHeader("isWechat");
 
-        String token = request.getHeader("Access-Token");
-        UserInfo userInfo = TokenUtil.getUserInfoByToken(token);
+        UserInfo userInfo = TokenUtil.getUserInfoByToken(request.getHeader("Access-Token"));
         rechargeParam.setMemberId(userInfo.getId());
         MtOrder orderInfo = orderService.doRecharge(request, rechargeParam);
 
@@ -157,20 +155,14 @@ public class ClientBalanceController extends BaseController {
     @RequestMapping(value = "/list", method = RequestMethod.POST)
     @CrossOrigin
     public ResponseObject list(HttpServletRequest request, @RequestBody BalanceListParam balanceListParam) throws BusinessCheckException {
-        String token = request.getHeader("Access-Token");
         Integer page = balanceListParam.getPage() == null ? Constants.PAGE_NUMBER : balanceListParam.getPage();
         Integer pageSize = balanceListParam.getPageSize() == null ? Constants.PAGE_SIZE : balanceListParam.getPageSize();
 
-        UserInfo mtUser = TokenUtil.getUserInfoByToken(token);
-
-        PaginationRequest paginationRequest = new PaginationRequest();
-        paginationRequest.setCurrentPage(page);
-        paginationRequest.setPageSize(pageSize);
+        UserInfo mtUser = TokenUtil.getUserInfoByToken(request.getHeader("Access-Token"));
 
         Map<String, Object> searchParams = new HashMap<>();
         searchParams.put("userId", mtUser.getId());
-        paginationRequest.setSearchParams(searchParams);
-        PaginationResponse<BalanceDto> paginationResponse = balanceService.queryBalanceListByPagination(paginationRequest);
+        PaginationResponse<BalanceDto> paginationResponse = balanceService.queryBalanceListByPagination(new PaginationRequest(page, pageSize, searchParams));
 
         Map<String, Object> result = new HashMap<>();
         result.put("data", paginationResponse);

@@ -68,7 +68,6 @@ public class BackendStockController extends BaseController {
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('stock:index')")
     public ResponseObject list(HttpServletRequest request) throws BusinessCheckException {
-        String token = request.getHeader("Access-Token");
         Integer page = request.getParameter("page") == null ? Constants.PAGE_NUMBER : Integer.parseInt(request.getParameter("page"));
         Integer pageSize = request.getParameter("pageSize") == null ? Constants.PAGE_SIZE : Integer.parseInt(request.getParameter("pageSize"));
         String description = request.getParameter("description");
@@ -76,14 +75,8 @@ public class BackendStockController extends BaseController {
         String searchStoreId = request.getParameter("storeId");
         String type = request.getParameter("type");
 
-        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
-
-        TAccount account = accountService.getAccountInfoById(accountInfo.getId());
-        Integer storeId = account.getStoreId() == null ? 0 : account.getStoreId();
-
-        PaginationRequest paginationRequest = new PaginationRequest();
-        paginationRequest.setCurrentPage(page);
-        paginationRequest.setPageSize(pageSize);
+        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
+        Integer storeId = accountInfo.getStoreId() == null ? 0 : accountInfo.getStoreId();
 
         Map<String, Object> params = new HashMap<>();
         if (StringUtil.isNotEmpty(description)) {
@@ -95,8 +88,8 @@ public class BackendStockController extends BaseController {
         if (StringUtil.isNotEmpty(type)) {
             params.put("type", type);
         }
-        if (account.getMerchantId() != null && account.getMerchantId() > 0) {
-            params.put("merchantId", account.getMerchantId());
+        if (accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0) {
+            params.put("merchantId", accountInfo.getMerchantId());
         }
         if (StringUtil.isNotEmpty(searchStoreId)) {
             params.put("storeId", searchStoreId);
@@ -105,14 +98,12 @@ public class BackendStockController extends BaseController {
             params.put("storeId", storeId);
         }
 
-        paginationRequest.setSearchParams(params);
-        PaginationResponse<MtStock> paginationResponse = stockService.queryStockListByPagination(paginationRequest);
+        PaginationResponse<MtStock> paginationResponse = stockService.queryStockListByPagination(new PaginationRequest(page, pageSize, params));
 
         List<MtStore> storeList = storeService.getMyStoreList(accountInfo.getMerchantId(), accountInfo.getStoreId(), StatusEnum.ENABLED.getKey());
-        String imagePath = settingService.getUploadBasePath();
 
         Map<String, Object> result = new HashMap<>();
-        result.put("imagePath", imagePath);
+        result.put("imagePath", settingService.getUploadBasePath());
         result.put("storeList", storeList);
         result.put("paginationResponse", paginationResponse);
 
@@ -127,10 +118,9 @@ public class BackendStockController extends BaseController {
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('stock:index')")
     public ResponseObject delete(HttpServletRequest request, @RequestBody Map<String, Object> params) throws BusinessCheckException {
-        String token = request.getHeader("Access-Token");
         Integer id = params.get("id") == null ? 0 : Integer.parseInt(params.get("id").toString());
 
-        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
+        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
         MtStock mtStock = stockService.queryStockById(id.longValue());
         if (mtStock == null) {
             return getFailureResult(201, "该数据不存在");
@@ -148,27 +138,26 @@ public class BackendStockController extends BaseController {
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('stock:index')")
     public ResponseObject save(HttpServletRequest request, @RequestBody Map<String, Object> params) throws BusinessCheckException {
-        String token = request.getHeader("Access-Token");
         String type = params.get("type") == null ? "" : CommonUtil.replaceXSS(params.get("type").toString());
         String description = params.get("description") == null ? "" : CommonUtil.replaceXSS(params.get("description").toString());
         String status = params.get("status") == null ? StatusEnum.ENABLED.getKey() : params.get("status").toString();
         Integer storeId = (params.get("storeId") == null || StringUtil.isEmpty(params.get("storeId").toString())) ? 0 : Integer.parseInt(params.get("storeId").toString());
         List<LinkedHashMap> goodsList = (List) params.get("goodsList");
 
-        AccountInfo accountDto = TokenUtil.getAccountInfoByToken(token);
+        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
 
-        Integer myStoreId = accountDto.getStoreId();
+        Integer myStoreId = accountInfo.getStoreId();
         if (myStoreId > 0 && myStoreId > 0) {
             storeId = myStoreId;
         }
 
         MtStock mtStock = new MtStock();
-        mtStock.setMerchantId(accountDto.getMerchantId());
+        mtStock.setMerchantId(accountInfo.getMerchantId());
         mtStock.setDescription(description);
         mtStock.setStatus(status);
         mtStock.setStoreId(storeId);
         mtStock.setType(type);
-        String operator = accountDto.getAccountName();
+        String operator = accountInfo.getAccountName();
         mtStock.setOperator(operator);
         stockService.addStock(mtStock, goodsList);
         return getSuccessResult(true);

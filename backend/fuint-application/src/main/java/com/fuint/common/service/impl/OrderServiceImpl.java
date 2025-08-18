@@ -695,7 +695,7 @@ public class OrderServiceImpl extends ServiceImpl<MtOrderMapper, MtOrder> implem
         String orderMode = StringUtil.isEmpty(param.getOrderMode()) ? OrderModeEnum.ONESELF.getKey() : param.getOrderMode(); // 订单模式(配送or自取)
         Integer orderId = param.getOrderId() == null ? null : param.getOrderId(); // 订单ID
         Integer merchantId = merchantService.getMerchantId(merchantNo);
-        UserInfo loginInfo = TokenUtil.getUserInfoByToken(token);
+        UserInfo loginInfo = TokenUtil.getUserInfoByToken(request.getHeader("Access-Token"));
         MtUser userInfo = null;
         if (loginInfo != null) {
             userInfo = memberService.queryMemberById(loginInfo.getId());
@@ -705,7 +705,7 @@ public class OrderServiceImpl extends ServiceImpl<MtOrderMapper, MtOrder> implem
         String operator = null;
         Integer staffId = 0;
         String isVisitor = YesOrNoEnum.NO.getKey();
-        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(token);
+        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
         if (accountInfo != null) {
             operator = accountInfo.getAccountName();
             staffId = accountInfo.getStaffId() == null ? 0 : accountInfo.getStaffId();
