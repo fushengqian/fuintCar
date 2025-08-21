@@ -69,11 +69,6 @@ public class BackendCouponController extends BaseController {
     private MemberService memberService;
 
     /**
-     * 后台账户服务接口
-     * */
-    private AccountService accountService;
-
-    /**
      * 系统配置服务接口
      * */
     private SettingService settingService;

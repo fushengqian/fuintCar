@@ -42,11 +42,6 @@ import java.util.Map;
 public class BackendCashierController extends BaseController {
 
     /**
-     * 后台账户服务接口
-     */
-    private AccountService accountService;
-
-    /**
      * 商品类别服务接口
      */
     private CateService cateService;

@@ -6,7 +6,6 @@ import com.fuint.common.dto.ParamDto;
 import com.fuint.common.dto.VehicleOrderDto;
 import com.fuint.common.enums.StatusEnum;
 import com.fuint.common.enums.VehicleOrderStatusEnum;
-import com.fuint.common.service.AccountService;
 import com.fuint.common.service.StoreService;
 import com.fuint.common.service.VehicleOrderService;
 import com.fuint.common.util.TokenUtil;
@@ -31,11 +30,6 @@ import java.util.Map;
 @AllArgsConstructor
 @RequestMapping(value = "/backendApi/vehicleOrder")
 public class BackendVehicleOrderController extends BaseController {
-
-    /**
-     * 帐号服务接口
-     * */
-    private AccountService accountService;
 
     /**
      * 服务订单接口

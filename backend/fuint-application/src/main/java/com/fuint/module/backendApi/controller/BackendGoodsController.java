@@ -72,11 +72,6 @@ public class BackendGoodsController extends BaseController {
     private StoreService storeService;
 
     /**
-     * 后台账户服务接口
-     */
-    private AccountService accountService;
-
-    /**
      * 系统设置服务接口
      * */
     private SettingService settingService;
