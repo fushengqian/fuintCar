@@ -80,7 +80,6 @@ public class BackendCommissionRuleController extends BaseController {
         if (storeId != null && storeId > 0) {
             params.put("storeId", storeId);
         }
-
         PaginationResponse<MtCommissionRule> paginationResponse = commissionRuleService.queryDataByPagination(new PaginationRequest(page, pageSize, params));
 
         // 分佣提成类型列表
@@ -135,6 +134,7 @@ public class BackendCommissionRuleController extends BaseController {
         if (accountInfo.getStoreId() != null && accountInfo.getStoreId() > 0) {
             params.setStoreId(accountInfo.getStoreId());
         }
+        params.setOperator(accountInfo.getAccountName());
         if (StringUtil.isNotEmpty(id)) {
             commissionRuleService.updateCommissionRule(params);
         } else {

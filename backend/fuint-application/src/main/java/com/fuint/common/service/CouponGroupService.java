@@ -1,7 +1,6 @@
 package com.fuint.common.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.fuint.common.dto.GroupDataDto;
 import com.fuint.common.dto.ReqCouponGroupDto;
 import com.fuint.framework.exception.BusinessCheckException;
 import com.fuint.framework.pagination.PaginationRequest;
@@ -9,7 +8,6 @@ import com.fuint.framework.pagination.PaginationResponse;
 import com.fuint.repository.model.MtCouponGroup;
 import org.springframework.web.multipart.MultipartFile;
 import javax.servlet.http.HttpServletRequest;
-import org.springframework.ui.Model;
 import java.math.BigDecimal;
 
 /**
@@ -53,9 +51,9 @@ public interface CouponGroupService extends IService<MtCouponGroup> {
     MtCouponGroup queryCouponGroupById(Integer id) throws BusinessCheckException;
 
     /**
-     * 根据分组ID 删除分组信息
+     * 根据分组ID删除分组信息
      *
-     * @param id       分组ID
+     * @param id 分组ID
      * @param operator 操作人
      * @throws BusinessCheckException
      */
@@ -64,7 +62,7 @@ public interface CouponGroupService extends IService<MtCouponGroup> {
     /**
      * 根据分组ID 获取券种类数量
      *
-     * @param id       分组ID
+     * @param id 分组ID
      * @throws BusinessCheckException
      */
     Integer getCouponNum(Integer id) throws BusinessCheckException;

@@ -110,7 +110,6 @@ public class BackendCommissionLogController extends BaseController {
         if (StringUtil.isNotEmpty(uuid)) {
             params.put("uuid", uuid);
         }
-
         PaginationResponse<CommissionLogDto> paginationResponse = commissionLogService.queryCommissionLogByPagination(new PaginationRequest(page, pageSize, params));
 
         // 店铺列表
@@ -145,6 +144,7 @@ public class BackendCommissionLogController extends BaseController {
         if (accountInfo.getMerchantId() > 0 && !commissionLog.getMerchantId().equals(accountInfo.getMerchantId())) {
             return getFailureResult(1004);
         }
+
         Map<String, Object> result = new HashMap<>();
         result.put("commissionLog", commissionLog);
 
@@ -158,9 +158,9 @@ public class BackendCommissionLogController extends BaseController {
     @RequestMapping(value = "/save", method = RequestMethod.POST)
     @PreAuthorize("@pms.hasPermission('commission:log:index')")
     public ResponseObject save(HttpServletRequest request, @RequestBody CommissionLogRequest commissionLogRequest) throws BusinessCheckException {
-        AccountInfo accountDto = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
+        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
 
-        commissionLogRequest.setOperator(accountDto.getAccountName());
+        commissionLogRequest.setOperator(accountInfo.getAccountName());
         commissionLogService.updateCommissionLog(commissionLogRequest);
 
         return getSuccessResult(true);
@@ -197,6 +197,7 @@ public class BackendCommissionLogController extends BaseController {
     @PreAuthorize("@pms.hasPermission('commission:log:index')")
     public ResponseObject doSettle(HttpServletRequest request, @RequestBody CommissionSettleRequest commissionSettleRequest) throws BusinessCheckException {
         AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
+
         commissionSettleRequest.setOperator(accountInfo.getAccountName());
         if (accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0) {
             commissionSettleRequest.setMerchantId(accountInfo.getMerchantId());
