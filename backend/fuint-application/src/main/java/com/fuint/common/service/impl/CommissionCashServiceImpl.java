@@ -312,13 +312,13 @@ public class CommissionCashServiceImpl extends ServiceImpl<MtCommissionCashMappe
             throw new BusinessCheckException("更新分销提成提现失败，数据不存在");
         }
         mtCommissionCash.setUpdateTime(new Date());
-        if (requestParam.getAmount() != null) {
+        if (StringUtil.isBlank(requestParam.getAmount())) {
             mtCommissionCash.setAmount(new BigDecimal(requestParam.getAmount()));
         }
-        if (requestParam.getDescription() != null) {
+        if (StringUtil.isBlank(requestParam.getDescription())) {
             mtCommissionCash.setDescription(requestParam.getDescription());
         }
-        if (requestParam.getStatus() != null) {
+        if (StringUtil.isBlank(requestParam.getStatus())) {
             mtCommissionCash.setStatus(requestParam.getStatus());
         }
         mtCommissionCash.setOperator(requestParam.getOperator());

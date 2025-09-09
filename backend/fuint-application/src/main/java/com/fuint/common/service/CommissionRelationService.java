@@ -33,4 +33,5 @@ public interface CommissionRelationService extends IService<MtCommissionRelation
      * @retrurn
      */
     void setCommissionRelation(MtUser userInfo, String shareId) throws BusinessCheckException;
+
 }

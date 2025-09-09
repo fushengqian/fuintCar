@@ -132,6 +132,7 @@ public class CommissionRelationServiceImpl extends ServiceImpl<MtCommissionRelat
         if (shareUserInfo == null) {
             return;
         }
+        logger.info("分享邀请：shareId={},userId={}", shareId, userInfo.getId());
 
         Map<String, Object> param = new HashMap();
         param.put("USER_ID", Integer.parseInt(shareId));

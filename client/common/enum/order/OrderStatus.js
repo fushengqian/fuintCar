@@ -13,4 +13,5 @@ export default new Enum([
   { key: 'RECEIVED', name: '已收货', value: 'F' },
   { key: 'DELETED', name: '已删除', value: 'G' },
   { key: 'REFUND', name: '已退款', value: 'H' },
+  { key: 'COMPLETE', name: '已完成', value: 'I' },
 ])

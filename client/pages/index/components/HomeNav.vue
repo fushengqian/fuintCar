@@ -17,16 +17,16 @@
             </view>
             <view class="nav-rows">
                 <view class="item">
-                    <image class="icon" src="/static/nav/new.png" @click.stop="goUrl('pages/coupon/list?type=T')"></image>
-                    <view class="title">新手福利</view>
+                    <image class="icon" src="/static/nav/new.png" @click.stop="goUrl('pages/share/index')"></image>
+                    <view class="title">邀请有礼</view>
                 </view>
                 <view class="item">
                     <image class="icon" src="/static/nav/service.png" @click.stop="goUrl('pages/book/index')"></image>
                     <view class="title">预约服务</view>
                 </view>
                 <view class="item">
-                    <image class="icon" src="/static/nav/coupon.png" @click.stop="goUrl('pages/coupon/list?type=C')"></image>
-                    <view class="title">领取卡券</view>
+                    <image class="icon" src="/static/nav/coupon.png" @click.stop="goUrl('pages/coupon/list')"></image>
+                    <view class="title">领券中心</view>
                 </view>
             </view>
         </view>
@@ -54,7 +54,7 @@ export default {
     margin: 0 10rpx 10rpx 10rpx;
     align-items: center;
     justify-content: center;
-    height: 365rpx;
+    height: 380rpx;
     .nav-rows {
         height: 120rpx;
         .item {
@@ -68,7 +68,11 @@ export default {
             .icon {
                 width: 60rpx;
                 height: 60rpx;
-                margin: 28rpx;
+                margin: 18rpx;
+                padding: 15rpx;
+                border: #666 solid 1rpx;
+                border-radius: 60rpx;
+                background: #f5f5f5;
             }
             .title {
                 font-size: 24rpx;

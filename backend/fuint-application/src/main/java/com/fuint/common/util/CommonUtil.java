@@ -75,6 +75,9 @@ public class CommonUtil {
      * @return
      */
     public static String firstLetterToUpperCase(String str) {
+        if (!Character.isLetter(str.charAt(0))) {
+            return str;
+        }
         char[] ch = str.toCharArray();
         if (ch[0] >= 'a' && ch[0] <= 'z') {
             ch[0] = (char) (ch[0] - 32);

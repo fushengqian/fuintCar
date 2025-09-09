@@ -92,7 +92,7 @@ public class BackendVehicleController extends BaseController {
                 mtUser.setMerchantId(accountInfo.getMerchantId());
                 mtUser.setStoreId(accountInfo.getStoreId());
                 mtUser.setStatus(StatusEnum.ENABLED.getKey());
-                mtUser = memberService.addMember(mtUser);
+                mtUser = memberService.addMember(mtUser, null);
             }
         } else if (StringUtil.isNotEmpty(param.getMobile())) {
             mtUser = memberService.queryMemberByMobile(accountInfo.getMerchantId(), param.getMobile());
@@ -104,7 +104,7 @@ public class BackendVehicleController extends BaseController {
                 mtUser.setMerchantId(accountInfo.getMerchantId());
                 mtUser.setStoreId(accountInfo.getStoreId());
                 mtUser.setStatus(StatusEnum.ENABLED.getKey());
-                mtUser = memberService.addMember(mtUser);
+                mtUser = memberService.addMember(mtUser, null);
             }
         }
 

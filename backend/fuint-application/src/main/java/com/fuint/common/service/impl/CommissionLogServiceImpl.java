@@ -270,6 +270,7 @@ public class CommissionLogServiceImpl extends ServiceImpl<MtCommissionLogMapper,
             // 订单更新为已结算
             if (mtOrder != null) {
                 mtOrder.setCommissionStatus(CommissionStatusEnum.SETTLED.getKey());
+                mtOrder.setStatus(OrderStatusEnum.COMPLETE.getKey());
                 orderService.updateOrder(mtOrder);
             }
         } else {
@@ -308,7 +309,7 @@ public class CommissionLogServiceImpl extends ServiceImpl<MtCommissionLogMapper,
             logger.error("更新分销提成记录失败...");
             throw new BusinessCheckException("更新分销提成记录失败，该记录不存在");
         }
-        if (requestParam.getAmount() != null) {
+        if (StringUtil.isNotEmpty(requestParam.getAmount())) {
             mtCommissionLog.setAmount(new BigDecimal(requestParam.getAmount()));
         }
         if (requestParam.getDescription() != null) {
