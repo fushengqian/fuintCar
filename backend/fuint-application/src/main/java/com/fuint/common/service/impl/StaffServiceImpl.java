@@ -259,6 +259,9 @@ public class StaffServiceImpl extends ServiceImpl<MtStaffMapper, MtStaff> implem
      */
     @Override
     public MtStaff queryStaffByMobile(String mobile) {
+        if (StringUtil.isBlank(mobile)) {
+            return null;
+        }
         return mtStaffMapper.queryStaffByMobile(mobile);
     }
 

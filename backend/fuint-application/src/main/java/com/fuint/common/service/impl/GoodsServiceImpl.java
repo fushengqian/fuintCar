@@ -14,6 +14,7 @@ import com.fuint.common.enums.PlatformTypeEnum;
 import com.fuint.common.enums.StatusEnum;
 import com.fuint.common.enums.YesOrNoEnum;
 import com.fuint.common.service.*;
+import com.fuint.common.util.SeqUtil;
 import com.fuint.common.util.XlsUtil;
 import com.fuint.framework.annoation.OperationServiceLog;
 import com.fuint.framework.exception.BusinessCheckException;
@@ -897,26 +898,37 @@ public class GoodsServiceImpl extends ServiceImpl<MtGoodsMapper, MtGoods> implem
                 mtGoods.setId(0);
                 mtGoods.setName(goods.get(0));
                 mtGoods.setType(GoodsTypeEnum.getKey(goods.get(1)));
-                mtGoods.setGoodsNo(goods.get(2));
+                mtGoods.setGoodsNo(StringUtil.isBlank(goods.get(2)) ? SeqUtil.getRandomNumber(15) : goods.get(2));
                 mtGoods.setMerchantId(accountInfo.getMerchantId());
                 mtGoods.setStoreId(accountInfo.getStoreId());
                 Integer cateId = cateService.getGoodsCateId(accountInfo.getMerchantId(), accountInfo.getStoreId(), goods.get(3));
+                if (cateId == null && StringUtil.isNotBlank(goods.get(3))) {
+                    MtGoodsCate mtCate = new MtGoodsCate();
+                    mtCate.setMerchantId(accountInfo.getMerchantId());
+                    mtCate.setStoreId(accountInfo.getStoreId());
+                    mtCate.setName(goods.get(3));
+                    mtCate.setOperator(accountInfo.getAccountName());
+                    mtCate.setDescription("导入商品并创建商品分类");
+                    cateService.addCate(mtCate);
+                }
                 mtGoods.setCateId(cateId);
                 mtGoods.setOperator(accountInfo.getAccountName());
                 String storeIds = storeService.getStoreIds(accountInfo.getMerchantId(), goods.get(4));
                 String images = goods.get(5);
-                if (StringUtil.isNotEmpty(images)) {
+                if (StringUtil.isNotBlank(images)) {
                     String[] imgArr = images.split(",");
                     if (imgArr.length > 0) {
                         mtGoods.setLogo(imgArr[0]);
                         String imagesJson = JSONObject.toJSONString(images.split(","));
                         mtGoods.setImages(imagesJson);
                     }
+                } else {
+                    mtGoods.setLogo("/static/defaultImage/none.png");
                 }
                 mtGoods.setSort(Integer.parseInt(goods.get(6)));
                 mtGoods.setCanUsePoint(YesOrNoEnum.getKey(goods.get(7)));
                 mtGoods.setIsMemberDiscount(YesOrNoEnum.getKey(goods.get(8)));
-                if (goods.get(9).equals(YesOrNoEnum.YES.getKey())) {
+                if (goods.get(9).equals(YesOrNoEnum.YES.getKey()) || goods.get(9).equals("单规格")) {
                     mtGoods.setIsSingleSpec(YesOrNoEnum.YES.getKey());
                 } else {
                     mtGoods.setIsSingleSpec(YesOrNoEnum.NO.getKey());

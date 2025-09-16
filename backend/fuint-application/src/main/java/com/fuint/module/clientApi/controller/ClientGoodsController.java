@@ -74,32 +74,31 @@ public class ClientGoodsController extends BaseController {
 
         Integer merchantId = merchantService.getMerchantId(merchantNo);
         List<MtGoodsCate> cateList = cateService.getCateList(merchantId, storeId, null, StatusEnum.ENABLED.getKey());
-        Map<String, Object> goodsData = goodsService.getStoreGoodsList(storeId, "", platform, 0, 1, 500);
-        List<MtGoods> goodsList = (ArrayList)goodsData.get("goodsList");
         String baseImage = settingService.getUploadBasePath();
-        if (goodsList.size() > 0) {
-            for (MtGoods goods : goodsList) {
-                 goods.setLogo(baseImage + goods.getLogo());
-            }
-        }
-
         List<ResCateDto> result = new ArrayList<>();
         for (MtGoodsCate cate : cateList) {
-            ResCateDto dto = new ResCateDto();
-            dto.setCateId(cate.getId());
-            dto.setName(cate.getName());
-            if (StringUtil.isNotEmpty(cate.getLogo())) {
-                dto.setLogo(baseImage + cate.getLogo());
-            }
-            List<MtGoods> goodsArr = new ArrayList<>();
-            for (MtGoods goods : goodsList) {
-                if (goods.getCateId().compareTo(cate.getId()) == 0) {
-                    goodsArr.add(goods);
-                }
-            }
-            dto.setGoodsList(goodsArr);
-            dto.setSort((goodsArr.size() > 0) ? 1 : 0);
-            result.add(dto);
+             ResCateDto dto = new ResCateDto();
+             dto.setCateId(cate.getId());
+             dto.setName(cate.getName());
+             if (StringUtil.isNotEmpty(cate.getLogo())) {
+                 dto.setLogo(baseImage + cate.getLogo());
+             }
+             Map<String, Object> goodsData = goodsService.getStoreGoodsList(storeId, "", platform, cate.getId(), 1, 100);
+             List<MtGoods> goodsList = (ArrayList)goodsData.get("goodsList");
+             if (goodsList.size() > 0) {
+                 for (MtGoods goods : goodsList) {
+                      goods.setLogo(baseImage + goods.getLogo());
+                 }
+             }
+             List<MtGoods> goodsArr = new ArrayList<>();
+             for (MtGoods goods : goodsList) {
+                  if (goods.getCateId().compareTo(cate.getId()) == 0) {
+                      goodsArr.add(goods);
+                  }
+             }
+             dto.setGoodsList(goodsArr);
+             dto.setSort((goodsArr.size() > 0) ? 1 : 0);
+             result.add(dto);
         }
         // 商品数量为0就排在后面
         Collections.sort(result, (p1, p2) -> Integer.compare(p2.getSort(), p1.getSort()));
