@@ -89,11 +89,10 @@ public class BackendBookCateController extends BaseController {
         PaginationResponse<MtBookCate> paginationResponse = bookCateService.queryBookCateListByPagination(new PaginationRequest(page, pageSize, params));
 
         List<MtStore> storeList = storeService.getMyStoreList(accountInfo.getMerchantId(), accountInfo.getStoreId(), StatusEnum.ENABLED.getKey());
-        String imagePath = settingService.getUploadBasePath();
 
         Map<String, Object> result = new HashMap<>();
         result.put("dataList", paginationResponse);
-        result.put("imagePath", imagePath);
+        result.put("imagePath", settingService.getUploadBasePath());
         result.put("storeList", storeList);
 
         return getSuccessResult(result);

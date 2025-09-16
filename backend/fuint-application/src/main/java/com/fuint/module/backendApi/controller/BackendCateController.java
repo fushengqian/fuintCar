@@ -180,15 +180,13 @@ public class BackendCateController extends BaseController {
         AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
 
         MtGoodsCate mtCate = cateService.queryCateById(id);
-        String imagePath = settingService.getUploadBasePath();
-
         if (accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0 && !accountInfo.getMerchantId().equals(mtCate.getMerchantId())) {
             return getFailureResult(1004);
         }
 
         Map<String, Object> result = new HashMap<>();
         result.put("cateInfo", mtCate);
-        result.put("imagePath", imagePath);
+        result.put("imagePath", settingService.getUploadBasePath());
 
         return getSuccessResult(result);
     }

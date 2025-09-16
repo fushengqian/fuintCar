@@ -178,7 +178,6 @@ public class BackendBannerController extends BaseController {
         AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
 
         MtBanner bannerInfo = bannerService.queryBannerById(id);
-        String imagePath = settingService.getUploadBasePath();
         if (accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0) {
             if (!bannerInfo.getMerchantId().equals(accountInfo.getMerchantId())) {
                 return getFailureResult(1004);
@@ -187,7 +186,7 @@ public class BackendBannerController extends BaseController {
 
         Map<String, Object> result = new HashMap<>();
         result.put("bannerInfo", bannerInfo);
-        result.put("imagePath", imagePath);
+        result.put("imagePath", settingService.getUploadBasePath());
 
         return getSuccessResult(result);
     }
