@@ -18,6 +18,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
+import java.text.ParseException;
 
 /**
  * 商户卡券接口controller
@@ -78,7 +79,7 @@ public class MerchantCouponController extends BaseController {
         Integer merchantId = merchantService.getMerchantId(request.getHeader("merchantNo"));
         UserInfo userInfo = TokenUtil.getUserInfoByToken(request.getHeader("Access-Token"));
         if (userInfo == null || userInfo.getMobile() == null) {
-            return getFailureResult(201, "该账号不是商户");
+            return getFailureResult(201, "您的帐号不是商户，没有操作权限");
         }
         MtStaff staff = staffService.queryStaffByMobile(userInfo.getMobile());
         MtCoupon couponInfo = couponService.queryCouponById(reqCouponDto.getId());
@@ -97,7 +98,7 @@ public class MerchantCouponController extends BaseController {
         Integer merchantId = merchantService.getMerchantId(request.getHeader("merchantNo"));
         UserInfo userInfo = TokenUtil.getUserInfoByToken(request.getHeader("Access-Token"));
         if (userInfo == null || userInfo.getMobile() == null) {
-            return getFailureResult(201, "该账号不是商户");
+            return getFailureResult(201, "您的帐号不是商户，没有操作权限");
         }
         MtStaff staff = staffService.queryStaffByMobile(userInfo.getMobile());
         if (staff == null || !merchantId.equals(staff.getMerchantId())) {
