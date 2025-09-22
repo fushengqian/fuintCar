@@ -274,7 +274,7 @@
 
       // 跳转到核销
       handleConfirm(orderId) {
-        this.$navTo('pages/merchant/order/confirm', { orderId })
+        this.$navTo('merchantPages/order/confirm', { orderId })
       }
     }
 

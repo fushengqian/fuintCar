@@ -21,11 +21,11 @@
                     <view class="title">邀请有礼</view>
                 </view>
                 <view class="item">
-                    <image class="icon" src="/static/nav/service.png" @click.stop="goUrl('pages/book/index')"></image>
+                    <image class="icon" src="/static/nav/service.png" @click.stop="goUrl('subPages/book/index')"></image>
                     <view class="title">预约服务</view>
                 </view>
                 <view class="item">
-                    <image class="icon" src="/static/nav/coupon.png" @click.stop="goUrl('pages/coupon/list')"></image>
+                    <image class="icon" src="/static/nav/coupon.png" @click.stop="goUrl('subPages/coupon/list')"></image>
                     <view class="title">领券中心</view>
                 </view>
             </view>

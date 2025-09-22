@@ -183,7 +183,7 @@
       })
       return {
         title: app.couponInfo.name,
-        path: `/pages/prestore/buy?${params}`
+        path: `/subPages/prestore/buy?${params}`
       }
     },
 
@@ -200,7 +200,7 @@
       })
       return {
         title: app.couponInfo.name,
-        path: `/pages/prestore/buy?${params}`
+        path: `/subPages/prestore/buy?${params}`
       }
     }
   }

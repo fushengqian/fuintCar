@@ -147,7 +147,7 @@
           </view>
         </block>
         <block>
-          <view v-if="isMerchant == true" class="service-item" @click="handleService({'url': 'pages/merchant/index'})">
+          <view v-if="isMerchant == true" class="service-item" @click="handleService({'url': 'merchantPages/index'})">
             <view class="item-icon">
               <text class="iconfont icon-dianpu"></text>
             </view>
@@ -195,10 +195,10 @@
    * id: 标识; name: 标题名称; icon: 图标; type 类型(link和button); url: 跳转的链接
    */
   const service = [
-    { id: 'myCoupon', name: '卡券兑换', icon: 'youhuiquan', type: 'link', url: 'pages/coupon/receive' },
+    { id: 'myCoupon', name: '卡券兑换', icon: 'youhuiquan', type: 'link', url: 'subPages/coupon/receive' },
     { id: 'coupon', name: '转赠记录', icon: 'lingquan', type: 'link', url: 'pages/give/index' },
     { id: 'points', name: '我的积分', icon: 'jifen', type: 'link', url: 'pages/points/detail' },
-    { id: 'book', name: '我的预约', icon: 'tuxingyanzhengma', type: 'link', url: 'pages/book/my' },
+    { id: 'book', name: '我的预约', icon: 'tuxingyanzhengma', type: 'link', url: 'subPages/book/my' },
     { id: 'help', name: '我的帮助', icon: 'bangzhu', type: 'link', url: 'pages/help/index' },
     { id: 'contact', name: '在线客服', icon: 'kefu', type: 'button', openType: 'contact' },
     { id: 'address', name: '收货地址', icon: 'shouhuodizhi', type: 'link', url: 'pages/address/index' },

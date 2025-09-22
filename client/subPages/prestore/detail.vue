@@ -43,14 +43,11 @@
     </view>
     
     <!-- 底部选项卡 -->
-    <view class="footer-fixed">
+    <view class="footer-fixed" v-if="detail.status == 'D'">
       <view class="footer-container">
         <view class="foo-item-btn">
           <view class="btn-wrapper">
-            <view v-if="detail.status != 'D'" class="btn-item btn-item-main" @click="remove(userCouponId)">
-              <text>删除卡券</text>
-            </view>
-            <view v-if="detail.status == 'D'" class="btn-item btn-item-main state">
+            <view class="btn-item btn-item-main state">
               <text>已删除</text>
             </view>
           </view>
@@ -147,28 +144,6 @@
                         }
                   })
               }
-      },
-      // 删除卡券
-      remove() {
-         const app = this;
-         if (app.isLoading == true) {
-             return false;
-         }
-         uni.showModal({
-           title: "提示",
-           content: "您确定要删除吗?",
-           success({ confirm }) {
-             if (confirm) {
-                 app.isLoading = true;
-                 myCouponApi.remove(app.userCouponId)
-                   .then(result => {
-                      app.getCouponDetail();
-                      app.isLoading = false;
-                   })
-                   .finally(() => app.isLoading = false)
-             }
-           }
-         });
       }
     }
   }

@@ -4,12 +4,12 @@
     <!-- 分类列表tab -->
     <view class="tabs-wrapper">
       <scroll-view class="scroll-view" scroll-x>
-        <view class="tab-item" :class="{ active: curId == '' }" @click="onSwitchTab('')">
+        <view class="tab-item" :class="{ active: curId ==  0 }" @click="onSwitchTab(0)">
           <view class="value"><text>全部</text></view>
         </view>
-        <!-- tab列表 -->
-        <view class="tab-item" :class="{ active: curId ==  item.key }" @click="onSwitchTab(item.key)"
-          v-for="(item, index) in statusList" :key="index">
+        <!-- 分类列表 -->
+        <view class="tab-item" :class="{ active: curId ==  item.id }" @click="onSwitchTab(item.id)"
+          v-for="(item, index) in categoryList" :key="index">
           <view class="value"><text>{{ item.name }}</text></view>
         </view>
       </scroll-view>
@@ -17,20 +17,17 @@
 
     <!-- 预约列表 -->
     <view class="book-list">
-      <view class="book-item" v-for="(item, index) in list.content" :key="index">
+      <view class="book-item show-type" v-for="(item, index) in list.content" :key="index" @click="onTargetDetail(item.id)">
         <block>
-          <view class="flex-box">
-            <view class="book-item-title">
-              <text>{{ item.bookName }}</text>
-            </view>
-            <view class="book-content">
-                <view class="contacts">姓名：{{ item.contact }}</view>
-                <view class="time">时间：{{ item.serviceDate }} {{ item.serviceTime }}</view>
+          <view class="book-item-image">
+            <image class="image" :src="item.logo"></image>
+          </view>
+          <view class="book-item-left flex-box">
+            <view class="book-item-title twolist-hidden">
+              <text>{{ item.name }}</text>
             </view>
             <view class="book-item-footer m-top10">
-              <text class="book-views f-24 col-8">{{ item.createTime | timeFormat('yyyy-mm-dd hh:MM') }}</text>
-              <view class="btn btn-operate" v-if="item.status == 'A'" @click="onCancel(item.id)">取消</view>
-              <view class="btn btn-view" @click="onView(item.id)">详情</view>
+              <text class="book-views">{{ item.description }}</text>
             </view>
           </view>
         </block>
@@ -54,12 +51,12 @@
     mixins: [MescrollMixin],
     data() {
       return {
-        // 状态列表
-        statusList: [],
+        // 分类列表
+        categoryList: [],
         // 预约列表
         list: getEmptyPaginateObj(),
         // 当前选中的分类id (0则代表首页)
-        curId: '',
+        curId: 0,
         // 上拉加载配置
         upOption: {
           // 首次自动执行
@@ -77,9 +74,11 @@
      */
     onLoad(options) {
       const app = this;
-      if (options.status) {
-          app.curId = options.status;
+      if (options.categoryId) {
+          app.curId = options.categoryId;
       }
+      // 获取分类数据
+      app.getCategoryList();
     },
 
     methods: {
@@ -92,7 +91,7 @@
       upCallback(page) {
         const app = this;
         // 设置列表数据
-        app.getMyBookList(page.num)
+        app.getBookList(page.num)
           .then(list => {
             const curPageLen = list.content.length;
             const totalSize = list.content.totalElements;
@@ -101,19 +100,27 @@
           .catch(() => app.mescroll.endErr());
       },
 
+      // 获取预约分类数据
+      getCategoryList() {
+        const app = this;
+        BookApi.cateList()
+          .then(result => {
+              app.categoryList = result.data.cateList;
+          })
+      },
+
       /**
-       * 获取预约列表
+       * 获取预约项目列表
        * @param {Number} pageNo 页码
        */
-      getMyBookList(pageNo = 1) {
-        const app = this;
+      getBookList(pageNo = 1) {
+        const app = this
         return new Promise((resolve, reject) => {
-          BookApi.myBookList({ status: app.curId, page: pageNo }, { load: false })
+          BookApi.list({ cateId: app.curId, page: pageNo }, { load: false })
             .then(result => {
               // 合并新数据
               const newList = result.data;
               app.list.content = getMoreListData(newList, app.list, pageNo);
-              app.statusList = result.data.statusList;
               resolve(newList);
             })
             .catch(result => reject());
@@ -121,42 +128,40 @@
       },
 
       // 切换选择的分类
-      onSwitchTab(status) {
+      onSwitchTab(categoryId = 0) {
         const app = this;
-        // 切换当前的状态
-        app.curId = status;
+        // 切换当前的分类ID
+        app.curId = categoryId;
         // 刷新列表数据
         app.list = getEmptyPaginateObj();
         app.mescroll.resetUpScroll();
       },
-      
-      // 取消预约
-      onCancel(myBookId) {
-         const app = this;
-         uni.showModal({
-           title: "提示",
-           content: "您确定要取消该预约吗?",
-           success({ confirm }) {
-             confirm && app.doCancel(myBookId)
-           }
-         });
-      },
-      
-      // 确认取消预约
-      doCancel(myBookId) {
-        const app = this;
-        BookApi.cancel(myBookId)
-          .then(result => {
-            app.$success("取消成功！")
-            setTimeout(() => {
-                app.getMyBookList(1);
-            }, 1500)
-          })
-      },
 
-      // 跳转详情页
-      onView(myBookId) {
-        this.$navTo('pages/book/bookDetail', { myBookId });
+      // 跳转预约详情页
+      onTargetDetail(bookId) {
+        this.$navTo('subPages/book/detail', { bookId });
+      }
+    },
+
+    /**
+     * 分享当前页面
+     */
+    onShareAppMessage() {
+      return {
+        title: '预约项目',
+        path: "/subPages/book/index?" + this.$getShareUrlParams()
+      }
+    },
+
+    /**
+     * 分享到朋友圈
+     * 本接口为 Beta 版本，暂只在 Android 平台支持，详见分享到朋友圈 (Beta)
+     * https://developers.weixin.qq.com/miniprogram/dev/framework/open-ability/share-timeline.html
+     */
+    onShareTimeline() {
+      return {
+        title: '预约项目',
+        path: "/subPages/book/index?" + this.$getShareUrlParams()
       }
     }
 
@@ -165,13 +170,14 @@
 
 <style lang="scss" scoped>
   /* 顶部选项卡 */
+
   .container {
     min-height: 100vh;
-    background: #333;
   }
 
   .tabs-wrapper {
     position: sticky;
+    top: 1rpx;
     display: flex;
     width: 100%;
     height: 88rpx;
@@ -186,8 +192,9 @@
 
   .tab-item {
     display: inline-block;
-    padding: 0 15rpx;
+    padding: 0 10rpx;
     text-align: center;
+    min-width: 10%;
     height: 87rpx;
     line-height: 88rpx;
     box-sizing: border-box;
@@ -197,63 +204,58 @@
     }
 
     &.active .value {
-      color: #fd4a5f;
-      border-bottom: 4rpx solid #fd4a5f;
+      color: #000;
+      border-bottom: 4rpx solid #000;
       font-weight: bold;
     }
   }
 
   /* 预约列表 */
   .book-list {
-    padding-top: 20rpx;
+    padding-top: 0rpx;
     line-height: 1;
     background: #f7f7f7;
   }
 
   .book-item {
-    margin: 0rpx 10rpx 20rpx 10rpx;
-    padding: 30rpx;
+    padding: 40rpx;
     background: #fff;
-    border-radius: 20rpx;
-    min-height: 280rpx;
-    border: solid 1rpx #f5f5f5;
+    margin: 20rpx;
+    border-radius: 15rpx;
+
     &:last-child {
       margin-bottom: 0;
     }
 
     .book-item-title {
+      max-height: 80rpx;
       font-size: 32rpx;
-      color: #333;
       font-weight: bold;
-      line-height: 40rpx;
-    }
-    .book-content {
-        margin: 30rpx 0rpx 30rpx 0rpx;
-        .contacts {
-            margin-bottom: 20rpx;
-        }
+      color: #333;
     }
 
+    .book-item-image .image {
+      display: block;
+      border-radius: 16rpx;
+      height: 160rpx;
+      width: 200rpx;
+      border: 2rpx solid #cccccc;
+    }
+  }
+
+  .show-type {
+    display: flex;
+    .book-item-left {
+      padding-left: 20rpx;
+    }
+    .book-item-title {
+      font-size: 32rpx;
+    }
     .book-item-footer {
-      .btn {
-          width: 120rpx;
-          border-radius: 10rpx;
-          padding: 18rpx;
-          font-size: 28rpx;
-          color: #fff;
-          text-align: center;
-          align-items: center;
-          border: 1rpx solid #fff;
-          float: right;
-          border: solid 1rpx #fff;
-          margin-left: 10rpx;
-      }
-      .btn-operate {
-          background: linear-gradient(to right, #f9211c, #ff6335);
-      }
-      .btn-view {
-          background: $fuint-theme;
-      }
+        line-height: 40rpx;
+        max-height: 120rpx;
+        text-overflow: ellipsis;
+        overflow: hidden;
     }
   }
 </style>

@@ -67,9 +67,6 @@
             <view v-if="!detail.code && !detail.isReceive" class="btn-item btn-item-main" @click="receive(detail.id)">
               <text>领取次卡</text>
             </view>
-            <view v-if="userCouponId && detail.status != 'D'" class="btn-item btn-item-main" @click="remove(userCouponId)">
-              <text>删除卡券</text>
-            </view>
             <view v-if="detail.status == 'D'" class="btn-item btn-item-main state">
               <text>已删除</text>
             </view>
@@ -197,28 +194,6 @@
                 app.$error(result.message);
             }
           })
-      },
-      // 删除卡券
-      remove() {
-         const app = this;
-         if (app.isLoading == true) {
-             return false;
-         }
-         uni.showModal({
-           title: "提示",
-           content: "您确定要删除吗?",
-           success({ confirm }) {
-             if (confirm) {
-                 app.isLoading = true;
-                 myCouponApi.remove(app.userCouponId)
-                   .then(result => {
-                      app.getCouponDetail();
-                      app.isLoading = false;
-                   })
-                   .finally(() => app.isLoading = false)
-             }
-           }
-         });
       },
       timeStamp: function(value) {
           var date = new Date(value);
