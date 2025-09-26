@@ -18,7 +18,6 @@ import lombok.AllArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
-import java.text.ParseException;
 
 /**
  * 商户卡券接口controller

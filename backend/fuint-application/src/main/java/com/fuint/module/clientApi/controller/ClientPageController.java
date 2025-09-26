@@ -1,10 +1,13 @@
 package com.fuint.module.clientApi.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fuint.common.dto.NavigationDto;
 import com.fuint.common.dto.UserInfo;
 import com.fuint.common.dto.VehicleDto;
 import com.fuint.common.enums.StatusEnum;
 import com.fuint.common.service.BannerService;
 import com.fuint.common.service.MerchantService;
+import com.fuint.common.service.SettingService;
 import com.fuint.common.service.VehicleService;
 import com.fuint.common.util.TokenUtil;
 import com.fuint.framework.exception.BusinessCheckException;
@@ -49,12 +52,17 @@ public class ClientPageController extends BaseController {
     private VehicleService vehicleService;
 
     /**
+     * 系统设置服务接口
+     * */
+    private SettingService settingService;
+
+    /**
      * 获取页面数据
      */
     @ApiOperation(value = "获取首页页面数据")
     @RequestMapping(value = "/home", method = RequestMethod.GET)
     @CrossOrigin
-    public ResponseObject getPageData(HttpServletRequest request, @RequestParam Map<String, Object> param) throws BusinessCheckException {
+    public ResponseObject getPageData(HttpServletRequest request, @RequestParam Map<String, Object> param) throws BusinessCheckException ,JsonProcessingException {
         String merchantNo = request.getHeader("merchantNo") == null ? "" : request.getHeader("merchantNo");
         Integer storeId = StringUtil.isEmpty(request.getHeader("storeId")) ? 0 : Integer.parseInt(request.getHeader("storeId"));
 
@@ -78,10 +86,12 @@ public class ClientPageController extends BaseController {
                 vehicle = vehicles.get(0);
             }
         }
+        List<NavigationDto> navigation = settingService.getNavigation(merchantId, storeId, StatusEnum.ENABLED.getKey());
 
         Map<String, Object> outParams = new HashMap();
         outParams.put("banner", bannerData);
         outParams.put("vehicle", vehicle);
+        outParams.put("navigation", navigation);
         return getSuccessResult(outParams);
     }
 }

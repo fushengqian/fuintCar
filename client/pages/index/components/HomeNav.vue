@@ -2,31 +2,9 @@
     <view class="navigation">
         <view class="nav">
             <view class="nav-rows">
-                <view class="item">
-                    <image class="icon" src="/static/nav/pay.png" @click.stop="goUrl('pages/pay/index')"></image>
-                    <view class="title">买单支付</view>
-                </view>
-                <view class="item">
-                    <image class="icon" src="/static/nav/xi.png" @click.stop="goUrl('pages/vehicle/order')"></image>
-                    <view class="title">美容洗车</view>
-                </view>
-                <view class="item">
-                    <image class="icon" src="/static/nav/add.png" @click.stop="goUrl('pages/wallet/recharge/index')"></image>
-                    <view class="title">充值有礼</view>
-                </view>
-            </view>
-            <view class="nav-rows">
-                <view class="item">
-                    <image class="icon" src="/static/nav/new.png" @click.stop="goUrl('pages/share/index')"></image>
-                    <view class="title">邀请有礼</view>
-                </view>
-                <view class="item">
-                    <image class="icon" src="/static/nav/service.png" @click.stop="goUrl('subPages/book/index')"></image>
-                    <view class="title">预约服务</view>
-                </view>
-                <view class="item">
-                    <image class="icon" src="/static/nav/coupon.png" @click.stop="goUrl('subPages/coupon/list')"></image>
-                    <view class="title">领券中心</view>
+                <view class="item" v-for="item in navigation">
+                    <image class="icon" :src="item.iconUrl" @click.stop="goUrl(item.url)"></image>
+                    <view class="title">{{ item.name }}</view>
                 </view>
             </view>
         </view>
@@ -35,6 +13,12 @@
 
 <script>
 export default {
+    props: {
+        navigation: {
+            type: Array,
+            default: []
+        }
+    },
     methods: {
         goUrl(url) {
             this.$navTo(url);

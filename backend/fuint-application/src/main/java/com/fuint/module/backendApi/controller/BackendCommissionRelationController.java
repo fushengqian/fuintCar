@@ -63,6 +63,7 @@ public class BackendCommissionRelationController extends BaseController {
         String subUserId = request.getParameter("subUserId");
 
         AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
+
         Map<String, Object> params = new HashMap<>();
         if (StringUtil.isNotEmpty(userId)) {
             params.put("userId", userId);
@@ -82,7 +83,6 @@ public class BackendCommissionRelationController extends BaseController {
         if (StringUtil.isNotEmpty(searchStoreId)) {
             params.put("storeId", searchStoreId);
         }
-
         PaginationResponse<CommissionRelationDto> paginationResponse = commissionRelationService.queryRelationByPagination(new PaginationRequest(page, pageSize, params));
 
         Map<String, Object> param = new HashMap<>();
@@ -111,7 +111,6 @@ public class BackendCommissionRelationController extends BaseController {
     @PreAuthorize("@pms.hasPermission('commission:relation:index')")
     public ResponseObject updateStatus(HttpServletRequest request, @RequestBody Map<String, Object> param) throws BusinessCheckException {
         AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
-
         Integer id = param.get("id") == null ? 0 : Integer.parseInt(param.get("id").toString());
         String status = param.get("status") == null ? StatusEnum.ENABLED.getKey() : param.get("status").toString();
 
@@ -139,13 +138,14 @@ public class BackendCommissionRelationController extends BaseController {
         AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
 
         MtCommissionRelation mtCommissionRelation = commissionRelationService.getById(id);
-        mtCommissionRelation.setStatus(StatusEnum.DISABLE.getKey());
-        commissionRelationService.updateById(mtCommissionRelation);
         if (accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0) {
             if (!accountInfo.getMerchantId().equals(mtCommissionRelation.getMerchantId())) {
                 return getFailureResult(1004);
             }
         }
+
+        mtCommissionRelation.setStatus(StatusEnum.DISABLE.getKey());
+        commissionRelationService.updateById(mtCommissionRelation);
 
         return getSuccessResult(true);
     }

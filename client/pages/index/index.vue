@@ -8,7 +8,7 @@
           <HomeUser v-if="storeInfo" :userInfo="userInfo" :vehicle="vehicle"/>
       </block>
       <block>
-          <HomeNav v-if="storeInfo" :nav="[]"/>
+          <HomeNav v-if="storeInfo" :navigation="navigation"/>
       </block>
       <block>
           <Goods v-if="storeInfo" :itemStyle="goodsStyle" :isReflash="isReflash" ref="mescrollItem" :params="goodsParams"/>
@@ -41,6 +41,7 @@
     },
     data() {
       return {
+        navigation: [],
         banner: [],
         storeInfo: null,
         userInfo: { id: '', avatar: '', name: '', balance: '', point: '' },
@@ -110,7 +111,7 @@
           Api.home()
             .then(result => {
                  app.banner = result.data.banner;
-                 app.ads = result.data.ads;
+                 app.navigation = result.data.navigation;
                  if (result.data.vehicle) {
                      app.vehicle = result.data.vehicle;
                  } else {

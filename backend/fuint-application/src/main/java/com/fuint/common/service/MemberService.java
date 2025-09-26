@@ -55,8 +55,8 @@ public interface MemberService extends IService<MtUser> {
     /**
      * 添加会员
      *
-     * @param  mtUser 会员信息
-     * @param  shareId 邀请人ID
+     * @param mtUser 用户信息
+     * @param shareId 分享用户ID
      * @throws BusinessCheckException
      * @return
      */
