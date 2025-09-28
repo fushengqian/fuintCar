@@ -49,6 +49,7 @@ export default {
             display: block;
             float: left;
             background: #fff;
+            margin-bottom: 10rpx;
             .icon {
                 width: 60rpx;
                 height: 60rpx;

@@ -8,7 +8,7 @@
           <HomeUser v-if="storeInfo" :userInfo="userInfo" :vehicle="vehicle"/>
       </block>
       <block>
-          <HomeNav v-if="storeInfo" :navigation="navigation"/>
+          <HomeNav v-if="storeInfo && navigation.length > 0" :navigation="navigation"/>
       </block>
       <block>
           <Goods v-if="storeInfo" :itemStyle="goodsStyle" :isReflash="isReflash" ref="mescrollItem" :params="goodsParams"/>
