@@ -225,12 +225,7 @@ public class UserCouponServiceImpl extends ServiceImpl<MtUserCouponMapper, MtUse
         }
 
         // 可领取多张，领取序列号
-        StringBuffer uuid = new StringBuffer();
-        uuid.append(SeqUtil.getRandomNumber(4));
-        uuid.append(SeqUtil.getRandomNumber(4));
-        uuid.append(SeqUtil.getRandomNumber(4));
-        uuid.append(SeqUtil.getRandomNumber(4));
-
+        String uuid = SeqUtil.getRandomNumber(16);
         for (int i = 1; i <= num; i++) {
              MtUserCoupon userCoupon = new MtUserCoupon();
              if (userCouponId > 0) {
@@ -250,23 +245,18 @@ public class UserCouponServiceImpl extends ServiceImpl<MtUserCouponMapper, MtUse
              userCoupon.setCreateTime(new Date());
              userCoupon.setUpdateTime(new Date());
              userCoupon.setExpireTime(couponInfo.getEndTime());
-            if (couponInfo.getExpireType().equals(CouponExpireTypeEnum.FLEX.getKey())) {
-                Date expireTime = new Date();
-                Calendar c = Calendar.getInstance();
-                c.setTime(expireTime);
-                c.add(Calendar.DATE, couponInfo.getExpireTime());
-                expireTime = c.getTime();
-                userCoupon.setExpireTime(expireTime);
-            }
-
-             // 12位随机数
-             StringBuffer code = new StringBuffer();
-             code.append(SeqUtil.getRandomNumber(4));
-             code.append(SeqUtil.getRandomNumber(4));
-             code.append(SeqUtil.getRandomNumber(4));
-             code.append(SeqUtil.getRandomNumber(4));
-             userCoupon.setCode(code.toString());
-             userCoupon.setUuid(uuid.toString());
+             if (couponInfo.getExpireType().equals(CouponExpireTypeEnum.FLEX.getKey())) {
+                 Date expireTime = new Date();
+                 Calendar calendar = Calendar.getInstance();
+                 calendar.setTime(expireTime);
+                 calendar.add(Calendar.DATE, couponInfo.getExpireTime());
+                 expireTime = calendar.getTime();
+                 userCoupon.setExpireTime(expireTime);
+             }
+             // 16位随机数
+             String code = SeqUtil.getRandomNumber(16);
+             userCoupon.setCode(code);
+             userCoupon.setUuid(uuid);
              if (userCoupon.getId() != null) {
                  mtUserCouponMapper.updateById(userCoupon);
              } else {

@@ -136,14 +136,12 @@ public class SendLogServiceImpl extends ServiceImpl<MtSendLogMapper, MtSendLog> 
      */
     @Override
     public void deleteSendLog(Long id, String operator) {
-        MtSendLog couponGroup = querySendLogById(id);
-
-        if (null == couponGroup) {
+        MtSendLog mtSendLog = querySendLogById(id);
+        if (null == mtSendLog) {
             return;
         }
-
-        couponGroup.setStatus(StatusEnum.DISABLE.getKey());
-        couponGroup.setOperator(operator);
-        mtSendLogMapper.updateById(couponGroup);
+        mtSendLog.setStatus(StatusEnum.DISABLE.getKey());
+        mtSendLog.setOperator(operator);
+        mtSendLogMapper.updateById(mtSendLog);
     }
 }

@@ -252,19 +252,19 @@ public class OrderServiceImpl extends ServiceImpl<MtOrderMapper, MtOrder> implem
             lambdaQueryWrapper.eq(MtOrder::getStatus, OrderStatusEnum.COMPLETE.getKey());
         }
 
-        if (StringUtil.isNotEmpty(orderSn)) {
+        if (StringUtil.isNotBlank(orderSn)) {
             lambdaQueryWrapper.eq(MtOrder::getOrderSn, orderSn);
         }
-        if (StringUtil.isNotEmpty(status)) {
+        if (StringUtil.isNotBlank(status)) {
             lambdaQueryWrapper.eq(MtOrder::getStatus, status);
         }
-        if (StringUtil.isNotEmpty(payStatus)) {
+        if (StringUtil.isNotBlank(payStatus)) {
             lambdaQueryWrapper.eq(MtOrder::getPayStatus, payStatus);
         }
-        if (StringUtil.isNotEmpty(settleStatus)) {
+        if (StringUtil.isNotBlank(settleStatus)) {
             lambdaQueryWrapper.eq(MtOrder::getSettleStatus, settleStatus);
         }
-        if (StringUtil.isNotEmpty(keyword)) {
+        if (StringUtil.isNotBlank(keyword)) {
             MtUser userInfo = memberService.queryMemberByMobile(merchantId, keyword);
             if (userInfo != null) {
                 lambdaQueryWrapper.and(wq -> wq
@@ -275,15 +275,13 @@ public class OrderServiceImpl extends ServiceImpl<MtOrderMapper, MtOrder> implem
                 lambdaQueryWrapper.like(MtOrder::getOrderSn, keyword);
             }
         }
-        if (StringUtil.isNotEmpty(mobile)) {
+        if (StringUtil.isNotBlank(mobile)) {
             MtUser userInfo = memberService.queryMemberByMobile(merchantId, mobile);
             if (userInfo != null) {
                 userId = userInfo.getId().toString();
-            } else {
-                userId = "0";
             }
         }
-        if (StringUtil.isNotEmpty(userId) && Integer.parseInt(userId) > 0) {
+        if (StringUtil.isNotBlank(userId) && Integer.parseInt(userId) > 0) {
             lambdaQueryWrapper.eq(MtOrder::getUserId, userId);
         }
         if (merchantId != null && merchantId > 0) {
@@ -292,13 +290,13 @@ public class OrderServiceImpl extends ServiceImpl<MtOrderMapper, MtOrder> implem
         if (storeId != null && storeId > 0) {
             lambdaQueryWrapper.eq(MtOrder::getStoreId, storeId);
         }
-        if (StringUtil.isNotEmpty(staffId)) {
+        if (StringUtil.isNotBlank(staffId)) {
             lambdaQueryWrapper.eq(MtOrder::getStaffId, staffId);
         }
-        if (StringUtil.isNotEmpty(type)) {
+        if (StringUtil.isNotBlank(type)) {
             lambdaQueryWrapper.eq(MtOrder::getType, type);
         }
-        if (StringUtil.isNotEmpty(orderMode)) {
+        if (StringUtil.isNotBlank(orderMode)) {
             lambdaQueryWrapper.eq(MtOrder::getOrderMode, orderMode);
         }
         if (StringUtils.isNotBlank(couponId)) {
@@ -310,16 +308,16 @@ public class OrderServiceImpl extends ServiceImpl<MtOrderMapper, MtOrder> implem
                 lambdaQueryWrapper.in(MtOrder::getStoreId, idList);
             }
         }
-        if (StringUtil.isNotEmpty(startTime)) {
+        if (StringUtil.isNotBlank(startTime)) {
             lambdaQueryWrapper.ge(MtOrder::getCreateTime, startTime);
         }
-        if (StringUtil.isNotEmpty(endTime)) {
+        if (StringUtil.isNotBlank(endTime)) {
             lambdaQueryWrapper.le(MtOrder::getCreateTime, endTime);
         }
         if (payType != null && payType.size() > 0) {
             lambdaQueryWrapper.in(MtOrder::getPayType, payType);
         }
-        if (StringUtil.isNotEmpty(confirmStatus)) {
+        if (StringUtil.isNotBlank(confirmStatus)) {
             lambdaQueryWrapper.eq(MtOrder::getConfirmStatus, confirmStatus);
             lambdaQueryWrapper.eq(MtOrder::getPayStatus, PayStatusEnum.SUCCESS.getKey());
             lambdaQueryWrapper.eq(MtOrder::getType, OrderTypeEnum.GOODS.getKey());
@@ -425,6 +423,9 @@ public class OrderServiceImpl extends ServiceImpl<MtOrderMapper, MtOrder> implem
         }
         if (mtOrder.getVerifyCode() == null && !orderDto.getPlatform().equals(PlatformTypeEnum.PC.getCode())) {
             mtOrder.setVerifyCode(SeqUtil.getRandomNumber(6));
+        } else {
+            mtOrder.setVerifyCode("");
+            mtOrder.setConfirmStatus(YesOrNoEnum.YES.getKey());
         }
 
         // 首先生成订单
