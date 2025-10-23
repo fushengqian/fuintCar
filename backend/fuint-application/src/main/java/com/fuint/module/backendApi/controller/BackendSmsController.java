@@ -137,6 +137,10 @@ public class BackendSmsController extends BaseController {
             return getFailureResult(5002);
         }
 
+        if (accountInfo.getStoreId() != null && accountInfo.getStoreId() > 0) {
+            return getFailureResult(1004);
+        }
+
         SmsSettingEnum[] settingList = SmsSettingEnum.values();
         for (SmsSettingEnum setting : settingList) {
             MtSetting mtSetting = new MtSetting();

@@ -175,7 +175,9 @@ public class MerchantServiceImpl extends ServiceImpl<MtMerchantMapper, MtMerchan
         mtMerchant.setPhone(merchant.getPhone());
         mtMerchant.setAddress(merchant.getAddress());
         mtMerchant.setStatus(merchant.getStatus());
-
+        if (merchant.getSettleRate() != null) {
+            mtMerchant.setSettleRate(merchant.getSettleRate());
+        }
         if (mtMerchant.getStatus() == null) {
             mtMerchant.setStatus(StatusEnum.ENABLED.getKey());
         }

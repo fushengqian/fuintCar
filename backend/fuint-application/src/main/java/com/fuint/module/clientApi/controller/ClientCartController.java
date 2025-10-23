@@ -97,7 +97,11 @@ public class ClientCartController extends BaseController {
         if (mtUser == null && StringUtil.isNotEmpty(token)) {
             AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
             if (accountInfo != null) {
-                return getFailureResult(201, "该管理员还未关联店铺员工，请先关联！");
+                if (accountInfo.getMerchantId() == null || accountInfo.getMerchantId() <= 0) {
+                    return getFailureResult(5002);
+                } else {
+                    return getFailureResult(201, "该管理员还未关联店铺员工");
+                }
             }
             return getFailureResult(1001);
         }
