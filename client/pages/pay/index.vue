@@ -20,7 +20,7 @@
         </u-form>
     </view>
     
-    <neoceansoft-keyboard keyboardType="payment" behaviorBgColor="#409EFF" @result="changeAmount" @paymentClick="doPay"></neoceansoft-keyboard>
+    <neoceansoft-keyboard keyboardType="payment" behaviorBgColor="#373F64" @result="changeAmount" @paymentClick="doPay"></neoceansoft-keyboard>
 
     <view class="remark-popup">
        <uni-popup ref="remarkPopup" type="dialog">

@@ -36,8 +36,8 @@
           <text class="name">性别</text>
           <view class="value">
              <radio-group @change="genderChange">
-                <label class="radio"><radio value="1" color="#409EFF" :checked="userInfo.sex == '1' ? true : false"/>男</label>
-                <label class="radio second"><radio value="0" color="#409EFF" :checked="userInfo.sex == '0' ? true: false"/>女</label>
+                <label class="radio"><radio value="1" color="#373F64" :checked="userInfo.sex == '1' ? true : false"/>男</label>
+                <label class="radio second"><radio value="0" color="#373F64" :checked="userInfo.sex == '0' ? true: false"/>女</label>
              </radio-group>
           </view>
         </view>

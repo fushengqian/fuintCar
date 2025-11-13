@@ -212,7 +212,7 @@
       // 立即购买按钮的背景颜色
       buyNowBackgroundColor: {
         Type: String,
-       default: "linear-gradient(to right, #409EFF, #409EFF)"
+       default: "linear-gradient(to right, #373F64, #373F64)"
       },
       // 加入购物车按钮的文字
       addCartText: {
@@ -227,7 +227,7 @@
       // 加入购物车按钮的背景颜色
       addCartBackgroundColor: {
         Type: String,
-        default: "linear-gradient(to right, #409EFF, #409EFF)"
+        default: "linear-gradient(to right, #373F64, #373F64)"
       },
       // 不可点击时,按钮的样式
       disableStyle: {

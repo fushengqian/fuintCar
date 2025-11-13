@@ -179,6 +179,11 @@ public class UserCouponServiceImpl extends ServiceImpl<MtUserCouponMapper, MtUse
             throw new BusinessCheckException(Message.USER_NOT_EXIST);
         }
 
+        // 校验后台领取
+        if (couponInfo.getSendWay().equals(SendWayEnum.BACKEND.getKey())) {
+            throw new BusinessCheckException(Message.SEND_WAY_ERROR);
+        }
+
         // 会员等级限制
         if (couponInfo.getGradeIds() != null && StringUtil.isNotEmpty(couponInfo.getGradeIds())) {
             String gradeIds[] = couponInfo.getGradeIds().split(",");
@@ -360,7 +365,7 @@ public class UserCouponServiceImpl extends ServiceImpl<MtUserCouponMapper, MtUse
         String id = paramMap.get("id") == null ? "" : paramMap.get("id").toString();
 
         // 处理已失效
-        if (pageNumber <= 1 && StringUtil.isNotEmpty(userId)) {
+        if (pageNumber <= 1 && StringUtil.isNotBlank(userId)) {
             List<String> statusList = Arrays.asList(UserCouponStatusEnum.UNUSED.getKey());
             List<MtUserCoupon> data = mtUserCouponMapper.getUserCouponList(Integer.parseInt(userId), statusList);
             for (MtUserCoupon uc : data) {
@@ -388,14 +393,22 @@ public class UserCouponServiceImpl extends ServiceImpl<MtUserCouponMapper, MtUse
 
         LambdaQueryWrapper<MtUserCoupon> lambdaQueryWrapper = Wrappers.lambdaQuery();
         lambdaQueryWrapper.ne(MtUserCoupon::getStatus, StatusEnum.DISABLE.getKey());
-        if (StringUtil.isNotEmpty(status)) {
+        if (StringUtil.isNotBlank(mobile)) {
+            MtUser mtUser = memberService.queryMemberByMobile(Integer.parseInt(merchantId), mobile);
+            if (mtUser != null) {
+                userId = mtUser.getId().toString();
+            } else {
+                lambdaQueryWrapper.eq(MtUserCoupon::getUserId, -1);
+            }
+        }
+        if (StringUtil.isNotBlank(status)) {
             lambdaQueryWrapper.eq(MtUserCoupon::getStatus, status);
         }
-        if (StringUtil.isNotEmpty(userId)) {
+        if (StringUtil.isNotBlank(userId)) {
             lambdaQueryWrapper.eq(MtUserCoupon::getUserId, userId);
         }
-        if (StringUtil.isNotEmpty(userNo)) {
-            if (StringUtil.isEmpty(merchantId)) {
+        if (StringUtil.isNotBlank(userNo)) {
+            if (StringUtil.isBlank(merchantId)) {
                 merchantId = "0";
             }
             MtUser userInfo = memberService.queryMemberByUserNo(Integer.parseInt(merchantId), userNo);
@@ -449,7 +462,7 @@ public class UserCouponServiceImpl extends ServiceImpl<MtUserCouponMapper, MtUse
                 dto.setCode(userCouponDto.getCode());
                 dto.setCouponId(couponInfo.getId());
                 dto.setUseRule(couponInfo.getDescription());
-
+                dto.setContent(couponInfo.getContent());
                 String image = couponInfo.getImage();
                 String baseImage = settingService.getUploadBasePath();
                 dto.setImage(baseImage + image);

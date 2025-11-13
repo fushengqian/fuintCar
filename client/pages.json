@@ -27,7 +27,7 @@
       "path": "pages/index/index",
       "style": {
         "navigationBarTitleText": "首页",
-        "navigationBarBackgroundColor": "#409EFF",
+        "navigationBarBackgroundColor": "#373F64",
         "navigationBarTextStyle": "white",
         "enablePullDownRefresh": true
       }
@@ -36,7 +36,7 @@
       "path": "pages/category/index",
       "style": {
         "navigationBarTitleText": "微店",
-        "navigationBarBackgroundColor": "#409EFF",
+        "navigationBarBackgroundColor": "#373F64",
         "navigationBarTextStyle": "white"
       }
     },
@@ -236,7 +236,7 @@
       "style": {
         "navigationBarTitleText": "服务单详情",
         "navigationBarTextStyle": "white",
-        "navigationBarBackgroundColor": "#409EFF"
+        "navigationBarBackgroundColor": "#373F64"
       }
     },
     {
@@ -244,7 +244,7 @@
       "style": {
         "navigationBarTitleText": "订单详情",
         "navigationBarTextStyle": "white",
-        "navigationBarBackgroundColor": "#409EFF"
+        "navigationBarBackgroundColor": "#373F64"
       }
     },
     {

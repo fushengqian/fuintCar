@@ -22,9 +22,9 @@
       <view class="item">
         <text class="name">车辆类型：</text>
         <radio-group @change="radioChange">
-           <label class="radio-item"><radio class="radio" value="C" color="#409EFF" :checked="true"/>轿车</label>
-           <label class="radio-item"><radio class="radio" value="S" color="#409EFF" :checked="false"/>SUV</label>
-           <label class="radio-item"><radio class="radio" value="M" color="#409EFF" :checked="false"/>MPV</label>
+           <label class="radio-item"><radio class="radio" value="C" color="#373F64" :checked="true"/>轿车</label>
+           <label class="radio-item"><radio class="radio" value="S" color="#373F64" :checked="false"/>SUV</label>
+           <label class="radio-item"><radio class="radio" value="M" color="#373F64" :checked="false"/>MPV</label>
         </radio-group>
       </view>
     </view>

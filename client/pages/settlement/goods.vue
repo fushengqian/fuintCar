@@ -1,7 +1,7 @@
 <template>
   <view class="container p-bottom">
     <view class="flow-mode">
-        <selectSwitch :switchList="orderModeList" checked_bj_color="#409EFF" @change="switchMode"/> 
+        <selectSwitch :switchList="orderModeList" checked_bj_color="#373F64" @change="switchMode"/> 
     </view>
     <!-- 快递配送：配送地址 -->
     <view @click="onSelectAddress" v-if="orderMode == false" class="flow-delivery">
@@ -96,8 +96,8 @@
         <text class="flex-five">使用卡券抵扣：</text>
         <view class="flex-five t-r">
           <view v-if="couponList.length > 0" @click="handleShowPopup()">
-            <text class="col-m" v-if="useCouponInfo">-￥{{ useCouponInfo.amount }}</text>
-            <text class="col-m" v-else>共有卡券{{ couponList.length }}张</text>
+            <text class="col-m" v-if="couponAmount">-￥{{ couponAmount }}</text>
+            <text class="col-m" v-else>可用卡券{{ couponList.length }}张</text>
             <text class="right-arrow iconfont icon-arrow-right"></text>
           </view>
           <text v-else>无卡券可用</text>
@@ -111,7 +111,7 @@
         </view>
         <view class="flex-five dis-flex flex-x-end flex-y-center">
           <text class="points-money col-m">-￥{{ usePointAmount }}</text>
-          <u-switch v-model="isUsePoints" size="48" active-color="#409EFF" @change="getCartList()"></u-switch>
+          <u-switch v-model="isUsePoints" size="48" active-color="#373F64" @change="getCartList()"></u-switch>
         </view>
       </view>
      <!-- 会员折扣 -->
@@ -192,11 +192,13 @@
               <scroll-view :scroll-y="true" style="height: 565rpx;">
                 <view class="coupon-item" v-for="(item, index) in couponList" :key="index">
                   <view class="item-wrapper"
+                    v-if="item.status == 'A'"
                     :class="[item.status == 'A' ? 'color-default': 'color-gray']"
                     @click="handleSelectCoupon(index)">
                     <view class="coupon-type">{{ item.type }}</view>
                     <view class="tip dis-flex flex-dir-column flex-x-center">
-                      <text class="money">￥{{ item.amount }}</text>
+                      <text class="money" v-if="item.content != '2'">￥{{ item.amount }}</text>
+                      <text class="money" v-if="item.content == '2'">{{ (item.amount / 10).toFixed(2) }}折</text>
                       <text class="pay-line">{{ item.description }}</text>
                     </view>
                     <view class="split-line"></view>
@@ -308,6 +310,7 @@
         selectCouponId: 0,
         myPoint: 0,
         usePoint: 0,
+        couponAmount: 0,
         usePointAmount: 0.00,
         // 是否使用积分抵扣
         isUsePoints: true,
@@ -380,6 +383,7 @@
               }
               app.usePointAmount = result.data.usePointAmount;
               app.memberDiscount = result.data.memberDiscount ? result.data.memberDiscount : 0;
+              app.couponAmount = result.data.couponAmount ? result.data.couponAmount : 0;
               resolve(result);
             })
             .catch(err => reject(err))
