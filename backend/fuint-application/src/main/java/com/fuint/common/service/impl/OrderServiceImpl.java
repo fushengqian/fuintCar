@@ -425,7 +425,9 @@ public class OrderServiceImpl extends ServiceImpl<MtOrderMapper, MtOrder> implem
             mtOrder.setVerifyCode(SeqUtil.getRandomNumber(6));
         } else {
             mtOrder.setVerifyCode("");
-            mtOrder.setConfirmStatus(YesOrNoEnum.YES.getKey());
+            if (mtOrder.getPayStatus().equals(PayStatusEnum.SUCCESS.getKey())) {
+                mtOrder.setConfirmStatus(YesOrNoEnum.YES.getKey());
+            }
         }
 
         // 首先生成订单
@@ -1445,14 +1447,19 @@ public class OrderServiceImpl extends ServiceImpl<MtOrderMapper, MtOrder> implem
             return true;
         }
         OrderDto reqDto = new OrderDto();
+        Date nowDate = new Date();
         reqDto.setId(orderId);
         reqDto.setStatus(OrderStatusEnum.PAID.getKey());
         reqDto.setPayStatus(PayStatusEnum.SUCCESS.getKey());
         if (payAmount != null) {
             reqDto.setPayAmount(payAmount);
         }
-        reqDto.setPayTime(new Date());
-        reqDto.setUpdateTime(new Date());
+        if (mtOrder.getPlatform().equals(PlatformTypeEnum.PC.getCode())) {
+            reqDto.setConfirmStatus(YesOrNoEnum.YES.getKey());
+            reqDto.setConfirmTime(nowDate);
+        }
+        reqDto.setPayTime(nowDate);
+        reqDto.setUpdateTime(nowDate);
         updateOrder(reqDto);
 
         // 处理会员升级订单
