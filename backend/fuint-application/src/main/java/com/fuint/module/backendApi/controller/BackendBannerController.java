@@ -1,15 +1,14 @@
 package com.fuint.module.backendApi.controller;
 
 import com.fuint.common.dto.AccountInfo;
+import com.fuint.common.param.BannerPage;
 import com.fuint.common.service.StoreService;
 import com.fuint.common.util.TokenUtil;
 import com.fuint.framework.web.BaseController;
 import com.fuint.framework.web.ResponseObject;
-import com.fuint.common.Constants;
 import com.fuint.common.dto.BannerDto;
 import com.fuint.common.enums.StatusEnum;
 import com.fuint.common.service.SettingService;
-import com.fuint.framework.pagination.PaginationRequest;
 import com.fuint.framework.pagination.PaginationResponse;
 import com.fuint.framework.exception.BusinessCheckException;
 import com.fuint.common.service.BannerService;
@@ -60,35 +59,15 @@ public class BackendBannerController extends BaseController {
     @RequestMapping(value = "/list", method = RequestMethod.GET)
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('content:banner:list')")
-    public ResponseObject list(HttpServletRequest request) throws BusinessCheckException {
-        Integer page = request.getParameter("page") == null ? Constants.PAGE_NUMBER : Integer.parseInt(request.getParameter("page"));
-        Integer pageSize = request.getParameter("pageSize") == null ? Constants.PAGE_SIZE : Integer.parseInt(request.getParameter("pageSize"));
-        String title = request.getParameter("title");
-        String status = request.getParameter("status");
-        String searchStoreId = request.getParameter("storeId");
-
+    public ResponseObject list(HttpServletRequest request, @RequestBody BannerPage bannerPage) throws BusinessCheckException {
         AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
-        Integer storeId = accountInfo.getStoreId();
-
-        Map<String, Object> params = new HashMap<>();
         if (accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0) {
-            params.put("merchantId", accountInfo.getMerchantId());
+            bannerPage.setMerchantId(accountInfo.getMerchantId());
         }
-        if (StringUtil.isNotEmpty(title)) {
-            params.put("title", title);
+        if (accountInfo.getStoreId() != null && accountInfo.getStoreId() > 0) {
+            bannerPage.setStoreId(accountInfo.getStoreId());
         }
-        if (StringUtil.isNotEmpty(status)) {
-            params.put("status", status);
-        }
-        if (StringUtil.isNotEmpty(searchStoreId)) {
-            params.put("storeId", searchStoreId);
-        }
-        if (storeId != null && storeId > 0) {
-            params.put("storeId", storeId);
-        }
-
-        PaginationResponse<MtBanner> paginationResponse = bannerService.queryBannerListByPagination(new PaginationRequest(page, pageSize, params));
-
+        PaginationResponse<MtBanner> paginationResponse = bannerService.queryBannerListByPagination(bannerPage);
         List<MtStore> storeList = storeService.getMyStoreList(accountInfo.getMerchantId(), accountInfo.getStoreId(), StatusEnum.ENABLED.getKey());
 
         Map<String, Object> result = new HashMap<>();
@@ -133,37 +112,20 @@ public class BackendBannerController extends BaseController {
     @RequestMapping(value = "/save", method = RequestMethod.POST)
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('content:banner:add')")
-    public ResponseObject saveHandler(HttpServletRequest request, @RequestBody Map<String, Object> params) throws BusinessCheckException {
-        String id = params.get("id") == null ? "" : params.get("id").toString();
-        String title = params.get("title") == null ? "" : params.get("title").toString();
-        String description = params.get("description") == null ? "" : params.get("description").toString();
-        String image = params.get("image") == null ? "" : params.get("image").toString();
-        String url = params.get("url") == null ? "" : params.get("url").toString();
-        String status = params.get("status") == null ? StatusEnum.ENABLED.getKey() : params.get("status").toString();
-        String storeId = params.get("storeId") == null ? "0" : params.get("storeId").toString();
-        String sort = params.get("sort") == null ? "0" : params.get("sort").toString();
-
+    public ResponseObject saveHandler(HttpServletRequest request, @RequestBody BannerDto bannerDto) throws BusinessCheckException {
         AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
-
-        BannerDto bannerDto = new BannerDto();
-        bannerDto.setTitle(title);
-        bannerDto.setDescription(description);
-        bannerDto.setImage(image);
-        bannerDto.setUrl(url);
         bannerDto.setOperator(accountInfo.getAccountName());
-        bannerDto.setStatus(status);
-        bannerDto.setStoreId(Integer.parseInt(storeId));
-        bannerDto.setSort(Integer.parseInt(sort));
         if (accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0) {
             bannerDto.setMerchantId(accountInfo.getMerchantId());
         }
-        if (StringUtil.isNotEmpty(id)) {
-            bannerDto.setId(Integer.parseInt(id));
+        if (accountInfo.getStoreId() != null && accountInfo.getStoreId() > 0) {
+            bannerDto.setStoreId(accountInfo.getStoreId());
+        }
+        if (bannerDto.getId() != null && bannerDto.getId() > 0) {
             bannerService.updateBanner(bannerDto);
         } else {
             bannerService.addBanner(bannerDto);
         }
-
         return getSuccessResult(true);
     }
 
