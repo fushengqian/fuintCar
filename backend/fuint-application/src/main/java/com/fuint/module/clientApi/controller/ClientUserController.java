@@ -97,7 +97,7 @@ public class ClientUserController extends BaseController {
         String isWechat = request.getHeader("isWechat") == null ? YesOrNoEnum.NO.getKey() : request.getHeader("isWechat");
         String platform = request.getHeader("platform") == null ? "" : request.getHeader("platform");
         String userNo = request.getParameter("code") == null ? "" : request.getParameter("code");
-        UserInfo loginInfo = TokenUtil.getUserInfoByToken(request.getHeader("Access-Token"));
+        UserInfo loginInfo = TokenUtil.getUserInfo();
 
         Integer merchantId = merchantService.getMerchantId(merchantNo);
 
@@ -181,7 +181,7 @@ public class ClientUserController extends BaseController {
     @CrossOrigin
     public ResponseObject asset(HttpServletRequest request) throws BusinessCheckException {
         String userId = request.getParameter("userId");
-        UserInfo mtUser = TokenUtil.getUserInfoByToken(request.getHeader("Access-Token"));
+        UserInfo mtUser = TokenUtil.getUserInfo();
 
         if (StringUtil.isNotEmpty(userId)) {
             MtUser userInfo = memberService.queryMemberById(Integer.parseInt(userId));
@@ -270,7 +270,7 @@ public class ClientUserController extends BaseController {
         String verifyCode = memberInfo.getVerifyCode();
         String mobile = "";
         Integer merchantId = merchantService.getMerchantId(merchantNo);
-        UserInfo userInfo = TokenUtil.getUserInfoByToken(request.getHeader("Access-Token"));
+        UserInfo userInfo = TokenUtil.getUserInfo();
         boolean modifyPassword = false;
         if (userInfo == null) {
             return getFailureResult(1001);
@@ -334,7 +334,7 @@ public class ClientUserController extends BaseController {
     public ResponseObject defaultStore(HttpServletRequest request) throws BusinessCheckException {
         Integer storeId = request.getParameter("storeId") == null ? 0 : Integer.parseInt(request.getParameter("storeId"));
 
-        UserInfo userInfo = TokenUtil.getUserInfoByToken(request.getHeader("Access-Token"));
+        UserInfo userInfo = TokenUtil.getUserInfo();
         if (userInfo != null && storeId > 0) {
             MtUser mtUser = memberService.queryMemberById(userInfo.getId());
             memberService.updateMember(mtUser, false);
@@ -351,7 +351,7 @@ public class ClientUserController extends BaseController {
     @RequestMapping(value = "/qrCode", method = RequestMethod.GET)
     @CrossOrigin
     public ResponseObject qrCode(HttpServletRequest request) throws BusinessCheckException {
-        UserInfo loginInfo = TokenUtil.getUserInfoByToken(request.getHeader("Access-Token"));
+        UserInfo loginInfo = TokenUtil.getUserInfo();
         MtUser mtUser = memberService.queryMemberById(loginInfo.getId());
         String qrCode = "";
         try {

@@ -91,7 +91,7 @@ public class BackendCouponController extends BaseController {
         String type = request.getParameter("type") == null ? "" : request.getParameter("type");
         String status = request.getParameter("status") == null ? "" : request.getParameter("status");
 
-        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
+        AccountInfo accountInfo = TokenUtil.getAccountInfo();
         Map<String, Object> params = new HashMap<>();
         if (accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0) {
             params.put("merchantId", accountInfo.getMerchantId());
@@ -194,8 +194,8 @@ public class BackendCouponController extends BaseController {
     @RequestMapping(value = "/delete/{id}", method = RequestMethod.GET)
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('coupon:coupon:index')")
-    public ResponseObject delete(HttpServletRequest request, @PathVariable("id") Long id) throws BusinessCheckException {
-        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
+    public ResponseObject delete(@PathVariable("id") Long id) throws BusinessCheckException {
+        AccountInfo accountInfo = TokenUtil.getAccountInfo();
         couponService.deleteCoupon(id, accountInfo.getAccountName());
         return getSuccessResult(true);
     }
@@ -207,8 +207,8 @@ public class BackendCouponController extends BaseController {
     @RequestMapping(value = "/save", method = RequestMethod.POST)
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('coupon:coupon:add')")
-    public ResponseObject saveCouponHandler(HttpServletRequest request, @RequestBody ReqCouponDto reqCouponDto) throws BusinessCheckException,ParseException {
-        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
+    public ResponseObject saveCouponHandler(@RequestBody ReqCouponDto reqCouponDto) throws BusinessCheckException,ParseException {
+        AccountInfo accountInfo = TokenUtil.getAccountInfo();
         reqCouponDto.setOperator(accountInfo.getAccountName());
 
         // 同一分组内卡券名称不能重复
@@ -328,8 +328,8 @@ public class BackendCouponController extends BaseController {
     @RequestMapping(value = "/sendCoupon", method = RequestMethod.POST)
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('coupon:coupon:index')")
-    public ResponseObject sendCoupon(HttpServletRequest request, @RequestBody SendCouponParam param) throws BusinessCheckException {
-        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
+    public ResponseObject sendCoupon(@RequestBody SendCouponParam param) throws BusinessCheckException {
+        AccountInfo accountInfo = TokenUtil.getAccountInfo();
         String mobile = param.getMobile();
         String num = param.getNum();
         String couponId = param.getCouponId();

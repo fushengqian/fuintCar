@@ -72,7 +72,7 @@ public class ClientShareController extends BaseController {
         Integer pageSize = param.getPageSize() == null ? Constants.PAGE_SIZE : param.getPageSize();
         String merchantNo = request.getHeader("merchantNo") == null ? "" : request.getHeader("merchantNo");
 
-        UserInfo userInfo = TokenUtil.getUserInfoByToken(request.getHeader("Access-Token"));
+        UserInfo userInfo = TokenUtil.getUserInfo();
         if (userInfo == null) {
             return getFailureResult(1001);
         }
@@ -102,7 +102,7 @@ public class ClientShareController extends BaseController {
     @CrossOrigin
     public ResponseObject getMiniAppLink(HttpServletRequest request, @RequestBody Map<String, Object> param) throws BusinessCheckException {
         String merchantNo = request.getHeader("merchantNo") == null ? "" : request.getHeader("merchantNo");
-        UserInfo mtUser = TokenUtil.getUserInfoByToken(request.getHeader("Access-Token"));
+        UserInfo mtUser = TokenUtil.getUserInfo();
 
         String path = param.get("path") == null ? "" : param.get("path").toString();
         String query = param.get("query") == null ? "" : param.get("query").toString();

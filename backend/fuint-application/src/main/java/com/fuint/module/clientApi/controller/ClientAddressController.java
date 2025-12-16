@@ -52,7 +52,7 @@ public class ClientAddressController extends BaseController {
     @ApiOperation(value="保存收货地址", notes="保存会员的收货地址")
     @RequestMapping(value = "/save", method = RequestMethod.POST)
     @CrossOrigin
-    public ResponseObject save(HttpServletRequest request, @RequestBody AddressRequest address) throws BusinessCheckException {
+    public ResponseObject save(@RequestBody AddressRequest address) throws BusinessCheckException {
         String name = address.getName() == null ? "" : address.getName();
         String mobile = address.getMobile() == null ? "" : address.getMobile();
         Integer provinceId = address.getProvinceId() == null ? 0 : address.getProvinceId();
@@ -63,7 +63,7 @@ public class ClientAddressController extends BaseController {
         String isDefault = address.getIsDefault() == null ? "" : address.getIsDefault();
         Integer addressId = address.getAddressId() == null ? 0 : address.getAddressId();
 
-        UserInfo mtUser = TokenUtil.getUserInfoByToken(request.getHeader("Access-Token"));
+        UserInfo mtUser = TokenUtil.getUserInfo();
         if (null == mtUser) {
             return getFailureResult(1001);
         }
@@ -91,11 +91,11 @@ public class ClientAddressController extends BaseController {
     @ApiOperation(value="获取个人收货地址列表", notes="获取个人收货地址列表")
     @RequestMapping(value = "/list", method = RequestMethod.GET)
     @CrossOrigin
-    public ResponseObject list(HttpServletRequest request) throws BusinessCheckException, InvocationTargetException, IllegalAccessException {
+    public ResponseObject list() throws BusinessCheckException, InvocationTargetException, IllegalAccessException {
         Map<String, Object> result = new HashMap<>();
         Map<String, Object> param = new HashMap<>();
 
-        UserInfo mtUser = TokenUtil.getUserInfoByToken(request.getHeader("Access-Token"));
+        UserInfo mtUser = TokenUtil.getUserInfo();
         if (null == mtUser) {
             return getFailureResult(1001);
         } else {
@@ -159,7 +159,7 @@ public class ClientAddressController extends BaseController {
         }
 
         Map<String, Object> result = new HashMap<>();
-        UserInfo mtUser = TokenUtil.getUserInfoByToken(request.getHeader("Access-Token"));
+        UserInfo mtUser = TokenUtil.getUserInfo();
         if (null == mtUser || StringUtil.isEmpty(token)) {
             return getFailureResult(1001);
         }

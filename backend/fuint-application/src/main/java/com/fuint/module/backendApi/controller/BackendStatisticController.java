@@ -20,7 +20,6 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-import javax.servlet.http.HttpServletRequest;
 import java.math.BigDecimal;
 import java.text.ParseException;
 import java.util.*;
@@ -63,7 +62,7 @@ public class BackendStatisticController extends BaseController {
     @ApiOperation(value = "数据概况")
     @RequestMapping(value = "/main", method = RequestMethod.POST)
     @CrossOrigin
-    public ResponseObject main(HttpServletRequest request, @RequestBody StatisticParam param) throws BusinessCheckException, ParseException {
+    public ResponseObject main(@RequestBody StatisticParam param) throws BusinessCheckException, ParseException {
         String startTimeStr = param.getStartTime();
         String endTimeStr = param.getEndTime();
         Integer storeId = param.getStoreId();
@@ -71,7 +70,7 @@ public class BackendStatisticController extends BaseController {
         Date startTime = StringUtil.isNotEmpty(startTimeStr) ? DateUtil.parseDate(startTimeStr) : null;
         Date endTime = StringUtil.isNotEmpty(endTimeStr) ? DateUtil.parseDate(endTimeStr) : null;
 
-        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
+        AccountInfo accountInfo = TokenUtil.getAccountInfo();
         Integer merchantId = accountInfo.getMerchantId();
         if (accountInfo.getStoreId() != null && accountInfo.getStoreId() > 0) {
             storeId = accountInfo.getStoreId();
@@ -130,7 +129,7 @@ public class BackendStatisticController extends BaseController {
     @ApiOperation(value = "排行榜数据")
     @RequestMapping(value = "/top", method = RequestMethod.POST)
     @CrossOrigin
-    public ResponseObject top(HttpServletRequest request, @RequestBody StatisticParam param) throws ParseException {
+    public ResponseObject top(@RequestBody StatisticParam param) throws ParseException {
         String startTimeStr = param.getStartTime();
         String endTimeStr = param.getEndTime();
         Integer storeId = param.getStoreId();
@@ -138,7 +137,7 @@ public class BackendStatisticController extends BaseController {
         Date startTime = StringUtil.isNotEmpty(startTimeStr) ? DateUtil.parseDate(startTimeStr) : null;
         Date endTime = StringUtil.isNotEmpty(endTimeStr) ? DateUtil.parseDate(endTimeStr) : null;
 
-        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
+        AccountInfo accountInfo = TokenUtil.getAccountInfo();
 
         Integer merchantId = accountInfo.getMerchantId();
         if (accountInfo.getStoreId() != null && accountInfo.getStoreId() > 0) {
@@ -161,8 +160,8 @@ public class BackendStatisticController extends BaseController {
     @ApiOperation(value = "获取会员数量")
     @RequestMapping(value = "/totalMember", method = RequestMethod.GET)
     @CrossOrigin
-    public ResponseObject totalMember(HttpServletRequest request) throws BusinessCheckException {
-        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
+    public ResponseObject totalMember() throws BusinessCheckException {
+        AccountInfo accountInfo = TokenUtil.getAccountInfo();
 
         Integer merchantId = accountInfo.getMerchantId();
         Integer storeId = accountInfo.getStoreId();

@@ -52,7 +52,7 @@ public class BackendSmsTemplateController extends BaseController {
         String name = request.getParameter("content") == null ? "" : request.getParameter("content");
         String code = request.getParameter("code") == null ? "" : request.getParameter("code");
 
-        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
+        AccountInfo accountInfo = TokenUtil.getAccountInfo();
         Map<String, Object> searchParams = new HashMap<>();
         if (accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0) {
             searchParams.put("merchantId", accountInfo.getMerchantId());
@@ -78,8 +78,8 @@ public class BackendSmsTemplateController extends BaseController {
     @RequestMapping(value = "/save", method = RequestMethod.POST)
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('smsTemplate:edit')")
-    public ResponseObject saveHandler(HttpServletRequest request, @RequestBody SmsTemplateDto smsTemplateDto) throws BusinessCheckException {
-        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
+    public ResponseObject saveHandler(@RequestBody SmsTemplateDto smsTemplateDto) throws BusinessCheckException {
+        AccountInfo accountInfo = TokenUtil.getAccountInfo();
         smsTemplateDto.setMerchantId(accountInfo.getMerchantId());
         smsTemplateService.saveSmsTemplate(smsTemplateDto);
         return getSuccessResult(true);
@@ -92,8 +92,8 @@ public class BackendSmsTemplateController extends BaseController {
     @RequestMapping(value = "/info/{id}", method = RequestMethod.GET)
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('smsTemplate:index')")
-    public ResponseObject info(HttpServletRequest request, @PathVariable("id") Long id) throws BusinessCheckException {
-        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
+    public ResponseObject info(@PathVariable("id") Long id) throws BusinessCheckException {
+        AccountInfo accountInfo = TokenUtil.getAccountInfo();
 
         MtSmsTemplate mtSmsTemplate = smsTemplateService.querySmsTemplateById(id.intValue());
         if (accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0) {
@@ -115,8 +115,8 @@ public class BackendSmsTemplateController extends BaseController {
     @RequestMapping(value = "/delete/{id}", method = RequestMethod.GET)
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('smsTemplate:edit')")
-    public ResponseObject delete(HttpServletRequest request, @PathVariable("id") Integer id) throws BusinessCheckException {
-        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
+    public ResponseObject delete(@PathVariable("id") Integer id) throws BusinessCheckException {
+        AccountInfo accountInfo = TokenUtil.getAccountInfo();
         MtSmsTemplate mtSmsTemplate = smsTemplateService.querySmsTemplateById(id.intValue());
         if (accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0 && !mtSmsTemplate.getMerchantId().equals(accountInfo.getMerchantId())) {
             return getFailureResult(1004);

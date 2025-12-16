@@ -46,8 +46,7 @@ public class VehicleServiceImpl extends ServiceImpl<MtVehicleMapper, MtVehicle> 
     @Override
     @OperationServiceLog(description = "查询用户车辆列表")
     public PaginationResponse<VehicleDto> getUserVehicleListByPagination(HttpServletRequest request) throws BusinessCheckException {
-        String token = request.getHeader("Access-Token");
-        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
+        AccountInfo accountInfo = TokenUtil.getAccountInfo();
 
         String userNo = request.getParameter("userNo");
         String mobile = request.getParameter("mobile");

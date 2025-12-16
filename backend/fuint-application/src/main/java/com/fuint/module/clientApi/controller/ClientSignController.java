@@ -377,8 +377,7 @@ public class ClientSignController extends BaseController {
     @RequestMapping(value = "/doGetUserInfo", method = RequestMethod.POST)
     @CrossOrigin
     public ResponseObject doGetUserInfo(HttpServletRequest request) {
-        String token = request.getHeader("Access-Token");
-        UserInfo userInfo = TokenUtil.getUserInfoByToken(request.getHeader("Access-Token"));
+        UserInfo userInfo = TokenUtil.getUserInfo();
         if (userInfo == null) {
             return getFailureResult(1001, "用户没登录!");
         }

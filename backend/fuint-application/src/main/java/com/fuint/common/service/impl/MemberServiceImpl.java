@@ -157,7 +157,7 @@ public class MemberServiceImpl extends ServiceImpl<MtUserMapper, MtUser> impleme
         MtUser mtUser = null;
 
         // 没有会员信息，则查询是否是后台收银员下单
-        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
+        AccountInfo accountInfo = TokenUtil.getAccountInfo();
         if (accountInfo != null) {
             // 输入了会员ID就用会员的账号下单，否则用员工账号下单
             if (userId != null && userId > 0) {
@@ -532,6 +532,7 @@ public class MemberServiceImpl extends ServiceImpl<MtUserMapper, MtUser> impleme
         mtUser.setMerchantId(merchantId);
         mtUser.setStoreId(0);
         mtUser.setSource(MemberSourceEnum.MOBILE_LOGIN.getKey());
+        mtUser.setIsStaff(YesOrNoEnum.NO.getKey());
         mtUserMapper.insert(mtUser);
         mtUser = queryMemberByMobile(merchantId, mobile);
 
@@ -623,6 +624,9 @@ public class MemberServiceImpl extends ServiceImpl<MtUserMapper, MtUser> impleme
                         updateById(mtUser);
                     }
                 }
+            }
+            if (mtUser.getIsStaff() == null) {
+                mtUser.setIsStaff(YesOrNoEnum.NO.getKey());
             }
         }
         return mtUser;

@@ -58,7 +58,7 @@ public class BackendFileController extends BaseController {
     @CrossOrigin
     public ResponseObject uploadFileLocal(HttpServletRequest request) {
         String action = request.getParameter("action") == null ? "" : request.getParameter("action");
-        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
+        AccountInfo accountInfo = TokenUtil.getAccountInfo();
 
         if (action.equals("config")) {
             Map<String, Object> outParams = new HashMap();

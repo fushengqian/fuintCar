@@ -82,7 +82,7 @@ public class BackendUserCouponController extends BaseController {
         Integer page = request.getParameter("page") == null ? Constants.PAGE_NUMBER : Integer.parseInt(request.getParameter("page"));
         Integer pageSize = request.getParameter("pageSize") == null ? Constants.PAGE_SIZE : Integer.parseInt(request.getParameter("pageSize"));
 
-        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
+        AccountInfo accountInfo = TokenUtil.getAccountInfo();
 
         Map<String, Object> param = new HashMap<>();
         param.put("pageNumber", page);
@@ -138,7 +138,7 @@ public class BackendUserCouponController extends BaseController {
             throw new BusinessCheckException("错误，用户卡券不存在！");
         }
 
-        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
+        AccountInfo accountInfo = TokenUtil.getAccountInfo();
         Integer storeId = accountInfo.getStoreId();
 
         BigDecimal confirmAmount = mtUserCoupon.getAmount();
@@ -157,8 +157,8 @@ public class BackendUserCouponController extends BaseController {
     @RequestMapping(value = "/delete/{id}", method = RequestMethod.GET)
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('coupon:userCoupon:delete')")
-    public ResponseObject delete(HttpServletRequest request, @PathVariable("id") Integer id) throws BusinessCheckException {
-        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
+    public ResponseObject delete(@PathVariable("id") Integer id) throws BusinessCheckException {
+        AccountInfo accountInfo = TokenUtil.getAccountInfo();
 
         // 删除会员的卡券
         couponService.deleteUserCoupon(id, accountInfo.getAccountName());
@@ -198,7 +198,7 @@ public class BackendUserCouponController extends BaseController {
         String status = request.getParameter("status") == null ? "" : request.getParameter("status");
         String userCouponId = request.getParameter("id") == null ? "" : request.getParameter("id");
 
-        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getParameter("token"));
+        AccountInfo accountInfo = TokenUtil.getAccountInfo();
         if (accountInfo == null) {
             return;
         }

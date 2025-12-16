@@ -96,7 +96,7 @@ public class ClientUserCouponController extends BaseController {
             return getFailureResult(1004);
         }
 
-        UserInfo mtUser = TokenUtil.getUserInfoByToken(request.getHeader("Access-Token"));
+        UserInfo mtUser = TokenUtil.getUserInfo();
         if (null == mtUser) {
             return getFailureResult(1001);
         }
@@ -145,34 +145,34 @@ public class ClientUserCouponController extends BaseController {
             String qrCode = new String(Base64Util.baseEncode(out.toByteArray()), "UTF-8");
             qrCode = "data:image/jpg;base64," + qrCode;
 
-            UserCouponDto result = new UserCouponDto();
-            result.setName(couponInfo.getName());
-            result.setQrCode(qrCode);
+            UserCouponDto userCouponDto = new UserCouponDto();
+            userCouponDto.setName(couponInfo.getName());
+            userCouponDto.setQrCode(qrCode);
 
             String baseImage = settingService.getUploadBasePath();
-            result.setImage(baseImage + couponInfo.getImage());
-
-            result.setId(userCouponId);
-            result.setDescription(couponInfo.getDescription());
-            result.setCouponId(couponInfo.getId());
-            result.setType(couponInfo.getType());
-            result.setUseRule(couponInfo.getOutRule());
+            userCouponDto.setImage(baseImage + couponInfo.getImage());
+            userCouponDto.setContent(couponInfo.getContent());
+            userCouponDto.setId(userCouponId);
+            userCouponDto.setDescription(couponInfo.getDescription());
+            userCouponDto.setCouponId(couponInfo.getId());
+            userCouponDto.setType(couponInfo.getType());
+            userCouponDto.setUseRule(couponInfo.getOutRule());
             String effectiveDate;
             if (couponInfo.getExpireType().equals(CouponExpireTypeEnum.FIX.getKey())) {
                 effectiveDate = DateUtil.formatDate(couponInfo.getEndTime(), "yyyy.MM.dd HH:mm");
             } else {
                 effectiveDate = DateUtil.formatDate(userCoupon.getExpireTime(), "yyyy.MM.dd HH:mm");
             }
-            result.setEffectiveDate(effectiveDate);
-            result.setCode(userCoupon.getCode());
-            result.setAmount(userCoupon.getAmount());
-            result.setBalance(userCoupon.getBalance());
-            result.setStatus(userCoupon.getStatus());
-            result.setIsGive(couponInfo.getIsGive());
+            userCouponDto.setEffectiveDate(effectiveDate);
+            userCouponDto.setCode(userCoupon.getCode());
+            userCouponDto.setAmount(userCoupon.getAmount());
+            userCouponDto.setBalance(userCoupon.getBalance());
+            userCouponDto.setStatus(userCoupon.getStatus());
+            userCouponDto.setIsGive(couponInfo.getIsGive());
 
             // 适用店铺
             String storeNames = storeService.getStoreNames(couponInfo.getStoreIds());
-            result.setStoreNames(storeNames);
+            userCouponDto.setStoreNames(storeNames);
 
             // 如果是计次卡，获取核销列表
             if (couponInfo.getType().equals(CouponTypeEnum.TIMER.getKey())) {
@@ -181,11 +181,11 @@ public class ClientUserCouponController extends BaseController {
                 }
                 List<MtConfirmLog> confirmLogs = confirmLogService.getConfirmList(userCouponId);
                 Long confirmCount = confirmLogService.getConfirmNum(userCouponId);
-                result.setConfirmCount(confirmCount.intValue());
-                result.setConfirmLogs(confirmLogs);
+                userCouponDto.setConfirmCount(confirmCount.intValue());
+                userCouponDto.setConfirmLogs(confirmLogs);
             }
 
-            responseObject = getSuccessResult(result);
+            responseObject = getSuccessResult(userCouponDto);
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
             responseObject = getSuccessResult(201, "生成二维码异常", "");

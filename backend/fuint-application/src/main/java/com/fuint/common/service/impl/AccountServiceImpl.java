@@ -185,8 +185,7 @@ public class AccountServiceImpl extends ServiceImpl<TAccountMapper, TAccount> im
      * */
     @Override
     public TAccount getAccountInfoById(Integer userId) {
-        TAccount tAccount = tAccountMapper.selectById(userId);
-        return tAccount;
+        return tAccountMapper.selectById(userId);
     }
 
     /**

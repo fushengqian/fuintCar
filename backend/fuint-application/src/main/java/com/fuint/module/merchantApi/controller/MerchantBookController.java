@@ -2,12 +2,12 @@ package com.fuint.module.merchantApi.controller;
 
 import com.fuint.common.dto.UserInfo;
 import com.fuint.common.enums.BookStatusEnum;
+import com.fuint.common.param.BookItemPage;
 import com.fuint.common.service.BookItemService;
 import com.fuint.common.service.MemberService;
 import com.fuint.common.service.StaffService;
 import com.fuint.common.util.TokenUtil;
 import com.fuint.framework.exception.BusinessCheckException;
-import com.fuint.framework.pagination.PaginationRequest;
 import com.fuint.framework.pagination.PaginationResponse;
 import com.fuint.framework.web.BaseController;
 import com.fuint.framework.web.ResponseObject;
@@ -22,7 +22,6 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-import javax.servlet.http.HttpServletRequest;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -59,26 +58,26 @@ public class MerchantBookController extends BaseController {
     @ApiOperation(value = "获取预约单列表")
     @RequestMapping(value = "/list", method = RequestMethod.POST)
     @CrossOrigin
-    public ResponseObject list(HttpServletRequest request, @RequestBody BookListRequest requestParams) throws BusinessCheckException {
-        UserInfo userInfo = TokenUtil.getUserInfoByToken(request.getHeader("Access-Token"));
+    public ResponseObject list(@RequestBody BookListRequest requestParams) throws BusinessCheckException {
+        UserInfo userInfo = TokenUtil.getUserInfo();
 
         MtUser mtUser = memberService.queryMemberById(userInfo.getId());
         MtStaff staffInfo = staffService.queryStaffByMobile(mtUser.getMobile());
-        Map<String, Object> params = new HashMap<>();
+        BookItemPage bookItemPage = new BookItemPage();
 
         if (staffInfo == null) {
             return getFailureResult(1004);
         } else {
-            params.put("merchantId", staffInfo.getMerchantId());
+            bookItemPage.setMerchantId(staffInfo.getMerchantId());
             if (staffInfo.getStoreId() > 0) {
-                params.put("storeId", staffInfo.getStoreId());
+                bookItemPage.setStoreId(staffInfo.getStoreId());
             }
         }
         if (StringUtil.isNotEmpty(requestParams.getStatus())) {
-            params.put("status", requestParams.getStatus());
+            bookItemPage.setStatus(requestParams.getStatus());
         }
 
-        PaginationResponse paginationResponse = bookItemService.queryBookItemListByPagination(new PaginationRequest(requestParams.getPage(), requestParams.getPageSize(), params));
+        PaginationResponse paginationResponse = bookItemService.queryBookItemListByPagination(bookItemPage);
 
         Map<String, Object> result = new HashMap<>();
         result.put("content", paginationResponse.getContent());
@@ -97,8 +96,8 @@ public class MerchantBookController extends BaseController {
     @ApiOperation(value = "获取预约单详情")
     @RequestMapping(value = "/detail", method = RequestMethod.POST)
     @CrossOrigin
-    public ResponseObject detail(HttpServletRequest request, @RequestBody BookDetailParam param) throws BusinessCheckException {
-        UserInfo userInfo = TokenUtil.getUserInfoByToken(request.getHeader("Access-Token"));
+    public ResponseObject detail(@RequestBody BookDetailParam param) throws BusinessCheckException {
+        UserInfo userInfo = TokenUtil.getUserInfo();
 
         MtUser mtUser = memberService.queryMemberById(userInfo.getId());
         MtStaff mtStaff = staffService.queryStaffByMobile(mtUser.getMobile());
@@ -121,8 +120,8 @@ public class MerchantBookController extends BaseController {
     @ApiOperation(value = "取消预约")
     @RequestMapping(value = "/cancel", method = RequestMethod.POST)
     @CrossOrigin
-    public ResponseObject cancel(HttpServletRequest request, @RequestBody BookDetailParam param) throws BusinessCheckException {
-        UserInfo mtUser = TokenUtil.getUserInfoByToken(request.getHeader("Access-Token"));
+    public ResponseObject cancel(@RequestBody BookDetailParam param) throws BusinessCheckException {
+        UserInfo mtUser = TokenUtil.getUserInfo();
 
         Integer bookId = param.getBookId();
         if (bookId == null) {
@@ -151,8 +150,8 @@ public class MerchantBookController extends BaseController {
     @ApiOperation(value = "确定预约")
     @RequestMapping(value = "/confirm", method = RequestMethod.POST)
     @CrossOrigin
-    public ResponseObject confirm(HttpServletRequest request, @RequestBody BookConfirmParam param) throws BusinessCheckException {
-        UserInfo mtUser = TokenUtil.getUserInfoByToken(request.getHeader("Access-Token"));
+    public ResponseObject confirm(@RequestBody BookConfirmParam param) throws BusinessCheckException {
+        UserInfo mtUser = TokenUtil.getUserInfo();
 
         Integer bookId = param.getBookId();
         MtBookItem bookItem = bookItemService.getBookItemById(bookId);

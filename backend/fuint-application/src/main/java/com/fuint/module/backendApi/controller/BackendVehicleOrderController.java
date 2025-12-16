@@ -58,7 +58,7 @@ public class BackendVehicleOrderController extends BaseController {
         String startTime = request.getParameter("startTime");
         String endTime = request.getParameter("endTime");
 
-        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
+        AccountInfo accountInfo = TokenUtil.getAccountInfo();
         Map<String, Object> params = new HashMap<>();
         params.put("userId", userId);
         params.put("vehiclePlateNo", vehiclePlateNo);
@@ -89,8 +89,8 @@ public class BackendVehicleOrderController extends BaseController {
     @ApiOperation(value="查询车辆服务单", notes="查询车辆服务单")
     @RequestMapping(value = "/info/{id}", method = RequestMethod.GET)
     @CrossOrigin
-    public ResponseObject info(HttpServletRequest request, @PathVariable("id") Integer id) throws BusinessCheckException {
-        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
+    public ResponseObject info(@PathVariable("id") Integer id) throws BusinessCheckException {
+        AccountInfo accountInfo = TokenUtil.getAccountInfo();
         MtVehicleOrder mtVehicleOrder = vehicleOrderService.getVehicleOrderById(id);
         if (!accountInfo.getMerchantId().equals(mtVehicleOrder.getMerchantId())) {
             return getFailureResult(201, "您没有操作权限");
@@ -101,8 +101,8 @@ public class BackendVehicleOrderController extends BaseController {
     @ApiOperation(value="更新服务单信息", notes="更新车辆服务单信息")
     @RequestMapping(value = "/update", method = RequestMethod.POST)
     @CrossOrigin
-    public ResponseObject update(HttpServletRequest request, @RequestBody Map<String, String> param) {
-        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
+    public ResponseObject update(@RequestBody Map<String, String> param) {
+        AccountInfo accountInfo = TokenUtil.getAccountInfo();
 
         String orderId = param.get("orderId");
         String remark = param.get("remark");
@@ -126,11 +126,11 @@ public class BackendVehicleOrderController extends BaseController {
     @ApiOperation(value = "更新车辆服务单状态")
     @RequestMapping(value = "/updateStatus", method = RequestMethod.POST)
     @CrossOrigin
-    public ResponseObject updateStatus(HttpServletRequest request, @RequestBody Map<String, String> param) throws BusinessCheckException {
+    public ResponseObject updateStatus(@RequestBody Map<String, String> param) throws BusinessCheckException {
         Integer vehicleId = param.get("vehicleId") == null ? 0 : Integer.parseInt(param.get("vehicleId"));
         String status = param.get("status") == null ? StatusEnum.ENABLED.getKey() : param.get("status");
 
-        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
+        AccountInfo accountInfo = TokenUtil.getAccountInfo();
         MtVehicleOrder mtVehicleOrder = vehicleOrderService.getVehicleOrderById(vehicleId);
         if (mtVehicleOrder == null) {
             return getFailureResult(201, "服务单不存在");
@@ -149,8 +149,8 @@ public class BackendVehicleOrderController extends BaseController {
     @ApiOperation(value = "删除车辆服务单", notes = "删除车辆服务单")
     @RequestMapping(value = "/delete/{id}", method = RequestMethod.GET)
     @CrossOrigin
-    public ResponseObject delete(HttpServletRequest request, @PathVariable("id") Integer id) throws BusinessCheckException {
-        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
+    public ResponseObject delete(@PathVariable("id") Integer id) throws BusinessCheckException {
+        AccountInfo accountInfo = TokenUtil.getAccountInfo();
         MtVehicleOrder mtVehicleOrder = vehicleOrderService.getVehicleOrderById(id);
         if (!accountInfo.getMerchantId().equals(mtVehicleOrder.getMerchantId())) {
             return getFailureResult(201, "您没有操作权限");

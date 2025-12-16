@@ -52,8 +52,8 @@ public class ClientRefundController extends BaseController {
     @ApiOperation(value = "获取售后订单列表")
     @RequestMapping(value = "/list", method = RequestMethod.GET)
     @CrossOrigin
-    public ResponseObject list(HttpServletRequest request, @ModelAttribute  RefundListRequest param) throws BusinessCheckException {
-        UserInfo userInfo = TokenUtil.getUserInfoByToken(request.getHeader("Access-Token"));
+    public ResponseObject list(@ModelAttribute  RefundListRequest param) throws BusinessCheckException {
+        UserInfo userInfo = TokenUtil.getUserInfo();
         param.setUserId(userInfo.getId());
 
         String status = param.getStatus() != null ? param.getStatus() : "";
@@ -79,8 +79,8 @@ public class ClientRefundController extends BaseController {
     @ApiOperation(value = "售后订单提交")
     @RequestMapping(value = "/submit", method = RequestMethod.POST)
     @CrossOrigin
-    public ResponseObject submit(HttpServletRequest request, @RequestBody RefundSubmitRequest param) throws BusinessCheckException {
-        UserInfo mtUser = TokenUtil.getUserInfoByToken(request.getHeader("Access-Token"));
+    public ResponseObject submit(@RequestBody RefundSubmitRequest param) throws BusinessCheckException {
+        UserInfo mtUser = TokenUtil.getUserInfo();
         param.setUserId(mtUser.getId());
 
         Integer orderId = param.getOrderId() == null ? 0 : param.getOrderId();
@@ -126,7 +126,7 @@ public class ClientRefundController extends BaseController {
     @RequestMapping(value = "/detail", method = RequestMethod.GET)
     @CrossOrigin
     public ResponseObject detail(HttpServletRequest request) throws BusinessCheckException {
-        UserInfo mtUser = TokenUtil.getUserInfoByToken(request.getHeader("Access-Token"));
+        UserInfo mtUser = TokenUtil.getUserInfo();
         String refundId = request.getParameter("refundId");
         if (StringUtil.isEmpty(refundId)) {
             return getFailureResult(201, "售后订单ID不能为空");
@@ -141,8 +141,8 @@ public class ClientRefundController extends BaseController {
     @ApiOperation(value = "售后用户发货")
     @RequestMapping(value = "/delivery", method = RequestMethod.POST)
     @CrossOrigin
-    public ResponseObject delivery(HttpServletRequest request, @RequestBody Map<String, Object> param) throws BusinessCheckException {
-        UserInfo mtUser = TokenUtil.getUserInfoByToken(request.getHeader("Access-Token"));
+    public ResponseObject delivery(@RequestBody Map<String, Object> param) throws BusinessCheckException {
+        UserInfo mtUser = TokenUtil.getUserInfo();
         param.put("userId", mtUser.getId());
 
         String refundId = param.get("refundId") == null ? "" : param.get("refundId").toString();

@@ -54,7 +54,7 @@ public class BackendOpenGiftController extends BaseController {
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('openGift:index')")
     public ResponseObject list(HttpServletRequest request) throws BusinessCheckException {
-        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
+        AccountInfo accountInfo = TokenUtil.getAccountInfo();
 
         Integer page = request.getParameter("page") == null ? Constants.PAGE_NUMBER : Integer.parseInt(request.getParameter("page"));
         Integer pageSize = request.getParameter("pageSize") == null ? Constants.PAGE_SIZE : Integer.parseInt(request.getParameter("pageSize"));
@@ -101,8 +101,8 @@ public class BackendOpenGiftController extends BaseController {
     @RequestMapping(value = "/info/{id}", method = RequestMethod.GET)
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('openGift:index')")
-    public ResponseObject info(HttpServletRequest request, @PathVariable("id") Integer id) throws BusinessCheckException {
-        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
+    public ResponseObject info(@PathVariable("id") Integer id) throws BusinessCheckException {
+        AccountInfo accountInfo = TokenUtil.getAccountInfo();
 
         Map<String, Object> param = new HashMap<>();
         if (accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0) {
@@ -126,8 +126,8 @@ public class BackendOpenGiftController extends BaseController {
     @RequestMapping(value = "/save", method = RequestMethod.POST)
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('openGift:add')")
-    public ResponseObject handleSave(HttpServletRequest request, @RequestBody Map<String, Object> param) throws BusinessCheckException {
-        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
+    public ResponseObject handleSave(@RequestBody Map<String, Object> param) throws BusinessCheckException {
+        AccountInfo accountInfo = TokenUtil.getAccountInfo();
 
         String id = param.get("id").toString();
         String gradeId = param.get("gradeId").toString();
@@ -190,19 +190,20 @@ public class BackendOpenGiftController extends BaseController {
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('openGift:index')")
     public ResponseObject updateStatus(@RequestBody Map<String, Object> param) throws BusinessCheckException {
+        AccountInfo accountInfo = TokenUtil.getAccountInfo();
         Integer id = param.get("id") == null ? 0 : Integer.parseInt(param.get("id").toString());
         String status = param.get("status") == null ? StatusEnum.ENABLED.getKey() : param.get("status").toString();
 
         OpenGiftDto info = openGiftService.getOpenGiftDetail(id);
         if (info == null) {
-            return getFailureResult(201, "会员等级不存在");
+            return getFailureResult(201, "开卡赠礼不存在");
         }
 
-        MtOpenGift reqDto = new MtOpenGift();
-        reqDto.setId(id);
-        reqDto.setStatus(status);
-
-        openGiftService.updateOpenGift(reqDto);
+        MtOpenGift mtOpenGift = new MtOpenGift();
+        mtOpenGift.setId(id);
+        mtOpenGift.setStatus(status);
+        mtOpenGift.setOperator(accountInfo.getAccountName());
+        openGiftService.updateOpenGift(mtOpenGift);
         return getSuccessResult(true);
     }
 
@@ -213,8 +214,8 @@ public class BackendOpenGiftController extends BaseController {
     @RequestMapping(value = "/delete/{id}", method = RequestMethod.GET)
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('openGift:index')")
-    public ResponseObject delete(HttpServletRequest request, @PathVariable("id") Integer id) throws BusinessCheckException {
-        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
+    public ResponseObject delete(@PathVariable("id") Integer id) throws BusinessCheckException {
+        AccountInfo accountInfo = TokenUtil.getAccountInfo();
 
         String operator = accountInfo.getAccountName();
         openGiftService.deleteOpenGift(id, operator);

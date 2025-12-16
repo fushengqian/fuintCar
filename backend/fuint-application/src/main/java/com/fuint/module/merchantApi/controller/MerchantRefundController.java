@@ -2,12 +2,9 @@ package com.fuint.module.merchantApi.controller;
 
 import com.fuint.common.dto.RefundDto;
 import com.fuint.common.dto.UserInfo;
-import com.fuint.common.dto.UserOrderDto;
-import com.fuint.common.param.OrderDetailParam;
 import com.fuint.common.param.RefundDetailParam;
 import com.fuint.common.param.RefundListParam;
 import com.fuint.common.service.MemberService;
-import com.fuint.common.service.OrderService;
 import com.fuint.common.service.RefundService;
 import com.fuint.common.service.StaffService;
 import com.fuint.common.util.CommonUtil;
@@ -17,16 +14,13 @@ import com.fuint.framework.pagination.PaginationRequest;
 import com.fuint.framework.pagination.PaginationResponse;
 import com.fuint.framework.web.BaseController;
 import com.fuint.framework.web.ResponseObject;
-import com.fuint.repository.model.MtOrder;
 import com.fuint.repository.model.MtRefund;
 import com.fuint.repository.model.MtStaff;
 import com.fuint.repository.model.MtUser;
-import com.fuint.utils.StringUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-import javax.servlet.http.HttpServletRequest;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -41,11 +35,6 @@ import java.util.Map;
 @AllArgsConstructor
 @RequestMapping(value = "/merchantApi/refund")
 public class MerchantRefundController extends BaseController {
-
-    /**
-     * 订单服务接口
-     * */
-    private OrderService orderService;
 
     /**
      * 会员服务接口
@@ -68,8 +57,8 @@ public class MerchantRefundController extends BaseController {
     @ApiOperation(value = "获取售订单后列表")
     @RequestMapping(value = "/list", method = RequestMethod.POST)
     @CrossOrigin
-    public ResponseObject list(HttpServletRequest request, @RequestBody RefundListParam params) throws BusinessCheckException, IllegalAccessException {
-        UserInfo userInfo = TokenUtil.getUserInfoByToken(request.getHeader("Access-Token"));
+    public ResponseObject list(@RequestBody RefundListParam params) throws BusinessCheckException, IllegalAccessException {
+        UserInfo userInfo = TokenUtil.getUserInfo();
         MtStaff staffInfo = staffService.queryStaffByMobile(userInfo.getMobile());
 
         if (staffInfo == null) {
@@ -91,8 +80,8 @@ public class MerchantRefundController extends BaseController {
     @ApiOperation(value = "获取售后订单详情")
     @RequestMapping(value = "/detail", method = RequestMethod.POST)
     @CrossOrigin
-    public ResponseObject detail(HttpServletRequest request, @RequestBody RefundDetailParam param) throws BusinessCheckException {
-        UserInfo userInfo = TokenUtil.getUserInfoByToken(request.getHeader("Access-Token"));
+    public ResponseObject detail(@RequestBody RefundDetailParam param) throws BusinessCheckException {
+        UserInfo userInfo = TokenUtil.getUserInfo();
 
         MtUser mtUser = memberService.queryMemberById(userInfo.getId());
         MtStaff mtStaff = staffService.queryStaffByMobile(mtUser.getMobile());
@@ -115,8 +104,8 @@ public class MerchantRefundController extends BaseController {
     @ApiOperation(value = "更新售后订单")
     @RequestMapping(value = "/update", method = RequestMethod.POST)
     @CrossOrigin
-    public ResponseObject update(HttpServletRequest request, @RequestBody RefundDetailParam param) throws BusinessCheckException {
-        UserInfo mtUser = TokenUtil.getUserInfoByToken(request.getHeader("Access-Token"));
+    public ResponseObject update(@RequestBody RefundDetailParam param) throws BusinessCheckException {
+        UserInfo mtUser = TokenUtil.getUserInfo();
 
         Integer refundId = param.getRefundId();
         if (refundId == null || refundId <= 0) {

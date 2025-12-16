@@ -82,7 +82,7 @@ public class BackendAccountController extends BaseController {
         String storeId = request.getParameter("storeId") == null ? "" : request.getParameter("storeId");
         String staffId = request.getParameter("staffId") == null ? "" : request.getParameter("staffId");
 
-        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
+        AccountInfo accountInfo = TokenUtil.getAccountInfo();
         Map<String, Object> searchParams = new HashMap<>();
         if (StringUtil.isNotEmpty(accountName)) {
             searchParams.put("name", accountName);
@@ -124,8 +124,8 @@ public class BackendAccountController extends BaseController {
     @ApiOperation(value = "获取账户详情")
     @RequestMapping(value = "/info/{userId}", method = RequestMethod.GET)
     @CrossOrigin
-    public ResponseObject info(HttpServletRequest request, @PathVariable("userId") Long userId) throws BusinessCheckException {
-        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
+    public ResponseObject info(@PathVariable("userId") Long userId) throws BusinessCheckException {
+        AccountInfo accountInfo = TokenUtil.getAccountInfo();
         Map<String, Object> result = new HashMap<>();
 
         List<TDuty> roleList = tDutyService.getAvailableRoles(accountInfo.getMerchantId(), accountInfo.getId());
@@ -179,8 +179,8 @@ public class BackendAccountController extends BaseController {
     @RequestMapping(value = "/doCreate", method = RequestMethod.POST)
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('system:account:add')")
-    public ResponseObject doCreate(HttpServletRequest request, @RequestBody Map<String, Object> param) throws BusinessCheckException {
-        AccountInfo account = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
+    public ResponseObject doCreate(@RequestBody Map<String, Object> param) throws BusinessCheckException {
+        AccountInfo account = TokenUtil.getAccountInfo();;
 
         List<Integer> roleIds = (List) param.get("roleIds");
         String accountName = param.get("accountName").toString();
@@ -239,7 +239,7 @@ public class BackendAccountController extends BaseController {
     @RequestMapping(value = "/update", method = RequestMethod.POST)
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('system:account:edit')")
-    public ResponseObject update(HttpServletRequest request, @RequestBody Map<String, Object> param) throws BusinessCheckException {
+    public ResponseObject update(@RequestBody Map<String, Object> param) throws BusinessCheckException {
         List<Integer> roleIds = (List) param.get("roleIds");
         String realName = param.get("realName").toString();
         String accountName = param.get("accountName").toString();
@@ -249,7 +249,7 @@ public class BackendAccountController extends BaseController {
         String merchantId = param.get("merchantId") == null ? "" : param.get("merchantId").toString();
         Long id = Long.parseLong(param.get("id").toString());
 
-        AccountInfo loginAccount = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
+        AccountInfo loginAccount = TokenUtil.getAccountInfo();;
         TAccount tAccount = tAccountService.getAccountInfoById(id.intValue());
         if (loginAccount.getMerchantId() > 0 && !tAccount.getMerchantId().equals(loginAccount.getMerchantId())) {
             return getFailureResult(1004);
@@ -302,8 +302,8 @@ public class BackendAccountController extends BaseController {
     @RequestMapping(value = "/delete/{userIds}", method = RequestMethod.GET)
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('system:account:delete')")
-    public ResponseObject deleteAccount(HttpServletRequest request, @PathVariable("userIds") String userIds) {
-        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
+    public ResponseObject deleteAccount(@PathVariable("userIds") String userIds) {
+        AccountInfo accountInfo = TokenUtil.getAccountInfo();
         String ids[] = userIds.split(",");
         if (ids.length > 0) {
             for (int i = 0; i < ids.length; i++) {
@@ -335,11 +335,11 @@ public class BackendAccountController extends BaseController {
     @RequestMapping(value = "/updateStatus", method = RequestMethod.POST)
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('system:account:edit')")
-    public ResponseObject updateStatus(HttpServletRequest request, @RequestBody Map<String, Object> param) throws BusinessCheckException {
+    public ResponseObject updateStatus(@RequestBody Map<String, Object> param) throws BusinessCheckException {
         Integer userId = param.get("userId") == null ? 0 : Integer.parseInt(param.get("userId").toString());
         Integer status = param.get("status") == null ? 0 : Integer.parseInt(param.get("status").toString());
 
-        AccountInfo accountDto = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
+        AccountInfo accountDto = TokenUtil.getAccountInfo();;
 
         TAccount tAccount = tAccountService.getAccountInfoById(userId.intValue());
         if (tAccount == null || accountDto == null) {
@@ -359,11 +359,11 @@ public class BackendAccountController extends BaseController {
     @RequestMapping(value = "/resetPwd", method = RequestMethod.POST)
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('system:account:edit')")
-    public ResponseObject resetPwd(HttpServletRequest request, @RequestBody Map<String, Object> param) {
+    public ResponseObject resetPwd(@RequestBody Map<String, Object> param) {
         Integer userId = param.get("userId") == null ? 0 : Integer.parseInt(param.get("userId").toString());
         String password = param.get("password") == null ? "" : param.get("password").toString();
 
-        AccountInfo account = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
+        AccountInfo account = TokenUtil.getAccountInfo();;
 
         TAccount tAccount = tAccountService.getAccountInfoById(userId.intValue());
         if (account.getMerchantId() > 0 && !account.getMerchantId().equals(tAccount.getMerchantId())) {

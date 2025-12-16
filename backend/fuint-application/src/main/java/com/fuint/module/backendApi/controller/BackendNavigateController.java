@@ -16,7 +16,6 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-import javax.servlet.http.HttpServletRequest;
 import java.util.*;
 
 /**
@@ -42,8 +41,8 @@ public class BackendNavigateController extends BaseController {
     @ApiOperation(value = "导航设置详情")
     @RequestMapping(value = "/info", method = RequestMethod.GET)
     @CrossOrigin
-    public ResponseObject info(HttpServletRequest request) throws BusinessCheckException, JsonProcessingException {
-        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
+    public ResponseObject info() throws BusinessCheckException, JsonProcessingException {
+        AccountInfo accountInfo = TokenUtil.getAccountInfo();
         List<NavigationDto> navigation = settingService.getNavigation(accountInfo.getMerchantId(), accountInfo.getStoreId(), null);
         Map<String, Object> result = new HashMap();
         result.put("navigation", navigation);
@@ -57,8 +56,8 @@ public class BackendNavigateController extends BaseController {
     @ApiOperation(value = "保存导航设置")
     @RequestMapping(value = "/save", method = RequestMethod.POST)
     @CrossOrigin
-    public ResponseObject save(HttpServletRequest request, @RequestBody NavigationDto navigation) throws BusinessCheckException, JsonProcessingException {
-        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
+    public ResponseObject save(@RequestBody NavigationDto navigation) throws BusinessCheckException, JsonProcessingException {
+        AccountInfo accountInfo = TokenUtil.getAccountInfo();
         if (accountInfo.getMerchantId() == null || accountInfo.getMerchantId() <= 0) {
             return getFailureResult(5002);
         }

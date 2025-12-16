@@ -48,8 +48,8 @@ public class BackendVehicleController extends BaseController {
     @ApiOperation(value="查询车辆信息", notes="查询会员车辆信息")
     @RequestMapping(value = "/info/{id}", method = RequestMethod.GET)
     @CrossOrigin
-    public ResponseObject info(HttpServletRequest request, @PathVariable("id") Integer id) throws BusinessCheckException {
-        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
+    public ResponseObject info(@PathVariable("id") Integer id) throws BusinessCheckException {
+        AccountInfo accountInfo = TokenUtil.getAccountInfo();
         VehicleDto vehicleDto = vehicleService.getVehicleById(id);
         if (accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0) {
             if (!accountInfo.getMerchantId().equals(vehicleDto.getMerchantId())) {
@@ -62,8 +62,8 @@ public class BackendVehicleController extends BaseController {
     @ApiOperation(value="保存车辆信息", notes="保存会员车辆信息")
     @RequestMapping(value = "/save", method = RequestMethod.POST)
     @CrossOrigin
-    public ResponseObject saveHandle(HttpServletRequest request, @RequestBody UserVehicleParam param) throws BusinessCheckException {
-        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
+    public ResponseObject saveHandle(@RequestBody UserVehicleParam param) throws BusinessCheckException {
+        AccountInfo accountInfo = TokenUtil.getAccountInfo();
 
         String vehiclePlateNo = param.getVehiclePlateNo();
         String vehicleType  = param.getVehicleType();
@@ -124,11 +124,11 @@ public class BackendVehicleController extends BaseController {
     @ApiOperation(value = "更新车辆状态", notes="更新车辆状态信息")
     @RequestMapping(value = "/updateStatus", method = RequestMethod.POST)
     @CrossOrigin
-    public ResponseObject updateStatus(HttpServletRequest request, @RequestBody Map<String, String> param) throws BusinessCheckException {
+    public ResponseObject updateStatus(@RequestBody Map<String, String> param) throws BusinessCheckException {
         Integer vehicleId = param.get("vehicleId") == null ? 0 : Integer.parseInt(param.get("vehicleId"));
         String status = param.get("status") == null ? StatusEnum.ENABLED.getKey() : param.get("status");
 
-        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
+        AccountInfo accountInfo = TokenUtil.getAccountInfo();
 
         MtVehicle mtVehicle = vehicleService.queryVehicleById(vehicleId);
         if (mtVehicle == null) {
@@ -145,8 +145,8 @@ public class BackendVehicleController extends BaseController {
     @ApiOperation(value = "删除车辆", notes = "根据ID删除会员车辆")
     @RequestMapping(value = "/delete/{id}", method = RequestMethod.GET)
     @CrossOrigin
-    public ResponseObject delete(HttpServletRequest request, @PathVariable("id") Integer id) throws BusinessCheckException {
-        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
+    public ResponseObject delete(@PathVariable("id") Integer id) throws BusinessCheckException {
+        AccountInfo accountInfo = TokenUtil.getAccountInfo();
         vehicleService.deleteVehicle(id, accountInfo.getAccountName());
         return getSuccessResult(true);
     }

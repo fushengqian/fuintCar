@@ -23,7 +23,6 @@ import io.swagger.annotations.ApiOperation;
 import lombok.AllArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import javax.servlet.http.HttpServletRequest;
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
@@ -102,6 +101,7 @@ public class BackendDoConfirmController extends BaseController {
         userCouponInfo.setDescription(couponInfo.getDescription());
         userCouponInfo.setId(userCoupon.getId());
         userCouponInfo.setType(couponInfo.getType());
+        userCouponInfo.setContent(couponInfo.getContent());
         userCouponInfo.setStatus(userCoupon.getStatus());
         userCouponInfo.setBalance(userCoupon.getBalance());
         userCouponInfo.setAmount(userCoupon.getAmount());
@@ -128,12 +128,12 @@ public class BackendDoConfirmController extends BaseController {
     @RequestMapping(value = "/doConfirm", method = RequestMethod.POST)
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('coupon:confirm:index')")
-    public ResponseObject doConfirm(HttpServletRequest request, @RequestBody Map<String, Object> param) {
+    public ResponseObject doConfirm(@RequestBody Map<String, Object> param) throws BusinessCheckException {
         String userCouponId = param.get("userCouponId") == null ? "" : param.get("userCouponId").toString();
         String amount = (param.get("amount") == null || StringUtil.isEmpty(param.get("amount").toString())) ? "0" : param.get("amount").toString();
         String remark = (param.get("remark") == null || StringUtil.isEmpty(param.get("remark").toString())) ? "后台核销" : param.get("remark").toString();
 
-        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getHeader("Access-Token"));
+        AccountInfo accountInfo = TokenUtil.getAccountInfo();
         Integer storeId = accountInfo.getStoreId() == null ? 0 : accountInfo.getStoreId();
         if (StringUtil.isEmpty(userCouponId)) {
             return getFailureResult(201, "系统参数有误");
@@ -143,12 +143,7 @@ public class BackendDoConfirmController extends BaseController {
             return getFailureResult(201, "储值卡核销金额不能为空");
         }
 
-        try {
-            couponService.useCoupon(Integer.parseInt(userCouponId), accountInfo.getId(), storeId, 0, new BigDecimal(amount), remark);
-        } catch (BusinessCheckException e) {
-            return getFailureResult(201, "核销失败：" + e.getMessage());
-        }
-
+        couponService.useCoupon(Integer.parseInt(userCouponId), accountInfo.getId(), storeId, 0, new BigDecimal(amount), remark);
         return getSuccessResult(true);
     }
 }

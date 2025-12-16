@@ -62,7 +62,7 @@ public class ClientVehicleController extends BaseController {
         String merchantNo = request.getHeader("merchantNo") == null ? "" : request.getHeader("merchantNo");
         Integer merchantId = merchantService.getMerchantId(merchantNo);
 
-        UserInfo mtUser = TokenUtil.getUserInfoByToken(request.getHeader("Access-Token"));
+        UserInfo mtUser = TokenUtil.getUserInfo();
 
         String vehiclePlateNo = requestParam.getVehiclePlateNo() == null ? "" : requestParam.getVehiclePlateNo();
         String vehicleBrand = requestParam.getVehicleBrand() == null ? "" : requestParam.getVehicleBrand();
@@ -97,7 +97,7 @@ public class ClientVehicleController extends BaseController {
     @CrossOrigin
     public ResponseObject list(HttpServletRequest request) throws BusinessCheckException {
         String isDefault = request.getParameter("isDefault") == null ? "" : request.getParameter("isDefault");
-        UserInfo mtUser = TokenUtil.getUserInfoByToken(request.getHeader("Access-Token"));
+        UserInfo mtUser = TokenUtil.getUserInfo();
         List<VehicleDto> dataList = vehicleService.getVehicleByUserId(mtUser.getId(), StringUtil.isNotEmpty(isDefault) ? true : false);
         return getSuccessResult(dataList);
     }
@@ -110,7 +110,7 @@ public class ClientVehicleController extends BaseController {
     @CrossOrigin
     public ResponseObject detail(HttpServletRequest request, @RequestBody VehicleRequest requestParam) throws BusinessCheckException {
         Integer vehicleId = requestParam.getVehicleId() == null ? 0 : requestParam.getVehicleId();
-        UserInfo mtUser = TokenUtil.getUserInfoByToken(request.getHeader("Access-Token"));
+        UserInfo mtUser = TokenUtil.getUserInfo();
 
         MtVehicle mtVehicle = null;
         if (vehicleId > 0) {
@@ -139,7 +139,7 @@ public class ClientVehicleController extends BaseController {
         Integer storeId = StringUtil.isEmpty(request.getHeader("storeId")) ? 0 : Integer.parseInt(request.getHeader("storeId"));
         Integer merchantId = merchantService.getMerchantId(merchantNo);
 
-        UserInfo mtUser = TokenUtil.getUserInfoByToken(request.getHeader("Access-Token"));
+        UserInfo mtUser = TokenUtil.getUserInfo();
 
         Integer vehicleId = requestParam.getVehicleId() == null ? 0 : requestParam.getVehicleId();
         Integer couponId = requestParam.getCouponId() == null ? 0 : requestParam.getCouponId();
