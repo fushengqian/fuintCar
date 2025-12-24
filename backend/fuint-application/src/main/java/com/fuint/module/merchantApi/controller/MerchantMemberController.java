@@ -1,26 +1,27 @@
 package com.fuint.module.merchantApi.controller;
 
-import com.fuint.common.Constants;
 import com.fuint.common.dto.UserDto;
 import com.fuint.common.dto.UserInfo;
 import com.fuint.common.enums.StatusEnum;
 import com.fuint.common.param.MemberDetailParam;
 import com.fuint.common.param.MemberInfoParam;
 import com.fuint.common.param.MemberListParam;
-import com.fuint.common.service.*;
-import com.fuint.common.util.CommonUtil;
+import com.fuint.common.service.MemberService;
+import com.fuint.common.service.StaffService;
 import com.fuint.common.util.DateUtil;
 import com.fuint.common.util.TokenUtil;
 import com.fuint.framework.exception.BusinessCheckException;
-import com.fuint.framework.pagination.PaginationRequest;
 import com.fuint.framework.pagination.PaginationResponse;
 import com.fuint.framework.web.BaseController;
 import com.fuint.framework.web.ResponseObject;
-import com.fuint.repository.model.*;
+import com.fuint.repository.model.MtStaff;
+import com.fuint.repository.model.MtUser;
+import com.fuint.repository.model.MtUserGrade;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -56,9 +57,6 @@ public class MerchantMemberController extends BaseController {
     @CrossOrigin
     public ResponseObject list(@RequestBody MemberListParam memberListParam) throws BusinessCheckException, IllegalAccessException {
         String dataType = memberListParam.getDataType();
-        Integer page = memberListParam.getPage() == null ? Constants.PAGE_NUMBER : memberListParam.getPage();
-        Integer pageSize = memberListParam.getPageSize() == null ? Constants.PAGE_SIZE : memberListParam.getPageSize();
-
         // 今日注册、今日活跃
         if (dataType.equals("todayRegister")) {
             String regTime = DateUtil.formatDate(new Date(), "yyyy-MM-dd") + " 00:00:00~" + DateUtil.formatDate(new Date(), "yyyy-MM-dd HH:mm:ss");
@@ -69,11 +67,9 @@ public class MerchantMemberController extends BaseController {
         }
 
         UserInfo userInfo = TokenUtil.getUserInfo();
-
-        MtUser mtUser = memberService.queryMemberById(userInfo.getId());
         MtStaff staffInfo = null;
-        if (mtUser != null && mtUser.getMobile() != null) {
-            staffInfo = staffService.queryStaffByMobile(mtUser.getMobile());
+        if (userInfo != null && userInfo.getMobile() != null) {
+            staffInfo = staffService.queryStaffByMobile(userInfo.getMobile());
         }
         if (staffInfo == null) {
             return getFailureResult(201, "您的帐号不是商户，没有操作权限");
@@ -86,7 +82,7 @@ public class MerchantMemberController extends BaseController {
             memberListParam.setStoreId(staffInfo.getStoreId());
         }
 
-        PaginationResponse<UserDto> paginationResponse = memberService.queryMemberListByPagination(new PaginationRequest(page, pageSize, CommonUtil.convert(memberListParam)));
+        PaginationResponse<UserDto> paginationResponse = memberService.queryMemberListByPagination(memberListParam);
 
         // 会员等级列表
         Map<String, Object> param = new HashMap<>();
