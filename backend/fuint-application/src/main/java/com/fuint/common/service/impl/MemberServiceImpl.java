@@ -1066,7 +1066,7 @@ public class MemberServiceImpl extends ServiceImpl<MtUserMapper, MtUser> impleme
             }
             // 先校验，是否已存在，是否为空，是否重复
             List<MtUser> userList = new ArrayList<>();
-            List<MtUserGrade> userGrades = userGradeService.getMerchantGradeList(accountInfo.getMerchantId());
+            List<MtUserGrade> userGrades = userGradeService.getMerchantGradeList(accountInfo.getMerchantId(), null);
             for (int i = 0; i < memberList.size(); i++) {
                 List<String> userInfo = memberList.get(i);
                 String username = userInfo.get(0);

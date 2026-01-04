@@ -5,12 +5,12 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fuint.common.dto.OrderUserDto;
 import com.fuint.common.enums.*;
+import com.fuint.common.param.CommissionCashPage;
 import com.fuint.common.service.*;
 import com.fuint.common.util.CommonUtil;
 import com.fuint.common.util.SeqUtil;
 import com.fuint.framework.annoation.OperationServiceLog;
 import com.fuint.framework.exception.BusinessCheckException;
-import com.fuint.framework.pagination.PaginationRequest;
 import com.fuint.framework.pagination.PaginationResponse;
 import com.fuint.module.backendApi.request.CommissionCashRequest;
 import com.fuint.module.backendApi.request.CommissionLogRequest;
@@ -79,27 +79,26 @@ public class CommissionCashServiceImpl extends ServiceImpl<MtCommissionCashMappe
     /**
      * 分页查询提现列表
      *
-     * @param paginationRequest
+     * @param commissionCashPage
      * @return
      */
     @Override
-    public PaginationResponse<CommissionCashDto> queryCommissionCashByPagination(PaginationRequest paginationRequest) throws BusinessCheckException {
-        Page<MtCommissionCash> pageHelper = PageHelper.startPage(paginationRequest.getCurrentPage(), paginationRequest.getPageSize());
+    public PaginationResponse<CommissionCashDto> queryCommissionCashByPagination(CommissionCashPage commissionCashPage) throws BusinessCheckException {
+        Page<MtCommissionCash> pageHelper = PageHelper.startPage(commissionCashPage.getPage(), commissionCashPage.getPageSize());
         LambdaQueryWrapper<MtCommissionCash> lambdaQueryWrapper = Wrappers.lambdaQuery();
-        lambdaQueryWrapper.ne(MtCommissionCash::getStatus, StatusEnum.DISABLE.getKey());
-        String status = paginationRequest.getSearchParams().get("status") == null ? "" : paginationRequest.getSearchParams().get("status").toString();
+        String status = commissionCashPage.getStatus();
         if (StringUtils.isNotBlank(status)) {
             lambdaQueryWrapper.eq(MtCommissionCash::getStatus, status);
         }
-        String merchantId = paginationRequest.getSearchParams().get("merchantId") == null ? "" : paginationRequest.getSearchParams().get("merchantId").toString();
-        if (StringUtils.isNotBlank(merchantId)) {
+        Integer merchantId = commissionCashPage.getMerchantId();
+        if (merchantId != null && merchantId > 0) {
             lambdaQueryWrapper.eq(MtCommissionCash::getMerchantId, merchantId);
         }
-        String storeId = paginationRequest.getSearchParams().get("storeId") == null ? "" : paginationRequest.getSearchParams().get("storeId").toString();
-        if (StringUtils.isNotBlank(storeId)) {
+        Integer storeId = commissionCashPage.getStoreId();
+        if (storeId != null && storeId > 0) {
             lambdaQueryWrapper.eq(MtCommissionCash::getStoreId, storeId);
         }
-        String realName = paginationRequest.getSearchParams().get("realName") == null ? "" : paginationRequest.getSearchParams().get("realName").toString();
+        String realName = commissionCashPage.getRealName();
         if (StringUtils.isNotEmpty(realName)) {
             Map<String, Object> params = new HashMap<>();
             params.put("REAL_NAME", realName);
@@ -111,7 +110,7 @@ public class CommissionCashServiceImpl extends ServiceImpl<MtCommissionCashMappe
                 lambdaQueryWrapper.eq(MtCommissionCash::getStaffId, -1);
             }
         }
-        String mobile = paginationRequest.getSearchParams().get("mobile") == null ? "" : paginationRequest.getSearchParams().get("mobile").toString();
+        String mobile = commissionCashPage.getMobile();
         if (StringUtils.isNotEmpty(mobile)) {
             MtStaff mtStaff = staffService.queryStaffByMobile(mobile);
             if (mtStaff != null) {
@@ -120,13 +119,13 @@ public class CommissionCashServiceImpl extends ServiceImpl<MtCommissionCashMappe
                 lambdaQueryWrapper.eq(MtCommissionCash::getStaffId, -1);
             }
         }
-        String uuid = paginationRequest.getSearchParams().get("uuid") == null ? "" : paginationRequest.getSearchParams().get("uuid").toString();
+        String uuid = commissionCashPage.getUuid();
         if (StringUtils.isNotBlank(uuid)) {
             lambdaQueryWrapper.eq(MtCommissionCash::getUuid, uuid);
         }
         // 开始时间、结束时间
-        String startTime = paginationRequest.getSearchParams().get("startTime") == null ? "" : paginationRequest.getSearchParams().get("startTime").toString();
-        String endTime = paginationRequest.getSearchParams().get("endTime") == null ? "" : paginationRequest.getSearchParams().get("endTime").toString();
+        String startTime = commissionCashPage.getStartTime();
+        String endTime = commissionCashPage.getEndTime();
         if (StringUtil.isNotEmpty(startTime)) {
             lambdaQueryWrapper.ge(MtCommissionCash::getCreateTime, startTime);
         }
@@ -138,32 +137,32 @@ public class CommissionCashServiceImpl extends ServiceImpl<MtCommissionCashMappe
         List<CommissionCashDto> dataList = new ArrayList<>();
         if (commissionCashList != null && commissionCashList.size() > 0) {
             for (MtCommissionCash mtCommissionCash : commissionCashList) {
-                 CommissionCashDto commissionCashDto = new CommissionCashDto();
-                 BeanUtils.copyProperties(mtCommissionCash, commissionCashDto);
-                 MtStore mtStore = storeService.getById(mtCommissionCash.getStoreId());
-                 commissionCashDto.setStoreInfo(mtStore);
-                 MtStaff mtStaff = staffService.getById(mtCommissionCash.getStaffId());
-                 if (mtCommissionCash.getUserId() != null && mtCommissionCash.getUserId() > 0) {
-                     MtUser userInfo = memberService.queryMemberById(mtCommissionCash.getUserId());
-                     if (userInfo != null) {
-                         OrderUserDto userDto = new OrderUserDto();
-                         userDto.setNo(userInfo.getUserNo());
-                         userDto.setId(userInfo.getId());
-                         userDto.setName(userInfo.getName());
-                         userDto.setCardNo(userInfo.getIdcard());
-                         userDto.setAddress(userInfo.getAddress());
-                         userDto.setMobile(CommonUtil.hidePhone(userInfo.getMobile()));
-                         commissionCashDto.setUserInfo(userDto);
-                     }
-                 }
-                 if (mtStaff != null) {
-                     mtStaff.setMobile(CommonUtil.hidePhone(mtStaff.getMobile()));
-                     commissionCashDto.setStaffInfo(mtStaff);
-                 }
-                 dataList.add(commissionCashDto);
+                CommissionCashDto commissionCashDto = new CommissionCashDto();
+                BeanUtils.copyProperties(mtCommissionCash, commissionCashDto);
+                MtStore mtStore = storeService.getById(mtCommissionCash.getStoreId());
+                commissionCashDto.setStoreInfo(mtStore);
+                MtStaff mtStaff = staffService.getById(mtCommissionCash.getStaffId());
+                if (mtCommissionCash.getUserId() != null && mtCommissionCash.getUserId() > 0) {
+                    MtUser userInfo = memberService.queryMemberById(mtCommissionCash.getUserId());
+                    if (userInfo != null) {
+                        OrderUserDto userDto = new OrderUserDto();
+                        userDto.setNo(userInfo.getUserNo());
+                        userDto.setId(userInfo.getId());
+                        userDto.setName(userInfo.getName());
+                        userDto.setCardNo(userInfo.getIdcard());
+                        userDto.setAddress(userInfo.getAddress());
+                        userDto.setMobile(CommonUtil.hidePhone(userInfo.getMobile()));
+                        commissionCashDto.setUserInfo(userDto);
+                    }
+                }
+                if (mtStaff != null) {
+                    mtStaff.setMobile(CommonUtil.hidePhone(mtStaff.getMobile()));
+                    commissionCashDto.setStaffInfo(mtStaff);
+                }
+                dataList.add(commissionCashDto);
             }
         }
-        PageRequest pageRequest = PageRequest.of(paginationRequest.getCurrentPage(), paginationRequest.getPageSize());
+        PageRequest pageRequest = PageRequest.of(commissionCashPage.getPage(), commissionCashPage.getPageSize());
         PageImpl pageImpl = new PageImpl(dataList, pageRequest, pageHelper.getTotal());
         PaginationResponse<CommissionCashDto> paginationResponse = new PaginationResponse(pageImpl, CommissionCashDto.class);
         paginationResponse.setTotalPages(pageHelper.getPages());
