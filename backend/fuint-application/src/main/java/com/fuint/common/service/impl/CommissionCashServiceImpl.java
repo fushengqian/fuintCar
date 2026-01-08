@@ -3,8 +3,12 @@ package com.fuint.common.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fuint.common.dto.CommissionCashDto;
 import com.fuint.common.dto.OrderUserDto;
-import com.fuint.common.enums.*;
+import com.fuint.common.enums.CommissionCashStatusEnum;
+import com.fuint.common.enums.CommissionStatusEnum;
+import com.fuint.common.enums.CommissionTargetEnum;
+import com.fuint.common.enums.StatusEnum;
 import com.fuint.common.param.CommissionCashPage;
 import com.fuint.common.service.*;
 import com.fuint.common.util.CommonUtil;
@@ -17,21 +21,21 @@ import com.fuint.module.backendApi.request.CommissionLogRequest;
 import com.fuint.module.backendApi.request.CommissionSettleConfirmRequest;
 import com.fuint.module.backendApi.request.CommissionSettleRequest;
 import com.fuint.repository.mapper.MtCommissionCashMapper;
-import com.fuint.common.dto.CommissionCashDto;
 import com.fuint.repository.mapper.MtCommissionLogMapper;
 import com.fuint.repository.model.*;
 import com.fuint.utils.StringUtil;
+import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import lombok.AllArgsConstructor;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.github.pagehelper.Page;
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import java.math.BigDecimal;
 import java.util.*;
 
@@ -137,29 +141,29 @@ public class CommissionCashServiceImpl extends ServiceImpl<MtCommissionCashMappe
         List<CommissionCashDto> dataList = new ArrayList<>();
         if (commissionCashList != null && commissionCashList.size() > 0) {
             for (MtCommissionCash mtCommissionCash : commissionCashList) {
-                CommissionCashDto commissionCashDto = new CommissionCashDto();
-                BeanUtils.copyProperties(mtCommissionCash, commissionCashDto);
-                MtStore mtStore = storeService.getById(mtCommissionCash.getStoreId());
-                commissionCashDto.setStoreInfo(mtStore);
-                MtStaff mtStaff = staffService.getById(mtCommissionCash.getStaffId());
-                if (mtCommissionCash.getUserId() != null && mtCommissionCash.getUserId() > 0) {
-                    MtUser userInfo = memberService.queryMemberById(mtCommissionCash.getUserId());
-                    if (userInfo != null) {
-                        OrderUserDto userDto = new OrderUserDto();
-                        userDto.setNo(userInfo.getUserNo());
-                        userDto.setId(userInfo.getId());
-                        userDto.setName(userInfo.getName());
-                        userDto.setCardNo(userInfo.getIdcard());
-                        userDto.setAddress(userInfo.getAddress());
-                        userDto.setMobile(CommonUtil.hidePhone(userInfo.getMobile()));
-                        commissionCashDto.setUserInfo(userDto);
-                    }
-                }
-                if (mtStaff != null) {
-                    mtStaff.setMobile(CommonUtil.hidePhone(mtStaff.getMobile()));
-                    commissionCashDto.setStaffInfo(mtStaff);
-                }
-                dataList.add(commissionCashDto);
+                 CommissionCashDto commissionCashDto = new CommissionCashDto();
+                 BeanUtils.copyProperties(mtCommissionCash, commissionCashDto);
+                 MtStore mtStore = storeService.getById(mtCommissionCash.getStoreId());
+                 commissionCashDto.setStoreInfo(mtStore);
+                 MtStaff mtStaff = staffService.getById(mtCommissionCash.getStaffId());
+                 if (mtCommissionCash.getUserId() != null && mtCommissionCash.getUserId() > 0) {
+                     MtUser userInfo = memberService.queryMemberById(mtCommissionCash.getUserId());
+                     if (userInfo != null) {
+                         OrderUserDto userDto = new OrderUserDto();
+                         userDto.setNo(userInfo.getUserNo());
+                         userDto.setId(userInfo.getId());
+                         userDto.setName(userInfo.getName());
+                         userDto.setCardNo(userInfo.getIdcard());
+                         userDto.setAddress(userInfo.getAddress());
+                         userDto.setMobile(CommonUtil.hidePhone(userInfo.getMobile()));
+                         commissionCashDto.setUserInfo(userDto);
+                     }
+                 }
+                 if (mtStaff != null) {
+                     mtStaff.setMobile(CommonUtil.hidePhone(mtStaff.getMobile()));
+                     commissionCashDto.setStaffInfo(mtStaff);
+                 }
+                 dataList.add(commissionCashDto);
             }
         }
         PageRequest pageRequest = PageRequest.of(commissionCashPage.getPage(), commissionCashPage.getPageSize());
@@ -318,13 +322,13 @@ public class CommissionCashServiceImpl extends ServiceImpl<MtCommissionCashMappe
             throw new BusinessCheckException("更新分销提成提现失败，数据不存在");
         }
         mtCommissionCash.setUpdateTime(new Date());
-        if (StringUtil.isBlank(requestParam.getAmount())) {
+        if (requestParam.getAmount() != null) {
             mtCommissionCash.setAmount(new BigDecimal(requestParam.getAmount()));
         }
-        if (StringUtil.isBlank(requestParam.getDescription())) {
+        if (requestParam.getDescription() != null) {
             mtCommissionCash.setDescription(requestParam.getDescription());
         }
-        if (StringUtil.isBlank(requestParam.getStatus())) {
+        if (requestParam.getStatus() != null) {
             mtCommissionCash.setStatus(requestParam.getStatus());
         }
         mtCommissionCash.setOperator(requestParam.getOperator());
@@ -343,7 +347,7 @@ public class CommissionCashServiceImpl extends ServiceImpl<MtCommissionCashMappe
     @OperationServiceLog(description = "结算确认")
     public void confirmCommissionCash(CommissionSettleConfirmRequest requestParam) throws BusinessCheckException {
        if (StringUtil.isEmpty(requestParam.getUuid())) {
-           throw new BusinessCheckException("请求参数有误");
+           throw new BusinessCheckException("请求有误.");
        }
        boolean flag = mtCommissionCashMapper.confirmCommissionCash(requestParam.getMerchantId(), requestParam.getUuid(), requestParam.getOperator());
        if (flag) {
@@ -354,7 +358,7 @@ public class CommissionCashServiceImpl extends ServiceImpl<MtCommissionCashMappe
     /**
      * 结算确认
      *
-     * @param  requestParam 取消参数
+     * @param requestParam 取消参数
      * @throws BusinessCheckException
      * @return
      */
@@ -374,7 +378,7 @@ public class CommissionCashServiceImpl extends ServiceImpl<MtCommissionCashMappe
     /**
      * 支付结算金额到用户余额
      *
-     * @param  commissionCashRequest 请求参数
+     * @param commissionCashRequest 请求参数
      * @throws BusinessCheckException
      * @return
      */

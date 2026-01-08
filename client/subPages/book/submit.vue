@@ -98,6 +98,7 @@
         }
         if (app.disabled === true) return false;
         const param = { bookId: app.bookData.bookId,
+                        orderGoodsId: app.bookData.orderGoodsId,
                         remark: app.form.remark,
                         mobile: app.form.mobile,
                         contact: app.form.contact,

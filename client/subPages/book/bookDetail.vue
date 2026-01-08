@@ -18,6 +18,10 @@
           <view class="label">门店：</view>
           <view class="value">{{ detail.storeInfo ? detail.storeInfo.name : '-'}}</view>
         </view>
+        <view class="item">
+          <view class="label">状态：</view>
+          <view class="value">{{ detail.statusName ? detail.statusName : '-'}}</view>
+        </view>
     </view>
     <view class="book-qr" v-if="detail.code">
       <view>

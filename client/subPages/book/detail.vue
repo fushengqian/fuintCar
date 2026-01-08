@@ -41,6 +41,8 @@
             return {
                 // 预约项目ID
                 bookId: null,
+                // 订单商品ID
+                orderGoodsId: null,
                 // 当前预约详情
                 bookInfo: null,
                 dateArr: [ { week: '星期六', date : '8月17号' }, { week: '星期日', date : '8月18号' }], 
@@ -55,6 +57,7 @@
         onLoad(options) {
             // 记录预约ID
             this.bookId = options.bookId;
+            this.orderGoodsId = options.orderGoodsId;
             // 获取预约详情
             this.getBookDetail();
         },
@@ -105,7 +108,7 @@
                         if (res.confirm) {
                             let dates = app.bookInfo.serviceDates.split(",");
                             let week = app.dateArr[app.dateIndex].week;
-                            let data = { bookId: app.bookId, week: week, date : dates[app.dateIndex], time: app.timeArr[app.timeIndex].time };
+                            let data = { bookId: app.bookId, orderGoodsId: app.orderGoodsId, week: week, date : dates[app.dateIndex], time: app.timeArr[app.timeIndex].time };
                             uni.setStorageSync('bookData', data);
                             app.$navTo('subPages/book/submit');
                         }

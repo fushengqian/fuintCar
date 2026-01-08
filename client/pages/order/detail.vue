@@ -44,7 +44,7 @@
           <text v-else-if="order.status == OrderStatusEnum.COMPLETE.value">{{OrderStatusEnum.COMPLETE.name}}</text>
         </view>
         <view class="verify-code" v-if="order.orderMode == 'oneself' && order.type == 'goods' && order.verifyCode && order.payStatus == 'B' && ( !['C', 'H', 'G'].includes(order.status))">
-            <view>提取码：</view>
+            <view>核销码：</view>
             <view class="code">{{ order.verifyCode }}</view>
         </view>
       </view>
@@ -84,14 +84,16 @@
     <!-- 商品列表 -->
     <view class="goods-list i-card" v-if="order.goods.length > 0">
       <view class="goods-item" v-for="(goods, idx) in order.goods" :key="idx">
-        <view class="goods-main" v-if="goods.num > 0" @click="handleTargetGoods(goods.goodsId, goods.type)">
+        <view class="goods-main" v-if="goods.num > 0">
           <!-- 商品图片 -->
-          <view class="goods-image">
+          <view class="goods-image" @click="handleTargetGoods(goods.goodsId, goods.type)">
             <image class="image" :src="goods.image" mode="widthFix"></image>
           </view>
           <!-- 商品信息 -->
-          <view class="goods-content">
-            <view class="goods-title twolist-hidden"><text>{{goods.name}}</text></view>
+          <view class="goods-content" @click="handleTargetGoods(goods.goodsId, goods.type)">
+            <view class="goods-title twolist-hidden">
+              <text>{{goods.name}}</text>
+            </view>
             <view class="goods-props clearfix">
               <view class="goods-props-item" v-for="(props, idx) in goods.specList" :key="idx">
                 <text>{{ props.specValue }}</text>
@@ -106,6 +108,14 @@
             </view>
             <view class="goods-num">
               <text>×{{goods.num}}</text>
+            </view>
+            <view v-if="goods.bookId">
+              <view class="book-btn" v-if="goods.myBookId">
+                 <text @click="handleMyBook(goods.myBookId)">预约详情</text>
+              </view>
+              <view class="book-btn active" v-else-if="order.status == 'B'" >
+                 <text @click="handleBook(goods.bookId, goods.id)">预约服务</text>
+              </view>
             </view>
           </view>
         </view>
@@ -198,7 +208,7 @@
     </view>
     
     <!-- 已支付的订单 -->
-    <view class="footer-fixed" v-if="(order.payStatus == OrderStatusEnum.PAID.value)">
+    <view class="footer-fixed" v-if="(order.payStatus == OrderStatusEnum.PAID.value && order.type == 'goods')">
       <view class="btn-wrapper">
         <block v-if="!order.refundInfo">
           <view class="btn-item active" @click="handleApplyRefund(order.id)">申请售后</view>
@@ -339,6 +349,20 @@
       handleTargetGoods(goodsId, type) {
         if (goodsId && parseInt(goodsId) > 0) {
             this.$navTo('pages/goods/detail', { goodsId })
+        }
+      },
+      
+      // 跳转到预约页面
+      handleBook(bookId, orderGoodsId) {
+        if (orderGoodsId && parseInt(orderGoodsId) > 0) {
+            this.$navTo('subPages/book/detail', { bookId, orderGoodsId })
+        }
+      },
+      
+      // 跳转到预约详情页面
+      handleMyBook(myBookId) {
+        if (myBookId && parseInt(myBookId) > 0) {
+            this.$navTo('subPages/book/bookDetail', { myBookId })
         }
       },
 
@@ -688,7 +712,6 @@
         text-align: right;
         color: $uni-text-color-grey;
         font-size: 26rpx;
-
         .goods-price {
           vertical-align: bottom;
           margin-bottom: 16rpx;
@@ -696,6 +719,19 @@
           .unit {
             margin-right: -2rpx;
             font-size: 24rpx;
+          }
+        }
+        .book-btn {
+          border-radius: 8rpx;
+          padding: 12rpx 0rpx;
+          font-size: 28rpx;
+          text-align: center;
+          color: #383838;
+          border: 1rpx solid #a8a8a8;
+          &.active {
+            color: #fff;
+            border: none;
+            background: #373F64;
           }
         }
       }

@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fuint.common.dto.BookItemDto;
 import com.fuint.common.enums.BookStatusEnum;
+import com.fuint.common.enums.StatusEnum;
 import com.fuint.common.param.BookItemPage;
 import com.fuint.common.param.BookableParam;
 import com.fuint.common.service.BookItemService;
@@ -14,20 +15,15 @@ import com.fuint.common.util.SeqUtil;
 import com.fuint.framework.annoation.OperationServiceLog;
 import com.fuint.framework.exception.BusinessCheckException;
 import com.fuint.framework.pagination.PaginationResponse;
-import com.fuint.repository.mapper.MtBookItemMapper;
-import com.fuint.common.enums.StatusEnum;
-import com.fuint.repository.mapper.MtBookMapper;
-import com.fuint.repository.mapper.MtStoreMapper;
-import com.fuint.repository.model.MtBook;
-import com.fuint.repository.model.MtBookItem;
-import com.fuint.repository.model.MtStore;
+import com.fuint.repository.mapper.*;
+import com.fuint.repository.model.*;
 import com.fuint.utils.StringUtil;
+import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import lombok.AllArgsConstructor;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.github.pagehelper.Page;
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -54,6 +50,10 @@ public class BookItemServiceImpl extends ServiceImpl<MtBookItemMapper, MtBookIte
     private MtBookMapper mtBookMapper;
 
     private MtStoreMapper mtStoreMapper;
+
+    private MtOrderGoodsMapper mtOrderGoodsMapper;
+
+    private MtGoodsMapper mtGoodsMapper;
 
     /**
      * 店铺接口
@@ -114,6 +114,15 @@ public class BookItemServiceImpl extends ServiceImpl<MtBookItemMapper, MtBookIte
                     bookItemDto.setBookName(mtBook.getName());
                 }
                 bookItemDto.setStatusName(BookStatusEnum.getValue(bookItemDto.getStatus()));
+                if (mtBookItem.getGoodsId() != null && mtBookItem.getGoodsId() > 0) {
+                    MtOrderGoods mtOrderGoods = mtOrderGoodsMapper.selectById(mtBookItem.getGoodsId());
+                    if (mtOrderGoods != null) {
+                        MtGoods mtGoods = mtGoodsMapper.selectById(mtOrderGoods.getGoodsId());
+                        if (mtGoods != null) {
+                            bookItemDto.setGoodsName(mtGoods.getName());
+                        }
+                    }
+                }
                 dataList.add(bookItemDto);
             }
         }
@@ -136,7 +145,7 @@ public class BookItemServiceImpl extends ServiceImpl<MtBookItemMapper, MtBookIte
      */
     @Override
     @OperationServiceLog(description = "新增预约订单")
-    public MtBookItem addBookItem(MtBookItem mtBookItem) throws BusinessCheckException , ParseException {
+    public MtBookItem addBookItem(MtBookItem mtBookItem) throws BusinessCheckException, ParseException {
         Integer storeId = mtBookItem.getStoreId() == null ? 0 : mtBookItem.getStoreId();
         if (mtBookItem.getMerchantId() == null || mtBookItem.getMerchantId() <= 0) {
             throw new BusinessCheckException("新增预约订单失败：所属商户不能为空！");
@@ -162,6 +171,9 @@ public class BookItemServiceImpl extends ServiceImpl<MtBookItemMapper, MtBookIte
         params.put("storeId", mtBookItem.getMerchantId());
         params.put("bookId", mtBookItem.getBookId());
         params.put("mobile", mtBookItem.getMobile());
+        if (mtBookItem.getGoodsId() != null && mtBookItem.getGoodsId() > 0) {
+            params.put("goodsId", mtBookItem.getGoodsId());
+        }
         params.put("status", BookStatusEnum.CREATED.getKey());
         List<MtBookItem> data = queryBookItemListByParams(params);
         if (data != null && data.size() > 0) {
@@ -171,7 +183,7 @@ public class BookItemServiceImpl extends ServiceImpl<MtBookItemMapper, MtBookIte
         mtBookItem.setStatus(BookStatusEnum.CREATED.getKey());
         mtBookItem.setUpdateTime(new Date());
         mtBookItem.setCreateTime(new Date());
-        mtBookItem.setVerifyCode(SeqUtil.getRandomNumber(6));
+        mtBookItem.setVerifyCode(SeqUtil.getRandomNumber(4));
         Integer id = mtBookItemMapper.insert(mtBookItem);
         if (id > 0) {
             return mtBookItem;
@@ -190,6 +202,26 @@ public class BookItemServiceImpl extends ServiceImpl<MtBookItemMapper, MtBookIte
     @Override
     public MtBookItem getBookItemById(Integer id) {
         return mtBookItemMapper.selectById(id);
+    }
+
+    /**
+     * 获取用户预约订单信息
+     *
+     * @param bookId 预约项目ID
+     * @param userId 用户ID
+     * @param orderGoodsId 订单商品ID
+     * @return
+     */
+    public MtBookItem getUserBookItem(Integer bookId, Integer userId, Integer orderGoodsId) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("bookId", bookId);
+        params.put("userId", userId);
+        params.put("goodsId", orderGoodsId);
+        List<MtBookItem> bookItemList = queryBookItemListByParams(params);
+        if (bookItemList != null && bookItemList.size() > 0) {
+            return bookItemList.get(0);
+        }
+        return null;
     }
 
     /**
@@ -219,7 +251,7 @@ public class BookItemServiceImpl extends ServiceImpl<MtBookItemMapper, MtBookIte
                 bookItemDto.setStoreInfo(mtStore);
             }
         }
-
+        bookItemDto.setStatusName(BookStatusEnum.getValue(bookItemDto.getStatus()));
 
         return bookItemDto;
     }
@@ -268,21 +300,22 @@ public class BookItemServiceImpl extends ServiceImpl<MtBookItemMapper, MtBookIte
     /**
      * 根据条件搜索预约订单
      *
-     * @param  params 查询参数
-     * @throws BusinessCheckException
+     * @param params 查询参数
      * @return
      * */
     @Override
     public List<MtBookItem> queryBookItemListByParams(Map<String, Object> params) {
-        String status =  params.get("status") == null ? StatusEnum.ENABLED.getKey(): params.get("status").toString();
-        String storeId =  params.get("storeId") == null ? "" : params.get("storeId").toString();
-        String merchantId =  params.get("merchantId") == null ? "" : params.get("merchantId").toString();
+        String status = params.get("status") == null ? "" : params.get("status").toString();
+        String storeId = params.get("storeId") == null ? "" : params.get("storeId").toString();
+        String merchantId = params.get("merchantId") == null ? "" : params.get("merchantId").toString();
         String mobile = params.get("mobile") == null ? "" : params.get("mobile").toString();
         String contact = params.get("contact") == null ? "" : params.get("contact").toString();
         String bookId = params.get("bookId") == null ? "" : params.get("bookId").toString();
+        String userId = params.get("userId") == null ? "" : params.get("userId").toString();
+        String goodsId = params.get("goodsId") == null ? "" : params.get("goodsId").toString();
 
         LambdaQueryWrapper<MtBookItem> lambdaQueryWrapper = Wrappers.lambdaQuery();
-        lambdaQueryWrapper.ne(MtBookItem::getStatus, StatusEnum.DISABLE.getKey());
+        lambdaQueryWrapper.ne(MtBookItem::getStatus, BookStatusEnum.DELETE.getKey());
         if (StringUtils.isNotBlank(mobile)) {
             lambdaQueryWrapper.eq(MtBookItem::getMobile, mobile);
         }
@@ -291,6 +324,12 @@ public class BookItemServiceImpl extends ServiceImpl<MtBookItemMapper, MtBookIte
         }
         if (StringUtils.isNotBlank(bookId)) {
             lambdaQueryWrapper.like(MtBookItem::getBookId, bookId);
+        }
+        if (StringUtils.isNotBlank(userId)) {
+            lambdaQueryWrapper.like(MtBookItem::getUserId, userId);
+        }
+        if (StringUtils.isNotBlank(goodsId)) {
+            lambdaQueryWrapper.like(MtBookItem::getGoodsId, goodsId);
         }
         if (StringUtils.isNotBlank(status)) {
             lambdaQueryWrapper.eq(MtBookItem::getStatus, status);
@@ -301,11 +340,8 @@ public class BookItemServiceImpl extends ServiceImpl<MtBookItemMapper, MtBookIte
         if (StringUtils.isNotBlank(storeId)) {
             lambdaQueryWrapper.eq(MtBookItem::getStoreId, storeId);
         }
-
         lambdaQueryWrapper.orderByDesc(MtBookItem::getId);
-        List<MtBookItem> dataList = mtBookItemMapper.selectList(lambdaQueryWrapper);
-
-        return dataList;
+        return mtBookItemMapper.selectList(lambdaQueryWrapper);
     }
 
     /**

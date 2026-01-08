@@ -32,6 +32,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import java.math.BigDecimal;
 import java.util.*;
 
@@ -176,10 +177,6 @@ public class BalanceServiceImpl extends ServiceImpl<MtBalanceMapper, MtBalance> 
         mtBalance.setUpdateTime(nowDate);
 
         MtUser mtUser = mtUserMapper.selectById(mtBalance.getUserId());
-        if (!mtBalance.getMerchantId().equals(mtUser.getMerchantId())) {
-            throw new BusinessCheckException("余额充值出错，权限不足");
-        }
-
         BigDecimal newAmount = mtUser.getBalance().add(mtBalance.getAmount());
         if (newAmount.compareTo(new BigDecimal("0")) < 0) {
             return false;

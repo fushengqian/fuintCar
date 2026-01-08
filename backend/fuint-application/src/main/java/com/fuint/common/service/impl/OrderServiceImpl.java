@@ -182,6 +182,11 @@ public class OrderServiceImpl extends ServiceImpl<MtOrderMapper, MtOrder> implem
     private StockService stockService;
 
     /**
+     * 预约单服务接口
+     */
+    private BookItemService bookItemService;
+
+    /**
      * 获取用户订单列表
      * @param  orderListParam
      * @throws BusinessCheckException
@@ -427,7 +432,7 @@ public class OrderServiceImpl extends ServiceImpl<MtOrderMapper, MtOrder> implem
             orderDto.setPlatform("");
         }
         if (mtOrder.getVerifyCode() == null && !orderDto.getPlatform().equals(PlatformTypeEnum.PC.getCode())) {
-            mtOrder.setVerifyCode(SeqUtil.getRandomNumber(6));
+            mtOrder.setVerifyCode(SeqUtil.getRandomNumber(4));
         } else {
             mtOrder.setVerifyCode("");
             if (mtOrder.getPayStatus().equals(PayStatusEnum.SUCCESS.getKey())) {
@@ -1759,6 +1764,13 @@ public class OrderServiceImpl extends ServiceImpl<MtOrderMapper, MtOrder> implem
                     orderGoodsDto.setPrice(orderGoods.getPrice().toString());
                     orderGoodsDto.setDiscount(orderGoods.getDiscount().toString());
                     orderGoodsDto.setGoodsId(orderGoods.getGoodsId());
+                    orderGoodsDto.setBookId(goodsInfo.getBookId());
+                    if (goodsInfo.getBookId() != null && goodsInfo.getBookId() > 0) {
+                        MtBookItem bookItem = bookItemService.getUserBookItem(goodsInfo.getBookId(), orderInfo.getUserId(), orderGoods.getId());
+                        if (bookItem != null) {
+                            orderGoodsDto.setMyBookId(bookItem.getId());
+                        }
+                    }
                     if (orderGoods.getSkuId() > 0) {
                         List<GoodsSpecValueDto> specList = goodsService.getSpecListBySkuId(orderGoods.getSkuId());
                         orderGoodsDto.setSpecList(specList);

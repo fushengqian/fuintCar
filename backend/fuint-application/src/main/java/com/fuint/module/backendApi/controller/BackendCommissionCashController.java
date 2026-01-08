@@ -4,7 +4,6 @@ import com.fuint.common.dto.AccountInfo;
 import com.fuint.common.dto.CommissionCashDto;
 import com.fuint.common.dto.ParamDto;
 import com.fuint.common.enums.CommissionCashStatusEnum;
-import com.fuint.common.enums.StatusEnum;
 import com.fuint.common.param.CommissionCashPage;
 import com.fuint.common.service.CommissionCashService;
 import com.fuint.common.service.StoreService;
@@ -65,7 +64,7 @@ public class BackendCommissionCashController extends BaseController {
         }
         PaginationResponse<CommissionCashDto> paginationResponse = commissionCashService.queryCommissionCashByPagination(commissionCashPage);
 
-        List<MtStore> storeList = storeService.getMyStoreList(accountInfo.getMerchantId(), accountInfo.getStoreId(), StatusEnum.ENABLED.getKey());
+        List<MtStore> storeList = storeService.getMyStoreList(accountInfo.getMerchantId(), accountInfo.getStoreId(), null);
 
         // 状态列表
         List<ParamDto> statusList = CommissionCashStatusEnum.getCommissionCashStatusList();
@@ -87,17 +86,14 @@ public class BackendCommissionCashController extends BaseController {
     @PreAuthorize("@pms.hasPermission('commission:cash:index')")
     public ResponseObject info(@PathVariable("id") Integer id) throws BusinessCheckException {
         AccountInfo accountInfo = TokenUtil.getAccountInfo();
-
         CommissionCashDto commissionCash = commissionCashService.queryCommissionCashById(id);
         if (accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0) {
             if (!accountInfo.getMerchantId().equals(commissionCash.getMerchantId())) {
                 return getFailureResult(1004);
             }
         }
-
         Map<String, Object> result = new HashMap<>();
         result.put("commissionCash", commissionCash);
-
         return getSuccessResult(result);
     }
 
@@ -109,10 +105,10 @@ public class BackendCommissionCashController extends BaseController {
     @PreAuthorize("@pms.hasPermission('commission:cash:index')")
     public ResponseObject save(@RequestBody CommissionCashRequest commissionCashRequest) throws BusinessCheckException {
         AccountInfo accountInfo = TokenUtil.getAccountInfo();
+        commissionCashRequest.setOperator(accountInfo.getAccountName());
         if (!checkOwner(commissionCashRequest.getId(), accountInfo)) {
             return getFailureResult(1004);
         }
-        commissionCashRequest.setOperator(accountInfo.getAccountName());
         commissionCashService.updateCommissionCash(commissionCashRequest);
         return getSuccessResult(true);
     }
@@ -140,10 +136,10 @@ public class BackendCommissionCashController extends BaseController {
     @RequestMapping(value = "/confirm", method = RequestMethod.POST)
     @PreAuthorize("@pms.hasPermission('commission:cash:index')")
     public ResponseObject confirm(@RequestBody CommissionSettleConfirmRequest requestParam) throws BusinessCheckException {
-        AccountInfo accountInfo = TokenUtil.getAccountInfo();
-        requestParam.setOperator(accountInfo.getAccountName());
-        if (accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0) {
-            requestParam.setMerchantId(accountInfo.getMerchantId());
+        AccountInfo AccountInfo = TokenUtil.getAccountInfo();
+        requestParam.setOperator(AccountInfo.getAccountName());
+        if (AccountInfo.getMerchantId() != null && AccountInfo.getMerchantId() > 0) {
+            requestParam.setMerchantId(AccountInfo.getMerchantId());
         }
         commissionCashService.confirmCommissionCash(requestParam);
         return getSuccessResult(true);
@@ -167,7 +163,7 @@ public class BackendCommissionCashController extends BaseController {
 
     private boolean checkOwner(Integer commissionCashId, AccountInfo accountInfo) throws BusinessCheckException {
         CommissionCashDto commissionCash = commissionCashService.queryCommissionCashById(commissionCashId);
-        if (commissionCash == null || accountInfo == null) {
+        if (commissionCash == null) {
             return false;
         }
         if (accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0) {

@@ -319,6 +319,9 @@ public class GoodsServiceImpl extends ServiceImpl<MtGoodsMapper, MtGoods> implem
         if (reqDto.getCateId() != null && reqDto.getCateId() > 0) {
             mtGoods.setCateId(reqDto.getCateId());
         }
+        if (reqDto.getBookId() != null && reqDto.getBookId() > 0) {
+            mtGoods.setBookId(reqDto.getBookId());
+        }
         if (reqDto.getServiceTime() != null && reqDto.getServiceTime() > 0) {
             mtGoods.setServiceTime(reqDto.getServiceTime());
         }
@@ -522,6 +525,7 @@ public class GoodsServiceImpl extends ServiceImpl<MtGoodsMapper, MtGoods> implem
                 goodsInfo.setStoreId(mtGoods.getStoreId());
                 goodsInfo.setName(mtGoods.getName());
                 goodsInfo.setCateId(mtGoods.getCateId());
+                goodsInfo.setBookId(mtGoods.getBookId());
                 goodsInfo.setGoodsNo(mtGoods.getGoodsNo());
                 goodsInfo.setIsSingleSpec(mtGoods.getIsSingleSpec());
                 goodsInfo.setLogo(mtGoods.getLogo());
