@@ -14,13 +14,11 @@ import com.fuint.repository.model.MtGoods;
 import com.fuint.repository.model.MtGoodsSku;
 import com.fuint.utils.StringUtil;
 import lombok.AllArgsConstructor;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import java.util.Date;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+
+import java.util.*;
 
 /**
  * 购物车业务实现类
@@ -29,7 +27,7 @@ import java.util.Map;
  * CopyRight https://www.fuint.cn
  */
 @Service
-@AllArgsConstructor
+@AllArgsConstructor(onConstructor_= {@Lazy})
 public class CartServiceImpl extends ServiceImpl<MtCartMapper, MtCart> implements CartService {
 
     private MtCartMapper mtCartMapper;

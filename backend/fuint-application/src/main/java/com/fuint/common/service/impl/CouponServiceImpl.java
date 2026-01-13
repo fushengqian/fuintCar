@@ -34,6 +34,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -631,7 +632,8 @@ public class CouponServiceImpl extends ServiceImpl<MtCouponMapper, MtCoupon> imp
     @Override
     @Transactional(rollbackFor = Exception.class)
     @OperationServiceLog(description = "发放卡券")
-    public void sendCoupon(Integer couponId, Integer userId, Integer num, Boolean sendMessage, String uuid, String operator) throws BusinessCheckException {
+    public ResponseObject sendCoupon(Integer couponId, Integer userId, Integer num, Boolean sendMessage, String uuid, String operator) throws BusinessCheckException {
+        ResponseObject response = new ResponseObject(200, "发放成功", null);
         if (StringUtil.isEmpty(uuid)) {
             uuid = UUID.randomUUID().toString().replaceAll("-", "");
         }
@@ -639,26 +641,34 @@ public class CouponServiceImpl extends ServiceImpl<MtCouponMapper, MtCoupon> imp
         MtUser userInfo = memberService.queryMemberById(userId);
 
         if (null == userInfo || !userInfo.getStatus().equals(StatusEnum.ENABLED.getKey())) {
-            throw new BusinessCheckException("该会员不存在或已禁用，请先注册会员");
+            response.setMessage("该会员不存在或已禁用，请先注册会员");
+            response.setCode(201);
+            return response;
         }
 
         String mobile = StringUtil.isNotEmpty(userInfo.getMobile()) ? userInfo.getMobile() : "";
 
         // 判断券是否有效
         if (!couponInfo.getStatus().equals(StatusEnum.ENABLED.getKey())) {
-            throw new BusinessCheckException("卡券“"+couponInfo.getName()+"”已停用，不能发放");
+            response.setMessage("卡券“"+couponInfo.getName()+"”已停用，不能发放");
+            response.setCode(201);
+            return response;
         }
 
         // 判断是否过期
         Date now = new Date();
         if (couponInfo.getEndTime() != null && couponInfo.getEndTime().before(now)) {
-            throw new BusinessCheckException("卡券“"+ couponInfo.getName() +"”已过期，不能发放");
+            response.setMessage("卡券“"+ couponInfo.getName() +"”已过期，不能发放");
+            response.setCode(201);
+            return response;
         }
 
         // 是否超过拥有数量
         if (couponInfo.getLimitNum() != null && couponInfo.getLimitNum() > 0) {
             if (num > couponInfo.getLimitNum()) {
-                throw new BusinessCheckException("该卡券每个会员最多拥有数量是" + couponInfo.getLimitNum());
+                response.setMessage("该卡券每个会员最多拥有数量是" + couponInfo.getLimitNum());
+                response.setCode(201);
+                return response;
             }
         }
 
@@ -667,7 +677,9 @@ public class CouponServiceImpl extends ServiceImpl<MtCouponMapper, MtCoupon> imp
             Long sendNum = mtUserCouponMapper.getSendNum(couponId);
             Long total = Long.parseLong(couponInfo.getTotal().toString());
             if (sendNum.compareTo(total) >= 0) {
-                throw new BusinessCheckException("该卡券发行总数量是" + couponInfo.getTotal() + "，现已超额！");
+                response.setMessage("该卡券发行总数量是" + couponInfo.getTotal() + "，现已超额！");
+                response.setCode(201);
+                return response;
             }
         }
 
@@ -690,7 +702,7 @@ public class CouponServiceImpl extends ServiceImpl<MtCouponMapper, MtCoupon> imp
                 param.put("orderId", 0);
                 userCouponService.preStore(param);
             }
-            return;
+            return response;
         }
 
         // 优惠券或计次卡，发放num套
@@ -773,6 +785,7 @@ public class CouponServiceImpl extends ServiceImpl<MtCouponMapper, MtCoupon> imp
                 logger.error("卡券发放失败：{}", e.getMessage());
             }
         }
+        return response;
     }
 
     /**
@@ -797,7 +810,10 @@ public class CouponServiceImpl extends ServiceImpl<MtCouponMapper, MtCoupon> imp
        Boolean sendMsg = userIds.size() >= 10 ? false : true;
        if (userIds != null && userIds.size() > 0) {
            for (Integer userId : userIds) {
-                sendCoupon(couponId, userId, num, sendMsg, uuid, operator);
+                ResponseObject result = sendCoupon(couponId, userId, num, sendMsg, uuid, operator);
+                if (result.getCode() != 200) {
+                    throw new BusinessCheckException("发放卡券失败：" + result.getMessage());
+                }
            }
        }
        return true;

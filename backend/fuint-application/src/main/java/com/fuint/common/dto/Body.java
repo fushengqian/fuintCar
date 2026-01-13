@@ -1,6 +1,7 @@
 package com.fuint.common.dto;
 
 import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 import java.io.Serializable;
@@ -12,8 +13,7 @@ import java.util.Map;
  * Created by FSQ
  * CopyRight https://www.fuint.cn
  */
-@Getter
-@Setter
+@Data
 public class Body implements Serializable {
 
     @ApiModelProperty("入参信息")

@@ -19,7 +19,9 @@ import com.fuint.framework.pagination.PaginationResponse;
 import com.fuint.repository.mapper.MtCouponGroupMapper;
 import com.fuint.repository.mapper.MtCouponMapper;
 import com.fuint.repository.mapper.MtUserCouponMapper;
-import com.fuint.repository.model.*;
+import com.fuint.repository.model.MtCoupon;
+import com.fuint.repository.model.MtCouponGroup;
+import com.fuint.repository.model.MtUser;
 import com.fuint.utils.StringUtil;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
@@ -27,6 +29,7 @@ import lombok.AllArgsConstructor;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.core.env.Environment;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -34,11 +37,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.ResourceUtils;
 import org.springframework.web.multipart.MultipartFile;
+
 import javax.servlet.http.HttpServletRequest;
 import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.lang.String;
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -49,7 +52,7 @@ import java.util.regex.Pattern;
  * CopyRight https://www.fuint.cn
  */
 @Service
-@AllArgsConstructor
+@AllArgsConstructor(onConstructor_= {@Lazy})
 public class CouponGroupServiceImpl extends ServiceImpl<MtCouponGroupMapper, MtCouponGroup> implements CouponGroupService {
 
     private static final Logger log = LoggerFactory.getLogger(CouponGroupServiceImpl.class);

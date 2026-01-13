@@ -11,11 +11,15 @@ import com.alipay.api.response.AlipayTradeRefundResponse;
 import com.fuint.common.bean.AliPayBean;
 import com.fuint.common.dto.OrderDto;
 import com.fuint.common.dto.UserOrderDto;
-import com.fuint.common.enums.*;
-import com.fuint.common.service.*;
+import com.fuint.common.enums.OrderTypeEnum;
+import com.fuint.common.service.AlipayService;
+import com.fuint.common.service.OrderService;
+import com.fuint.common.service.StoreService;
 import com.fuint.framework.exception.BusinessCheckException;
 import com.fuint.framework.web.ResponseObject;
-import com.fuint.repository.model.*;
+import com.fuint.repository.model.MtOrder;
+import com.fuint.repository.model.MtStore;
+import com.fuint.repository.model.MtUser;
 import com.fuint.utils.StringUtil;
 import com.ijpay.alipay.AliPayApi;
 import com.ijpay.alipay.AliPayApiConfig;
@@ -23,10 +27,13 @@ import com.ijpay.alipay.AliPayApiConfigKit;
 import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * 支付宝相关接口
@@ -35,7 +42,7 @@ import java.util.*;
  * CopyRight https://www.fuint.cn
  */
 @Service
-@AllArgsConstructor
+@AllArgsConstructor(onConstructor_= {@Lazy})
 public class AlipayServiceImpl implements AlipayService {
 
     private static final Logger logger = LoggerFactory.getLogger(AlipayServiceImpl.class);

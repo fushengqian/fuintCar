@@ -17,10 +17,11 @@ import com.fuint.common.util.CommonUtil;
 import com.fuint.utils.StringUtil;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -29,23 +30,20 @@ import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.util.*;
 
-@Service
 @Slf4j
+@Service
+@AllArgsConstructor(onConstructor_= {@Lazy})
 public class VehicleOrderServiceImpl extends ServiceImpl<MtVehicleOrderMapper, MtVehicleOrder> implements VehicleOrderService {
 
     @Resource
     private MtVehicleOrderMapper mtVehicleOrderMapper;
 
-    @Autowired
     private UserCouponService userCouponService;
 
-    @Autowired
     private CouponService couponService;
 
-    @Autowired
     private MemberService memberService;
 
-    @Autowired
     private StoreService storeService;
 
     @Override

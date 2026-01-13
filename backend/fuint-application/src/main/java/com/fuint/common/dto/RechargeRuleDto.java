@@ -1,8 +1,7 @@
 package com.fuint.common.dto;
 
 import io.swagger.annotations.ApiModelProperty;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
 import java.io.Serializable;
 
@@ -12,8 +11,7 @@ import java.io.Serializable;
  * Created by FSQ
  * CopyRight https://www.fuint.cn
  */
-@Getter
-@Setter
+@Data
 public class RechargeRuleDto implements Serializable {
 
     @ApiModelProperty("充值金额")
@@ -21,5 +19,8 @@ public class RechargeRuleDto implements Serializable {
 
     @ApiModelProperty("赠送金额")
     private String giveAmount;
+
+    @ApiModelProperty("赠送卡券ID")
+    private String giveCouponIds;
 
 }

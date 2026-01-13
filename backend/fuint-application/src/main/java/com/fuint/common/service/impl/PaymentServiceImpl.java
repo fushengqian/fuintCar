@@ -1,14 +1,18 @@
 package com.fuint.common.service.impl;
 
 import com.fuint.common.dto.*;
-import com.fuint.common.enums.*;
+import com.fuint.common.enums.OrderTypeEnum;
+import com.fuint.common.enums.PayTypeEnum;
+import com.fuint.common.enums.YesOrNoEnum;
 import com.fuint.common.service.*;
 import com.fuint.common.util.CommonUtil;
 import com.fuint.common.util.TokenUtil;
 import com.fuint.framework.exception.BusinessCheckException;
 import com.fuint.framework.web.ResponseObject;
 import com.fuint.repository.mapper.MtOrderMapper;
-import com.fuint.repository.model.*;
+import com.fuint.repository.model.MtBalance;
+import com.fuint.repository.model.MtOrder;
+import com.fuint.repository.model.MtUser;
 import com.fuint.utils.StringUtil;
 import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
@@ -16,6 +20,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import javax.servlet.http.HttpServletRequest;
 import java.math.BigDecimal;
 import java.util.Date;
@@ -65,6 +70,11 @@ public class PaymentServiceImpl implements PaymentService {
      * 会员卡券服务接口
      * */
     private UserCouponService userCouponService;
+
+    /**
+     * 卡券服务接口
+     * */
+    private CouponService couponService;
 
     /**
      * 创建预支付订单
@@ -138,10 +148,26 @@ public class PaymentServiceImpl implements PaymentService {
             String param = orderInfo.getParam();
             if (StringUtil.isNotEmpty(param)) {
                 String params[] = param.split("_");
-                if (params.length == 2) {
+                if (params.length >= 2) {
                     BigDecimal amount = new BigDecimal(params[0]).add(new BigDecimal(params[1]));
                     mtBalance.setAmount(amount);
                     balanceService.addBalance(mtBalance, true);
+                }
+                // 充值赠送卡券
+                if (params.length == 3) {
+                    try {
+                        String[] couponIds = params[2].split("\\|");
+                        if (couponIds != null && couponIds.length > 0) {
+                            for (int i = 0; i < couponIds.length; i++) {
+                                ResponseObject result = couponService.sendCoupon(Integer.parseInt(couponIds[i]), orderInfo.getUserId(), 1, true, null, null);
+                                if (!result.getCode().equals(200)) {
+                                    logger.error("充值赠送卡券失败：", result.getMessage());
+                                }
+                            }
+                        }
+                    } catch (Exception e) {
+                        logger.error("sendCoupon error", e);
+                    }
                 }
             }
         }

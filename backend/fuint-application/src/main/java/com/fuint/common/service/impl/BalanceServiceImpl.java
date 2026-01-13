@@ -28,6 +28,7 @@ import lombok.AllArgsConstructor;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -43,7 +44,7 @@ import java.util.*;
  * CopyRight https://www.fuint.cn
  */
 @Service
-@AllArgsConstructor
+@AllArgsConstructor(onConstructor_= {@Lazy})
 public class BalanceServiceImpl extends ServiceImpl<MtBalanceMapper, MtBalance> implements BalanceService {
 
     private static final Logger logger = LoggerFactory.getLogger(BalanceServiceImpl.class);
@@ -187,6 +188,7 @@ public class BalanceServiceImpl extends ServiceImpl<MtBalanceMapper, MtBalance> 
         mtBalance.setMerchantId(mtUser.getMerchantId());
         if (updateBalance) {
             mtUserMapper.updateUserBalance(mtUser.getMerchantId(), Arrays.asList(mtUser.getId()), mtBalance.getAmount());
+            logger.info("会员余额变动：" + mtUser.getMobile() + "，会员ID：" + mtUser.getId() + "，会员余额：" + newAmount);
         }
 
         if (PhoneFormatCheckUtils.isChinaPhoneLegal(mtUser.getMobile())) {
