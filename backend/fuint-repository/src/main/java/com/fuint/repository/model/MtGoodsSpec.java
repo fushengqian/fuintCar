@@ -6,17 +6,15 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
 /**
- * 规格表
+ * 商品规格表
  *
  * Created by FSQ
  * CopyRight https://www.fuint.cn
  */
-@Getter
-@Setter
+@Data
 @TableName("mt_goods_spec")
 @ApiModel(value = "MtGoodsSpec对象", description = "规格表")
 public class MtGoodsSpec implements Serializable {
@@ -38,6 +36,5 @@ public class MtGoodsSpec implements Serializable {
 
     @ApiModelProperty("状态")
     private String status;
-
 
 }

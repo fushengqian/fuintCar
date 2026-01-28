@@ -7,8 +7,7 @@ import java.io.Serializable;
 import java.util.Date;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
 /**
  * 短信验证码表
@@ -16,8 +15,7 @@ import lombok.Setter;
  * Created by FSQ
  * CopyRight https://www.fuint.cn
  */
-@Getter
-@Setter
+@Data
 @TableName("mt_verify_code")
 @ApiModel(value = "MtVerifyCode对象", description = "短信验证码表")
 public class MtVerifyCode implements Serializable {
@@ -45,6 +43,5 @@ public class MtVerifyCode implements Serializable {
 
     @ApiModelProperty("可用状态 0未用 1已用 2置为失效")
     private String validFlag;
-
 
 }

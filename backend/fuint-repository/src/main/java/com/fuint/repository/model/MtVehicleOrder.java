@@ -5,15 +5,14 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
+
 import java.io.Serializable;
 import java.util.Date;
 
-@Getter
-@Setter
+@Data
 @TableName("mt_vehicle_order")
-@ApiModel(value = "MtVehicleOrder对象", description = "")
+@ApiModel(value = "MtVehicleOrder对象", description = "汽车服务单")
 public class MtVehicleOrder implements Serializable {
     private static final long serialVersionUID = 1L;
 

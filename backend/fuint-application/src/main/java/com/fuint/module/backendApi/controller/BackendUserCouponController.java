@@ -209,8 +209,9 @@ public class BackendUserCouponController extends BaseController {
         String status = request.getParameter("status") == null ? "" : request.getParameter("status");
         String userCouponId = request.getParameter("id") == null ? "" : request.getParameter("id");
 
-        AccountInfo accountInfo = TokenUtil.getAccountInfo();
+        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getParameter("token"));
         if (accountInfo == null) {
+            logger.info("导出会员卡券失败：未登录！");
             return;
         }
 
