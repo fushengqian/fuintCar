@@ -23,7 +23,7 @@ public interface ArticleService extends IService<MtArticle> {
      * @param articlePage
      * @return
      */
-    PaginationResponse<ArticleDto> queryArticleListByPagination(ArticlePage articlePage) throws BusinessCheckException;
+    PaginationResponse<ArticleDto> queryArticleListByPagination(ArticlePage articlePage);
 
     /**
      * 添加文章

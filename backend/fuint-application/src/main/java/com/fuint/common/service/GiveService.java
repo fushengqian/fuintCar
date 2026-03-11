@@ -2,9 +2,9 @@ package com.fuint.common.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fuint.common.dto.GiveDto;
+import com.fuint.common.param.GiveLogPage;
 import com.fuint.common.param.GiveParam;
 import com.fuint.framework.exception.BusinessCheckException;
-import com.fuint.framework.pagination.PaginationRequest;
 import com.fuint.framework.pagination.PaginationResponse;
 import com.fuint.framework.web.ResponseObject;
 import com.fuint.repository.model.MtGive;
@@ -27,7 +27,7 @@ public interface GiveService extends IService<MtGive> {
      * @param paginationRequest
      * @return
      */
-    PaginationResponse<GiveDto> queryGiveListByPagination(PaginationRequest paginationRequest) throws BusinessCheckException;
+    PaginationResponse<GiveDto> queryGiveListByPagination(GiveLogPage giveLogPage) throws BusinessCheckException;
 
     /**
      * 转赠卡券

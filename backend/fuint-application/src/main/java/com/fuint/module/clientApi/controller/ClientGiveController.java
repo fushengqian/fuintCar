@@ -4,12 +4,12 @@ import com.fuint.common.Constants;
 import com.fuint.common.dto.GiveDto;
 import com.fuint.common.dto.UserInfo;
 import com.fuint.common.param.GiveListParam;
+import com.fuint.common.param.GiveLogPage;
 import com.fuint.common.param.GiveParam;
 import com.fuint.common.service.GiveService;
 import com.fuint.common.service.MemberService;
 import com.fuint.common.util.TokenUtil;
 import com.fuint.framework.exception.BusinessCheckException;
-import com.fuint.framework.pagination.PaginationRequest;
 import com.fuint.framework.pagination.PaginationResponse;
 import com.fuint.framework.web.BaseController;
 import com.fuint.framework.web.ResponseObject;
@@ -79,19 +79,17 @@ public class ClientGiveController extends BaseController {
         Integer page = giveListParam.getPage() == null ? Constants.PAGE_NUMBER : giveListParam.getPage();
         Integer pageSize = giveListParam.getPageSize() == null ? Constants.PAGE_SIZE : giveListParam.getPageSize();
 
-        Map<String, Object> searchParams = new HashMap<>();
+        GiveLogPage giveLogPage = new GiveLogPage();
+        giveLogPage.setPage(page);
+        giveLogPage.setPageSize(pageSize);
+        giveLogPage.setMobile(mobile);
         if (type.equals("gived")) {
-            searchParams.put("userId", mtUser.getId());
+            giveLogPage.setUserId(mtUser.getId());
         } else {
-            searchParams.put("giveUserId", mtUser.getId());
+            giveLogPage.setUserId(mtUser.getId());
         }
 
-        if (StringUtil.isNotEmpty(mobile) && type.equals("give")) {
-            searchParams.put("mobile", mobile);
-        } else if(StringUtil.isNotEmpty(mobile) && type.equals("gived")) {
-            searchParams.put("userMobile", mobile);
-        }
-        PaginationResponse<GiveDto> paginationResponse = giveService.queryGiveListByPagination(new PaginationRequest(page, pageSize, searchParams));
+        PaginationResponse<GiveDto> paginationResponse = giveService.queryGiveListByPagination(giveLogPage);
 
         Map<String, Object> outParams = new HashMap();
         outParams.put("content", paginationResponse.getContent());

@@ -3,8 +3,8 @@ package com.fuint.common.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fuint.common.dto.ReqCouponDto;
 import com.fuint.common.param.CouponListParam;
+import com.fuint.common.param.CouponPage;
 import com.fuint.framework.exception.BusinessCheckException;
-import com.fuint.framework.pagination.PaginationRequest;
 import com.fuint.framework.pagination.PaginationResponse;
 import com.fuint.framework.web.ResponseObject;
 import com.fuint.repository.model.MtCoupon;
@@ -24,10 +24,10 @@ public interface CouponService extends IService<MtCoupon> {
     /**
      * 分页查询卡券列表
      *
-     * @param paginationRequest
+     * @param couponPage
      * @return
      */
-    PaginationResponse<MtCoupon> queryCouponListByPagination(PaginationRequest paginationRequest) throws BusinessCheckException;
+    PaginationResponse<MtCoupon> queryCouponListByPagination(CouponPage couponPage);
 
     /**
      * 保存卡券
@@ -42,10 +42,9 @@ public interface CouponService extends IService<MtCoupon> {
      * 根据ID获取卡券信息
      *
      * @param id 卡券ID
-     * @throws BusinessCheckException
      * @return
      */
-    MtCoupon queryCouponById(Integer id) throws BusinessCheckException;
+    MtCoupon queryCouponById(Integer id);
 
     /**
      * 删除卡券信息

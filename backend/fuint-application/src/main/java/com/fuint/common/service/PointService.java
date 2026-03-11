@@ -21,16 +21,15 @@ public interface PointService extends IService<MtPoint> {
      * @param paginationRequest
      * @return
      */
-    PaginationResponse<PointDto> queryPointListByPagination(PaginationRequest paginationRequest) throws BusinessCheckException;
+    PaginationResponse<PointDto> queryPointListByPagination(PaginationRequest paginationRequest);
 
     /**
      * 添加积分
      *
-     * @param  reqPointDto
-     * @throws BusinessCheckException
+     * @param  mtPoint
      * @return
      */
-    void addPoint(MtPoint reqPointDto) throws BusinessCheckException;
+    void addPoint(MtPoint mtPoint);
 
     /**
      * 转赠积分

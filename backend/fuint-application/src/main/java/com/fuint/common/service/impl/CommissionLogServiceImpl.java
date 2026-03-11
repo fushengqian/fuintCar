@@ -85,7 +85,7 @@ public class CommissionLogServiceImpl extends ServiceImpl<MtCommissionLogMapper,
      * @return
      */
     @Override
-    public PaginationResponse<CommissionLogDto> queryCommissionLogByPagination(CommissionLogPage commissionLogPage) throws BusinessCheckException {
+    public PaginationResponse<CommissionLogDto> queryCommissionLogByPagination(CommissionLogPage commissionLogPage) {
         LambdaQueryWrapper<MtCommissionLog> lambdaQueryWrapper = Wrappers.lambdaQuery();
         lambdaQueryWrapper.ne(MtCommissionLog::getStatus, StatusEnum.DISABLE.getKey());
         String target = commissionLogPage.getTarget();

@@ -1,15 +1,14 @@
 package com.fuint.module.backendApi.controller;
 
-import com.fuint.common.Constants;
 import com.fuint.common.dto.AccountInfo;
 import com.fuint.common.dto.StoreDto;
 import com.fuint.common.enums.StatusEnum;
+import com.fuint.common.param.StorePage;
 import com.fuint.common.service.MerchantService;
 import com.fuint.common.service.SettingService;
 import com.fuint.common.service.StoreService;
 import com.fuint.common.util.TokenUtil;
 import com.fuint.framework.exception.BusinessCheckException;
-import com.fuint.framework.pagination.PaginationRequest;
 import com.fuint.framework.pagination.PaginationResponse;
 import com.fuint.framework.web.BaseController;
 import com.fuint.framework.web.ResponseObject;
@@ -63,27 +62,16 @@ public class BackendStoreController extends BaseController {
     @RequestMapping(value = "/list", method = RequestMethod.GET)
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('store:list')")
-    public ResponseObject list(HttpServletRequest request) throws BusinessCheckException {
-        Integer page = request.getParameter("page") == null ? Constants.PAGE_NUMBER : Integer.parseInt(request.getParameter("page"));
-        Integer pageSize = request.getParameter("pageSize") == null ? Constants.PAGE_SIZE : Integer.parseInt(request.getParameter("pageSize"));
-        String storeName = request.getParameter("name");
-        String storeStatus = request.getParameter("status");
+    public ResponseObject list(@ModelAttribute StorePage storePage) throws BusinessCheckException {
         AccountInfo accountInfo = TokenUtil.getAccountInfo();
 
-        Map<String, Object> params = new HashMap<>();
         if (accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0) {
-            params.put("merchantId", accountInfo.getMerchantId());
+            storePage.setMerchantId(accountInfo.getMerchantId());
         }
         if (accountInfo.getStoreId() != null && accountInfo.getStoreId() > 0) {
-            params.put("storeId", accountInfo.getStoreId());
+            storePage.setStoreId(accountInfo.getStoreId());
         }
-        if (StringUtil.isNotEmpty(storeName)) {
-            params.put("name", storeName);
-        }
-        if (StringUtil.isNotEmpty(storeStatus)) {
-            params.put("status", storeStatus);
-        }
-        PaginationResponse<StoreDto> paginationResponse = storeService.queryStoreListByPagination(new PaginationRequest(page, pageSize, params));
+        PaginationResponse<StoreDto> paginationResponse = storeService.queryStoreListByPagination(storePage);
 
         List<MtMerchant> merchantList = merchantService.getMyMerchantList(accountInfo.getMerchantId(), accountInfo.getStoreId(), StatusEnum.ENABLED.getKey());
 

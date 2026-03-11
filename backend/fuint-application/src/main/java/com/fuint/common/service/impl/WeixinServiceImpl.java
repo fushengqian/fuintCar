@@ -482,11 +482,10 @@ public class WeixinServiceImpl implements WeixinService {
      * @param page 跳转页面
      * @param params 发送参数
      * @param sendTime 发送时间
-     * @throws BusinessCheckException
      * @return
      * */
     @Override
-    public Boolean sendSubscribeMessage(Integer merchantId, Integer userId, String toUserOpenId, String key, String page, Map<String,Object> params, Date sendTime) throws BusinessCheckException {
+    public Boolean sendSubscribeMessage(Integer merchantId, Integer userId, String toUserOpenId, String key, String page, Map<String,Object> params, Date sendTime) {
         if (StringUtil.isEmpty(toUserOpenId) || StringUtil.isEmpty(key) || userId < 1) {
             return false;
         }

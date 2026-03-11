@@ -6,6 +6,7 @@ import com.fuint.common.dto.ParamDto;
 import com.fuint.common.enums.CouponTypeEnum;
 import com.fuint.common.enums.StatusEnum;
 import com.fuint.common.enums.UserCouponStatusEnum;
+import com.fuint.common.param.SendLogPage;
 import com.fuint.common.service.CouponService;
 import com.fuint.common.service.SendLogService;
 import com.fuint.common.service.StoreService;
@@ -176,9 +177,13 @@ public class BackendUserCouponController extends BaseController {
 
         // 发券记录，部分作废
         MtUserCoupon userCoupon = mtUserCouponMapper.selectById(id);
-        Map<String, Object> requestParams = new HashMap<>();
-        requestParams.put("uuid", userCoupon.getUuid());
-        PaginationResponse<MtSendLog> list = sendLogService.querySendLogListByPagination(new PaginationRequest(Constants.PAGE_NUMBER, Constants.MAX_ROWS, requestParams));
+
+        SendLogPage sendLogPage = new SendLogPage();
+        sendLogPage.setPage(Constants.PAGE_NUMBER);
+        sendLogPage.setPageSize(Constants.MAX_ROWS);
+        sendLogPage.setUuid(userCoupon.getUuid());
+
+        PaginationResponse<MtSendLog> list = sendLogService.querySendLogListByPagination(sendLogPage);
         if (list.getContent().size() > 0) {
             MtSendLog sendLog = list.getContent().get(0);
             if (sendLog.getStatus().equals(UserCouponStatusEnum.UNUSED.getKey())) {

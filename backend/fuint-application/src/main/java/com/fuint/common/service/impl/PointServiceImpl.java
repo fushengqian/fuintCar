@@ -74,7 +74,7 @@ public class PointServiceImpl extends ServiceImpl<MtPointMapper, MtPoint> implem
      * @return
      */
     @Override
-    public PaginationResponse<PointDto> queryPointListByPagination(PaginationRequest paginationRequest) throws BusinessCheckException {
+    public PaginationResponse<PointDto> queryPointListByPagination(PaginationRequest paginationRequest) {
         LambdaQueryWrapper<MtPoint> lambdaQueryWrapper = Wrappers.lambdaQuery();
         lambdaQueryWrapper.ne(MtPoint::getStatus, StatusEnum.DISABLE.getKey());
 
@@ -146,7 +146,7 @@ public class PointServiceImpl extends ServiceImpl<MtPointMapper, MtPoint> implem
     @Override
     @Transactional(rollbackFor = Exception.class)
     @OperationServiceLog(description = "修改会员积分")
-    public void addPoint(MtPoint mtPoint) throws BusinessCheckException {
+    public void addPoint(MtPoint mtPoint) {
         if (mtPoint.getUserId() < 0) {
            return;
         }
@@ -163,7 +163,7 @@ public class PointServiceImpl extends ServiceImpl<MtPointMapper, MtPoint> implem
 
         MtUser mtUser = mtUserMapper.selectById(mtPoint.getUserId());
         if (mtPoint.getMerchantId() != null && !mtPoint.getMerchantId().equals(mtUser.getMerchantId())) {
-            throw new BusinessCheckException("充值积分出错，权限不足");
+            return;
         }
 
         Integer newAmount = mtUser.getPoint() + mtPoint.getAmount();

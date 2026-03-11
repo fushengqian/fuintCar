@@ -73,12 +73,11 @@ public class OpenGiftServiceImpl extends ServiceImpl<MtOpenGiftMapper, MtOpenGif
     /**
      * 获取开卡赠礼列表
      * @param  paramMap
-     * @throws BusinessCheckException
      * @return
      * */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public ResponseObject getOpenGiftList(Map<String, Object> paramMap) throws BusinessCheckException {
+    public ResponseObject getOpenGiftList(Map<String, Object> paramMap) {
         Integer pageNumber = paramMap.get("pageNumber") == null ? Constants.PAGE_NUMBER : Integer.parseInt(paramMap.get("pageNumber").toString());
         Integer pageSize = paramMap.get("pageSize") == null ? Constants.PAGE_SIZE : Integer.parseInt(paramMap.get("pageSize").toString());
 
@@ -150,11 +149,10 @@ public class OpenGiftServiceImpl extends ServiceImpl<MtOpenGiftMapper, MtOpenGif
      * 根据ID获取开卡赠礼详情
      *
      * @param  id 开卡赠礼ID
-     * @throws BusinessCheckException
      * @return
      */
     @Override
-    public OpenGiftDto getOpenGiftDetail(Integer id) throws BusinessCheckException {
+    public OpenGiftDto getOpenGiftDetail(Integer id) {
         MtOpenGift openGift = mtOpenGiftMapper.selectById(id);
         return dealDetail(openGift);
     }
@@ -164,7 +162,6 @@ public class OpenGiftServiceImpl extends ServiceImpl<MtOpenGiftMapper, MtOpenGif
      *
      * @param  id 开卡赠礼ID
      * @param  operator 操作人
-     * @throws BusinessCheckException
      * @return
      */
     @Override
@@ -239,13 +236,13 @@ public class OpenGiftServiceImpl extends ServiceImpl<MtOpenGiftMapper, MtOpenGif
      * @return
      * */
     @Override
-    public Boolean openGift(Integer userId, Integer gradeId, boolean isNewMember) throws BusinessCheckException {
+    public Boolean openGift(Integer userId, Integer gradeId, boolean isNewMember) {
         if (gradeId == null || gradeId.compareTo(0) <= 0) {
             return false;
         }
         MtUser user = mtUserMapper.selectById(userId);
         if (user == null) {
-            throw new BusinessCheckException("会员状态异常");
+            return false;
         }
         if (user.getIsStaff().equals(YesOrNoEnum.YES.getKey())) {
             return false;
@@ -343,10 +340,9 @@ public class OpenGiftServiceImpl extends ServiceImpl<MtOpenGiftMapper, MtOpenGif
      * 赠礼详情
      *
      * @param  openGiftInfo 赠礼详情
-     * @throws BusinessCheckException
      * @return OpenGiftDto
      * */
-    private OpenGiftDto dealDetail(MtOpenGift openGiftInfo) throws BusinessCheckException {
+    private OpenGiftDto dealDetail(MtOpenGift openGiftInfo) {
         OpenGiftDto dto = new OpenGiftDto();
 
         dto.setId(openGiftInfo.getId());

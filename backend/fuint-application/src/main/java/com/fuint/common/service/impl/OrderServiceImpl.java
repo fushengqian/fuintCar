@@ -579,18 +579,13 @@ public class OrderServiceImpl extends ServiceImpl<MtOrderMapper, MtOrder> implem
 
         // 扣减积分
         if (orderDto.getUsePoint() != null && orderDto.getUsePoint() > 0) {
-            try {
-                MtPoint reqPointDto = new MtPoint();
-                reqPointDto.setUserId(orderDto.getUserId());
-                reqPointDto.setAmount(-orderDto.getUsePoint());
-                reqPointDto.setOrderSn(orderSn);
-                reqPointDto.setDescription("支付扣除" + orderDto.getUsePoint() + "积分");
-                reqPointDto.setOperator("");
-                pointService.addPoint(reqPointDto);
-            } catch (BusinessCheckException e) {
-                logger.error("OrderService 扣减积分失败...{}", e.getMessage());
-                throw new BusinessCheckException("扣减积分失败，请稍后重试");
-            }
+            MtPoint mtPoint = new MtPoint();
+            mtPoint.setUserId(orderDto.getUserId());
+            mtPoint.setAmount(-orderDto.getUsePoint());
+            mtPoint.setOrderSn(orderSn);
+            mtPoint.setDescription("支付扣除" + orderDto.getUsePoint() + "积分");
+            mtPoint.setOperator("");
+            pointService.addPoint(mtPoint);
         }
 
         // 如果是商品订单，生成订单商品

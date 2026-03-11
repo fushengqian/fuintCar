@@ -184,7 +184,6 @@ public class StaffServiceImpl extends ServiceImpl<MtStaffMapper, MtStaff> implem
      * 根据ID获取员工信息
      *
      * @param  id 员工ID
-     * @throws BusinessCheckException
      * @return
      */
     @Override
@@ -201,12 +200,11 @@ public class StaffServiceImpl extends ServiceImpl<MtStaffMapper, MtStaff> implem
      * @param  staffId 员工ID
      * @param status 状态
      * @param operator 操作人
-     * @throws BusinessCheckException
      * @return
      */
     @Override
     @OperationServiceLog(description = "修改店铺员工状态")
-    public Integer updateAuditedStatus(Integer staffId, String status, String operator) throws BusinessCheckException {
+    public Integer updateAuditedStatus(Integer staffId, String status, String operator) {
         MtStaff mtStaff = mtStaffMapper.selectById(staffId);
         if (mtStaff != null) {
             mtStaff.setAuditedStatus(status);
@@ -256,7 +254,6 @@ public class StaffServiceImpl extends ServiceImpl<MtStaffMapper, MtStaff> implem
      * 根据手机号获取员工信息
      *
      * @param mobile 手机号
-     * @throws BusinessCheckException
      * @return
      */
     @Override
@@ -271,7 +268,6 @@ public class StaffServiceImpl extends ServiceImpl<MtStaffMapper, MtStaff> implem
      * 根据会员ID获取员工信息
      *
      * @param  userId 会员ID
-     * @throws BusinessCheckException
      * @return
      */
     @Override
@@ -283,11 +279,10 @@ public class StaffServiceImpl extends ServiceImpl<MtStaffMapper, MtStaff> implem
      * 根据手机号获取员工信息
      *
      * @param mobile 手机号
-     * @throws BusinessCheckException
      * @return
      */
     @Override
-    public StaffDto getStaffInfoByMobile(String mobile) throws BusinessCheckException {
+    public StaffDto getStaffInfoByMobile(String mobile) {
         MtStaff mtStaff =  mtStaffMapper.queryStaffByMobile(mobile);
         StaffDto staffDto = new StaffDto();
         if (mtStaff != null) {

@@ -5,13 +5,13 @@ import com.fuint.common.dto.AccountInfo;
 import com.fuint.common.dto.GiveDto;
 import com.fuint.common.dto.GiveItemDto;
 import com.fuint.common.enums.StatusEnum;
+import com.fuint.common.param.GiveLogPage;
 import com.fuint.common.service.GiveService;
 import com.fuint.common.util.CommonUtil;
 import com.fuint.common.util.ExcelUtil;
 import com.fuint.common.util.TokenUtil;
 import com.fuint.common.util.XlsUtil;
 import com.fuint.framework.exception.BusinessCheckException;
-import com.fuint.framework.pagination.PaginationRequest;
 import com.fuint.framework.pagination.PaginationResponse;
 import com.fuint.framework.web.BaseController;
 import com.fuint.framework.web.ResponseObject;
@@ -65,33 +65,16 @@ public class BackendGiveLogController extends BaseController {
     @ApiOperation(value = "查询转赠列表")
     @RequestMapping(value = "/list", method = RequestMethod.GET)
     @CrossOrigin
-    public ResponseObject list(HttpServletRequest request) throws BusinessCheckException {
-        Integer page = request.getParameter("page") == null ? Constants.PAGE_NUMBER : Integer.parseInt(request.getParameter("page"));
-        Integer pageSize = request.getParameter("pageSize") == null ? Constants.PAGE_SIZE : Integer.parseInt(request.getParameter("pageSize"));
-        String mobile = request.getParameter("mobile") == null ? "" : request.getParameter("mobile");
-        String userId = request.getParameter("userId") == null ? "" : request.getParameter("userId");
-        String couponId = request.getParameter("couponId") == null ? "" : request.getParameter("couponId");
-
+    public ResponseObject list(@ModelAttribute GiveLogPage giveLogPage) throws BusinessCheckException {
         AccountInfo accountInfo = TokenUtil.getAccountInfo();
-        Integer storeId = accountInfo.getStoreId() == null ? 0 : accountInfo.getStoreId();
-        Map<String, Object> params = new HashMap<>();
-        if (StringUtil.isNotEmpty(mobile)) {
-            params.put("mobile", mobile);
-        }
-        if (StringUtil.isNotEmpty(userId)) {
-            params.put("userId", userId);
-        }
-        if (StringUtil.isNotEmpty(couponId)) {
-            params.put("couponId", couponId);
-        }
-        if (storeId > 0) {
-            params.put("storeId", storeId);
-        }
         if (accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0) {
-            params.put("merchantId", accountInfo.getMerchantId());
+            giveLogPage.setMerchantId(accountInfo.getMerchantId());
+        }
+        if (accountInfo.getStoreId() != null && accountInfo.getStoreId() > 0) {
+            giveLogPage.setStoreId(accountInfo.getStoreId());
         }
 
-        PaginationResponse<GiveDto> paginationResponse = giveService.queryGiveListByPagination(new PaginationRequest(page, pageSize, params));
+        PaginationResponse<GiveDto> paginationResponse = giveService.queryGiveListByPagination(giveLogPage);
 
         Map<String, Object> result = new HashMap<>();
         result.put("paginationResponse", paginationResponse);
@@ -154,7 +137,10 @@ public class BackendGiveLogController extends BaseController {
     @RequestMapping(value = "/export", method = RequestMethod.GET)
     @ResponseBody
     public void export(HttpServletRequest request, HttpServletResponse response) throws Exception {
-        PaginationResponse<GiveDto> paginationResponse = giveService.queryGiveListByPagination(new PaginationRequest(Constants.PAGE_NUMBER, Constants.MAX_ROWS));
+        GiveLogPage giveLogPage = new GiveLogPage();
+        giveLogPage.setPage(Constants.PAGE_NUMBER);
+        giveLogPage.setPageSize(Constants.MAX_ROWS);
+        PaginationResponse<GiveDto> paginationResponse = giveService.queryGiveListByPagination(giveLogPage);
         List<GiveDto> list = paginationResponse.getContent();
 
         // excel标题

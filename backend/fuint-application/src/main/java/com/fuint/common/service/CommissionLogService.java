@@ -22,14 +22,14 @@ public interface CommissionLogService extends IService<MtCommissionLog> {
      * @param commissionLogPage
      * @return
      */
-    PaginationResponse<CommissionLogDto> queryCommissionLogByPagination(CommissionLogPage commissionLogPage) throws BusinessCheckException;
+    PaginationResponse<CommissionLogDto> queryCommissionLogByPagination(CommissionLogPage commissionLogPage);
 
     /**
      * 计算订单分销提成
      *
      * @param orderId 订单ID
-     * @return
      * @throws BusinessCheckException
+     * @return
      */
     void calculateCommission(Integer orderId) throws BusinessCheckException;
 
@@ -37,8 +37,8 @@ public interface CommissionLogService extends IService<MtCommissionLog> {
      * 根据ID获取记录信息
      *
      * @param id 记录ID
-     * @return
      * @throws BusinessCheckException
+     * @return
      */
     CommissionLogDto queryCommissionLogById(Integer id) throws BusinessCheckException;
 
@@ -46,8 +46,8 @@ public interface CommissionLogService extends IService<MtCommissionLog> {
      * 更新分销提成记录
      *
      * @param requestParam 请求参数
-     * @return
      * @throws BusinessCheckException
+     * @return
      */
     void updateCommissionLog(CommissionLogRequest requestParam) throws BusinessCheckException;
 }
