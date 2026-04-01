@@ -38,10 +38,11 @@ public interface GoodsService {
      *
      * @param  reqDto 商品参数
      * @param  storeIds 分配店铺
+     * @param  accountInfo 登录用户信息
      * @throws BusinessCheckException
      * @return
      */
-    MtGoods saveGoods(MtGoods reqDto, String storeIds) throws BusinessCheckException;
+    MtGoods saveGoods(MtGoods reqDto, String storeIds, AccountInfo accountInfo) throws BusinessCheckException;
 
     /**
      * 根据ID获取商品信息

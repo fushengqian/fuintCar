@@ -3,6 +3,7 @@ package com.fuint.common.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fuint.common.dto.AccountInfo;
 import com.fuint.common.dto.BannerDto;
 import com.fuint.common.enums.StatusEnum;
 import com.fuint.common.param.BannerPage;
@@ -176,10 +177,13 @@ public class BannerServiceImpl extends ServiceImpl<MtBannerMapper, MtBanner> imp
     @Override
     @Transactional(rollbackFor = Exception.class)
     @OperationServiceLog(description = "更新焦点图")
-    public MtBanner updateBanner(BannerDto bannerDto) throws BusinessCheckException {
+    public MtBanner updateBanner(BannerDto bannerDto, AccountInfo accountInfo) throws BusinessCheckException {
         MtBanner mtBanner = queryBannerById(bannerDto.getId());
         if (mtBanner == null) {
-            throw new BusinessCheckException("该Banner状态异常");
+            throw new BusinessCheckException("该 Banner 状态异常");
+        }
+        if (accountInfo.getMerchantId() > 0 && !mtBanner.getMerchantId().equals(accountInfo.getMerchantId())) {
+            throw new BusinessCheckException("不同商户，没有操作权限");
         }
 
         mtBanner.setId(bannerDto.getId());

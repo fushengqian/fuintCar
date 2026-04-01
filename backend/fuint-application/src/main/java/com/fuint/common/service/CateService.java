@@ -54,10 +54,11 @@ public interface CateService extends IService<MtGoodsCate> {
     /**
      * 更新分类
      * @param  reqDto 分类参数
+     * @param  accountInfo 登录用户信息
      * @throws BusinessCheckException
      * @return
      * */
-    MtGoodsCate updateCate(MtGoodsCate reqDto) throws BusinessCheckException;
+    MtGoodsCate updateCate(MtGoodsCate reqDto, AccountInfo accountInfo) throws BusinessCheckException;
 
     /**
      * 获取分类列表

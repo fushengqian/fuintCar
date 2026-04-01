@@ -102,7 +102,7 @@ public class BackendCateController extends BaseController {
         cate.setId(id);
         cate.setStatus(status);
 
-        cateService.updateCate(cate);
+        cateService.updateCate(cate, accountInfo);
         return getSuccessResult(true);
     }
 
@@ -140,7 +140,7 @@ public class BackendCateController extends BaseController {
 
         if (StringUtil.isNotEmpty(id)) {
             info.setId(Integer.parseInt(id));
-            cateService.updateCate(info);
+            cateService.updateCate(info, accountInfo);
         } else {
             cateService.addCate(info);
         }

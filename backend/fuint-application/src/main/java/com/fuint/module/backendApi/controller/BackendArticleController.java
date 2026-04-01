@@ -99,7 +99,7 @@ public class BackendArticleController extends BaseController {
         article.setOperator(accountInfo.getAccountName());
         article.setId(id);
         article.setStatus(status);
-        articleService.updateArticle(article);
+        articleService.updateArticle(article, accountInfo);
 
         return getSuccessResult(true);
     }
@@ -122,7 +122,7 @@ public class BackendArticleController extends BaseController {
         }
 
         if (articleDto.getId() != null && articleDto.getId() > 0) {
-            articleService.updateArticle(articleDto);
+            articleService.updateArticle(articleDto, accountInfo);
         } else {
             articleService.addArticle(articleDto);
         }

@@ -116,7 +116,7 @@ public class BackendBookController extends BaseController {
 
         mtBook.setOperator(accountInfo.getAccountName());
         mtBook.setStatus(status);
-        bookService.updateBook(mtBook);
+        bookService.updateBook(mtBook, accountInfo);
 
         return getSuccessResult(true);
     }
@@ -131,7 +131,7 @@ public class BackendBookController extends BaseController {
     public ResponseObject saveHandler(@RequestBody BookDto bookDto) throws BusinessCheckException {
         AccountInfo accountInfo = TokenUtil.getAccountInfo();
         if (accountInfo.getMerchantId() == null || accountInfo.getMerchantId() < 1) {
-            getFailureResult(5002);
+            return getFailureResult(5002);
         }
         if (accountInfo.getStoreId() != null && accountInfo.getStoreId() > 0) {
             bookDto.setStoreId(accountInfo.getStoreId());
@@ -160,7 +160,7 @@ public class BackendBookController extends BaseController {
         }
         mtBook.setServiceTimes(timeStr);
         if (bookDto.getId() != null) {
-            bookService.updateBook(mtBook);
+            bookService.updateBook(mtBook, accountInfo);
         } else {
             bookService.addBook(mtBook);
         }

@@ -112,7 +112,7 @@ public class BackendBookItemController extends BaseController {
 
         mtBookItem.setOperator(accountInfo.getAccountName());
         mtBookItem.setStatus(status);
-        bookItemService.updateBookItem(mtBookItem);
+        bookItemService.updateBookItem(mtBookItem, accountInfo);
 
         return getSuccessResult(true);
     }
@@ -135,7 +135,7 @@ public class BackendBookItemController extends BaseController {
             mtBookItem.setStoreId(accountInfo.getStoreId());
         }
         if (bookItemDto.getId() != null && mtBookItem.getId() > 0) {
-            bookItemService.updateBookItem(mtBookItem);
+            bookItemService.updateBookItem(mtBookItem, accountInfo);
         } else {
             bookItemService.addBookItem(mtBookItem);
         }

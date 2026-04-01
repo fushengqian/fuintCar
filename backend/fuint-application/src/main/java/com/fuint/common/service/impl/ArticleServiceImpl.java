@@ -3,6 +3,7 @@ package com.fuint.common.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fuint.common.dto.AccountInfo;
 import com.fuint.common.dto.ArticleDto;
 import com.fuint.common.enums.StatusEnum;
 import com.fuint.common.param.ArticlePage;
@@ -31,7 +32,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
 /**
  * 文章服务接口
@@ -196,15 +196,19 @@ public class ArticleServiceImpl extends ServiceImpl<MtArticleMapper, MtArticle> 
      * 编辑文章
      *
      * @param  articleDto 文章参数
+     * @param accountInfo 登录用户信息
      * @throws BusinessCheckException
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
     @OperationServiceLog(description = "编辑文章")
-    public MtArticle updateArticle(ArticleDto articleDto) throws BusinessCheckException {
+    public MtArticle updateArticle(ArticleDto articleDto, AccountInfo accountInfo) throws BusinessCheckException {
         MtArticle mtArticle = queryArticleById(articleDto.getId());
         if (mtArticle == null) {
             throw new BusinessCheckException("该文章状态异常");
+        }
+        if (accountInfo.getMerchantId() > 0 && !mtArticle.getMerchantId().equals(accountInfo.getMerchantId())) {
+            throw new BusinessCheckException("不同商户，没有操作权限");
         }
         mtArticle.setId(articleDto.getId());
         if (articleDto.getImage() != null) {
@@ -243,48 +247,5 @@ public class ArticleServiceImpl extends ServiceImpl<MtArticleMapper, MtArticle> 
         mtArticle.setUpdateTime(new Date());
         mtArticleMapper.updateById(mtArticle);
         return mtArticle;
-    }
-
-    /**
-     * 根据条件搜索文章
-     *
-     * @param params 搜索条件
-     * @return
-     * */
-    @Override
-    public List<MtArticle> queryArticleListByParams(Map<String, Object> params) {
-        String status =  params.get("status") == null ? StatusEnum.ENABLED.getKey(): params.get("status").toString();
-        String storeId =  params.get("storeId") == null ? "" : params.get("storeId").toString();
-        String title = params.get("title") == null ? "" : params.get("title").toString();
-        String merchantId = params.get("merchantId") == null ? "" : params.get("merchantId").toString();
-
-        LambdaQueryWrapper<MtArticle> lambdaQueryWrapper = Wrappers.lambdaQuery();
-        if (StringUtils.isNotBlank(merchantId)) {
-            lambdaQueryWrapper.like(MtArticle::getMerchantId, merchantId);
-        }
-        if (StringUtils.isNotBlank(title)) {
-            lambdaQueryWrapper.like(MtArticle::getTitle, title);
-        }
-        if (StringUtils.isNotBlank(status)) {
-            lambdaQueryWrapper.eq(MtArticle::getStatus, status);
-        }
-        if (StringUtils.isNotBlank(storeId)) {
-            lambdaQueryWrapper.and(wq -> wq
-                              .eq(MtArticle::getStoreId, 0)
-                              .or()
-                              .eq(MtArticle::getStoreId, storeId));
-        }
-
-        lambdaQueryWrapper.orderByAsc(MtArticle::getSort);
-        List<MtArticle> dataList = mtArticleMapper.selectList(lambdaQueryWrapper);
-        String baseImage = settingService.getUploadBasePath();
-
-        if (dataList.size() > 0) {
-            for (MtArticle article : dataList) {
-                 article.setImage(baseImage + article.getImage());
-            }
-        }
-
-        return dataList;
     }
 }

@@ -14,10 +14,10 @@
         <encoder>
             <pattern>%d{MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
         </encoder>
-        <file>/data/log/fuint/server.log</file>
+        <file>/data/log/fuint/serverCar.log</file>
         <!-- 滚动记录文件，先将日志记录到指定文件，当符合某个条件时，将日志记录到其他文件。-->
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>/data/log/fuint/archive/server_all_%d{yyyy-MM-dd}.%i.log.zip
+            <fileNamePattern>/data/log/fuint/archive/serverCar_all_%d{yyyy-MM-dd}.%i.log.zip
             </fileNamePattern>
             <!-- 当天的日志大小 超过${log.max.size}时,压缩日志并保存 -->
             <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">

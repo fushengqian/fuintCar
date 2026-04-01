@@ -1,13 +1,12 @@
 package com.fuint.common.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.fuint.common.dto.AccountInfo;
 import com.fuint.common.dto.ArticleDto;
 import com.fuint.common.param.ArticlePage;
+import com.fuint.framework.exception.BusinessCheckException;
 import com.fuint.framework.pagination.PaginationResponse;
 import com.fuint.repository.model.MtArticle;
-import com.fuint.framework.exception.BusinessCheckException;
-import java.util.List;
-import java.util.Map;
 
 /**
  * 文章业务接口
@@ -52,16 +51,9 @@ public interface ArticleService extends IService<MtArticle> {
     /**
      * 更新文章
      * @param  articleDto
+     * @param  accountInfo
      * @throws BusinessCheckException
      * */
-    MtArticle updateArticle(ArticleDto articleDto) throws BusinessCheckException;
-
-    /**
-     * 根据条件搜索文章
-     *
-     * @param params
-     * @return
-     * */
-    List<MtArticle> queryArticleListByParams(Map<String, Object> params) throws BusinessCheckException;
+    MtArticle updateArticle(ArticleDto articleDto, AccountInfo accountInfo) throws BusinessCheckException;
 
 }

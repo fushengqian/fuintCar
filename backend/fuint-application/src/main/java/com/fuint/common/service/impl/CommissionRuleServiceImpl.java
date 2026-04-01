@@ -247,11 +247,14 @@ public class CommissionRuleServiceImpl extends ServiceImpl<MtCommissionRuleMappe
     @Override
     @Transactional(rollbackFor = Exception.class)
     @OperationServiceLog(description = "更新分销提成规则")
-    public MtCommissionRule updateCommissionRule(CommissionRuleParam commissionRule) throws BusinessCheckException {
+    public MtCommissionRule updateCommissionRule(CommissionRuleParam commissionRule, AccountInfo accountInfo) throws BusinessCheckException {
         MtCommissionRule mtCommissionRule = mtCommissionRuleMapper.selectById(commissionRule.getId());
         if (mtCommissionRule == null) {
             logger.error("更新分销提成规则失败...");
             throw new BusinessCheckException("该数据状态异常");
+        }
+        if (accountInfo.getMerchantId() > 0 && !mtCommissionRule.getMerchantId().equals(accountInfo.getMerchantId())) {
+            throw new BusinessCheckException("不同商户，没有操作权限");
         }
         mtCommissionRule.setId(commissionRule.getId());
         if (commissionRule.getName() != null) {

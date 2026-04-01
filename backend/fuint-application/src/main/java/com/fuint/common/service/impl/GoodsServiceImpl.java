@@ -267,11 +267,16 @@ public class GoodsServiceImpl extends ServiceImpl<MtGoodsMapper, MtGoods> implem
     @Override
     @Transactional(rollbackFor = Exception.class)
     @OperationServiceLog(description = "保存商品信息")
-    public MtGoods saveGoods(MtGoods reqDto, String storeIds) throws BusinessCheckException {
+    public MtGoods saveGoods(MtGoods reqDto, String storeIds, AccountInfo accountInfo) throws BusinessCheckException {
         MtGoods mtGoods = new MtGoods();
         if (reqDto.getId() > 0) {
             mtGoods = queryGoodsById(reqDto.getId());
             reqDto.setMerchantId(mtGoods.getMerchantId());
+            // 添加商户权限校验
+            if (accountInfo != null && accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0 
+                && !mtGoods.getMerchantId().equals(accountInfo.getMerchantId())) {
+                throw new BusinessCheckException("不同商户，没有操作权限");
+            }
         }
         if (reqDto.getMerchantId() != null && reqDto.getMerchantId() > 0) {
             mtGoods.setMerchantId(reqDto.getMerchantId());

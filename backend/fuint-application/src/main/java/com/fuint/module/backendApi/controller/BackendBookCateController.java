@@ -98,7 +98,7 @@ public class BackendBookCateController extends BaseController {
 
         mtBookCate.setOperator(accountInfo.getAccountName());
         mtBookCate.setStatus(status);
-        bookCateService.updateBookCate(mtBookCate);
+        bookCateService.updateBookCate(mtBookCate, accountInfo);
 
         return getSuccessResult(true);
     }
@@ -124,7 +124,7 @@ public class BackendBookCateController extends BaseController {
             mtBookCate.setStoreId(accountInfo.getStoreId());
         }
         if (bookCateDto.getId() != null && bookCateDto.getId() > 0) {
-            bookCateService.updateBookCate(mtBookCate);
+            bookCateService.updateBookCate(mtBookCate, accountInfo);
         } else {
             bookCateService.addBookCate(mtBookCate);
         }

@@ -480,7 +480,7 @@ public class BackendGoodsController extends BaseController {
         }
         mtGoods.setOperator(accountInfo.getAccountName());
 
-        MtGoods goodsInfo = goodsService.saveGoods(mtGoods, storeIds);
+        MtGoods goodsInfo = goodsService.saveGoods(mtGoods, storeIds, accountInfo);
 
         Map<String, Object> result = new HashMap();
         result.put("goodsInfo", goodsInfo);

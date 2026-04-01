@@ -303,11 +303,14 @@ public class CommissionLogServiceImpl extends ServiceImpl<MtCommissionLogMapper,
     @Override
     @Transactional
     @OperationServiceLog(description = "更新分销提成记录")
-    public void updateCommissionLog(CommissionLogRequest requestParam) throws BusinessCheckException {
+    public void updateCommissionLog(CommissionLogRequest requestParam, AccountInfo accountInfo) throws BusinessCheckException {
         MtCommissionLog mtCommissionLog =  mtCommissionLogMapper.selectById(requestParam.getId());
         if (mtCommissionLog == null) {
             logger.error("更新分销提成记录失败...");
             throw new BusinessCheckException("更新分销提成记录失败，该记录不存在");
+        }
+        if (accountInfo.getMerchantId() > 0 && !mtCommissionLog.getMerchantId().equals(accountInfo.getMerchantId())) {
+            throw new BusinessCheckException("不同商户，没有操作权限");
         }
         if (requestParam.getAmount() != null) {
             mtCommissionLog.setAmount(new BigDecimal(requestParam.getAmount()));

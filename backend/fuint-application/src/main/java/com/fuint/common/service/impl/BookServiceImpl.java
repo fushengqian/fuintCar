@@ -3,6 +3,7 @@ package com.fuint.common.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fuint.common.dto.AccountInfo;
 import com.fuint.common.dto.BookDto;
 import com.fuint.common.dto.DayDto;
 import com.fuint.common.dto.TimeDto;
@@ -254,10 +255,13 @@ public class BookServiceImpl extends ServiceImpl<MtBookMapper, MtBook> implement
     @Override
     @Transactional(rollbackFor = Exception.class)
     @OperationServiceLog(description = "修改预约项目")
-    public MtBook updateBook(MtBook mtBook) throws BusinessCheckException {
+    public MtBook updateBook(MtBook mtBook, AccountInfo accountInfo) throws BusinessCheckException {
         MtBook book = mtBookMapper.selectById(mtBook.getId());
         if (book == null) {
             throw new BusinessCheckException("该预约项目状态异常");
+        }
+        if (accountInfo.getMerchantId() > 0 && !book.getMerchantId().equals(accountInfo.getMerchantId())) {
+            throw new BusinessCheckException("不同商户，没有操作权限");
         }
         if (mtBook.getLogo() != null) {
             book.setLogo(mtBook.getLogo());
