@@ -140,7 +140,6 @@ public class PointServiceImpl extends ServiceImpl<MtPointMapper, MtPoint> implem
      * 添加积分记录
      *
      * @param  mtPoint 积分参数
-     * @throws BusinessCheckException
      * @return
      */
     @Override

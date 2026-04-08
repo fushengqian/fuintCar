@@ -120,13 +120,11 @@ public class BackendArticleController extends BaseController {
         if (accountInfo.getStoreId() != null && accountInfo.getStoreId() > 0) {
             articleDto.setStoreId(accountInfo.getStoreId());
         }
-
         if (articleDto.getId() != null && articleDto.getId() > 0) {
             articleService.updateArticle(articleDto, accountInfo);
         } else {
             articleService.addArticle(articleDto);
         }
-
         return getSuccessResult(true);
     }
 

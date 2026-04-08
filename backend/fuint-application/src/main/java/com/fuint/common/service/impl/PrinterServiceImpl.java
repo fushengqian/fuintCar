@@ -3,6 +3,7 @@ package com.fuint.common.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fuint.common.dto.AccountInfo;
 import com.fuint.common.dto.GoodsSpecValueDto;
 import com.fuint.common.dto.OrderGoodsDto;
 import com.fuint.common.dto.UserOrderDto;
@@ -319,7 +320,7 @@ public class PrinterServiceImpl extends ServiceImpl<MtPrinterMapper, MtPrinter> 
     @Override
     @Transactional(rollbackFor = Exception.class)
     @OperationServiceLog(description = "更新打印机")
-    public MtPrinter updatePrinter(MtPrinter mtPrinter) throws BusinessCheckException {
+    public MtPrinter updatePrinter(MtPrinter mtPrinter, AccountInfo accountInfo) throws BusinessCheckException {
         MtPrinter printer = queryPrinterById(mtPrinter.getId());
         BeanUtils.copyProperties(mtPrinter, printer);
         if (mtPrinter == null) {
@@ -327,6 +328,9 @@ public class PrinterServiceImpl extends ServiceImpl<MtPrinterMapper, MtPrinter> 
         }
         if (printer.getMerchantId() == null || printer.getMerchantId() < 1) {
             throw new BusinessCheckException("平台方帐号无法执行该操作，请使用商户帐号操作");
+        }
+        if (!printer.getMerchantId().equals(accountInfo.getMerchantId())) {
+            throw new BusinessCheckException("不同商户，没有操作权限");
         }
 
         if (mtPrinter.getSn() != null && mtPrinter.getName() != null && !mtPrinter.getStatus().equals(StatusEnum.DISABLE.getKey())) {

@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fuint.common.Constants;
+import com.fuint.common.dto.AccountInfo;
 import com.fuint.common.dto.CouponDto;
 import com.fuint.common.dto.ReqCouponDto;
 import com.fuint.common.dto.ReqSendLogDto;
@@ -1082,14 +1083,14 @@ public class CouponServiceImpl extends ServiceImpl<MtCouponMapper, MtCoupon> imp
      *
      * @param id             核销流水ID
      * @param userCouponId   用户卡券ID
-     * @param operator       操作人
+     * @param accountInfo       操作人
      * @throws BusinessCheckException
      * @return
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
     @OperationServiceLog(description = "撤销卡券核销")
-    public void rollbackUserCoupon(Integer id, Integer userCouponId,String operator) throws BusinessCheckException {
+    public void rollbackUserCoupon(Integer id, Integer userCouponId, AccountInfo accountInfo) throws BusinessCheckException {
         MtConfirmLog mtConfirmLog = mtConfirmLogMapper.selectById(id);
         MtUserCoupon userCoupon = mtUserCouponMapper.selectById(userCouponId);
 
@@ -1099,6 +1100,10 @@ public class CouponServiceImpl extends ServiceImpl<MtCouponMapper, MtCoupon> imp
 
         if (null == userCoupon) {
             throw new BusinessCheckException("用户卡券不存在");
+        }
+
+        if (!mtConfirmLog.getMerchantId().equals(accountInfo.getMerchantId())) {
+            throw new BusinessCheckException("不同商户，没有操作权限");
         }
 
         // 卡券未过期才能撤销,当前时间小于过期日期才能删除,48小时
@@ -1144,7 +1149,7 @@ public class CouponServiceImpl extends ServiceImpl<MtCouponMapper, MtCoupon> imp
         mtUserCouponMapper.updateById(userCoupon);
 
         // 更新流水
-        mtConfirmLog.setOperator(operator);
+        mtConfirmLog.setOperator(accountInfo.getAccountName());
         mtConfirmLog.setStatus(StatusEnum.DISABLE.getKey());
         mtConfirmLog.setUpdateTime(new Date());
         mtConfirmLog.setCancelTime(new Date());

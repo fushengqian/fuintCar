@@ -952,7 +952,7 @@ public class GoodsServiceImpl extends ServiceImpl<MtGoodsMapper, MtGoods> implem
                 mtGoods.setLinePrice(new BigDecimal("0"));
                 mtGoods.setStock(0);
                 mtGoods.setStatus(StatusEnum.FORBIDDEN.getKey());
-                saveGoods(mtGoods, storeIds);
+                saveGoods(mtGoods, storeIds, accountInfo);
             }
         }
 

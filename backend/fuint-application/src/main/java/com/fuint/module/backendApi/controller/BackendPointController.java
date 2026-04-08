@@ -208,7 +208,7 @@ public class BackendPointController extends BaseController {
     @RequestMapping(value = "/doRecharge", method = RequestMethod.POST)
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('point:modify')")
-    public ResponseObject doRecharge(@RequestBody Map<String, Object> param) throws BusinessCheckException {
+    public ResponseObject doRecharge(@RequestBody Map<String, Object> param) {
         String amount = param.get("amount") == null ? "0" : param.get("amount").toString();
         String remark = param.get("remark") == null ? "后台充值" : param.get("remark").toString();
         Integer userId = param.get("userId") == null ? 0 : Integer.parseInt(param.get("userId").toString());

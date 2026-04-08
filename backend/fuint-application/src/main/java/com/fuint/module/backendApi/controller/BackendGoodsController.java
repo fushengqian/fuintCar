@@ -150,7 +150,7 @@ public class BackendGoodsController extends BaseController {
         goodsInfo.setOperator(accountInfo.getAccountName());
         goodsInfo.setId(goodsId);
         goodsInfo.setStatus(status);
-        goodsService.saveGoods(goodsInfo, null);
+        goodsService.saveGoods(goodsInfo, null, accountInfo);
         logger.info("更新商品状态, goodsId = {},account = {}", goodsId, accountInfo.getAccountName());
 
         return getSuccessResult(true);

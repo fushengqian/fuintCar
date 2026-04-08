@@ -3,11 +3,12 @@ package com.fuint.common.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fuint.common.dto.AccountInfo;
 import com.fuint.common.dto.RefundDto;
+import com.fuint.common.param.RefundPage;
 import com.fuint.framework.exception.BusinessCheckException;
-import com.fuint.framework.pagination.PaginationRequest;
 import com.fuint.framework.pagination.PaginationResponse;
 import com.fuint.framework.web.ResponseObject;
 import com.fuint.repository.model.MtRefund;
+
 import java.util.Date;
 import java.util.Map;
 
@@ -22,10 +23,10 @@ public interface RefundService extends IService<MtRefund> {
     /**
      * 分页查询列表
      *
-     * @param paginationRequest
+     * @param refundPage
      * @return
      */
-    PaginationResponse<RefundDto> getRefundListByPagination(PaginationRequest paginationRequest) throws BusinessCheckException;
+    PaginationResponse<RefundDto> getRefundListByPagination(RefundPage refundPage) throws BusinessCheckException;
 
     /**
      * 获取用户的售后订单
@@ -60,17 +61,21 @@ public interface RefundService extends IService<MtRefund> {
 
     /**
      * 更新售后订单
-     * @param  reqDto
+     *
+     * @param  refundDto
      * @throws BusinessCheckException
+     * @return
      * */
-    MtRefund updateRefund(RefundDto reqDto) throws BusinessCheckException;
+    MtRefund updateRefund(RefundDto refundDto) throws BusinessCheckException;
 
     /**
      * 同意售后订单
-     * @param  reqDto
+     *
+     * @param  refundDto
      * @throws BusinessCheckException
+     * @return
      * */
-    MtRefund agreeRefund(RefundDto reqDto) throws BusinessCheckException;
+    MtRefund agreeRefund(RefundDto refundDto) throws BusinessCheckException;
 
     /**
      * 发起退款

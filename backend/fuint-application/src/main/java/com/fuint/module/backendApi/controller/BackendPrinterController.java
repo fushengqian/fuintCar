@@ -109,7 +109,7 @@ public class BackendPrinterController extends BaseController {
 
         mtPrinter.setOperator(accountInfo.getAccountName());
         mtPrinter.setStatus(status);
-        printerService.updatePrinter(mtPrinter);
+        printerService.updatePrinter(mtPrinter, accountInfo);
 
         return getSuccessResult(true);
     }
@@ -133,7 +133,7 @@ public class BackendPrinterController extends BaseController {
         }
         if (printer.getId() != null && printer.getId() > 0) {
             mtPrinter.setId(printer.getId());
-            printerService.updatePrinter(mtPrinter);
+            printerService.updatePrinter(mtPrinter, accountInfo);
         } else {
             printerService.addPrinter(mtPrinter);
         }

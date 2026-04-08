@@ -102,7 +102,7 @@ public class BackendConfirmLogController extends BaseController {
         String userCouponId = (request.getParameter("userCouponId") == null || StringUtil.isEmpty(request.getParameter("userCouponId"))) ? "0" : request.getParameter("userCouponId");
 
         AccountInfo accountInfo = TokenUtil.getAccountInfo();
-        couponService.rollbackUserCoupon(id, Integer.parseInt(userCouponId), accountInfo.getAccountName());
+        couponService.rollbackUserCoupon(id, Integer.parseInt(userCouponId), accountInfo);
         return getSuccessResult(true);
     }
 }

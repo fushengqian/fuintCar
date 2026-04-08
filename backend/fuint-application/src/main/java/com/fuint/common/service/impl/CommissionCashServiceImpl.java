@@ -3,6 +3,7 @@ package com.fuint.common.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fuint.common.dto.AccountInfo;
 import com.fuint.common.dto.CommissionCashDto;
 import com.fuint.common.dto.OrderUserDto;
 import com.fuint.common.enums.CommissionCashStatusEnum;
@@ -181,11 +182,12 @@ public class CommissionCashServiceImpl extends ServiceImpl<MtCommissionCashMappe
      * 分销提成结算
      *
      * @param commissionSettleRequest 结算参数
+     * @param accountInfo 操作用户
      * @return
      */
     @Override
     @Transactional
-    public String settleCommission(CommissionSettleRequest commissionSettleRequest) throws BusinessCheckException {
+    public String settleCommission(CommissionSettleRequest commissionSettleRequest, AccountInfo accountInfo) throws BusinessCheckException {
         LambdaQueryWrapper<MtCommissionLog> lambdaQueryWrapper = Wrappers.lambdaQuery();
         lambdaQueryWrapper.eq(MtCommissionLog::getStatus, CommissionStatusEnum.NORMAL.getKey());
         if (commissionSettleRequest.getMerchantId() != null && StringUtils.isNotBlank(commissionSettleRequest.getMerchantId().toString())) {
@@ -259,7 +261,7 @@ public class CommissionCashServiceImpl extends ServiceImpl<MtCommissionCashMappe
                           commissionLogRequest.setSettleUuid(uuid);
                           commissionLogRequest.setOperator(commissionSettleRequest.getOperator());
                           commissionLogRequest.setStatus(CommissionStatusEnum.SETTLED.getKey());
-                          commissionLogService.updateCommissionLog(commissionLogRequest);
+                          commissionLogService.updateCommissionLog(commissionLogRequest, accountInfo);
                      }
                  }
                  MtCommissionCash mtCommissionCash = new MtCommissionCash();

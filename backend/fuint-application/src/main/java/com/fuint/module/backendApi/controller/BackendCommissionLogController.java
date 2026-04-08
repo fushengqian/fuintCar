@@ -165,7 +165,7 @@ public class BackendCommissionLogController extends BaseController {
         if (accountInfo.getStoreId() != null && accountInfo.getStoreId() > 0) {
             commissionSettleRequest.setStoreId(accountInfo.getStoreId());
         }
-        String settleNo = commissionCashService.settleCommission(commissionSettleRequest);
+        String settleNo = commissionCashService.settleCommission(commissionSettleRequest, accountInfo);
         return getSuccessResult(settleNo);
     }
 }

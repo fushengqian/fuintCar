@@ -72,7 +72,7 @@
     "babel-plugin-dynamic-import-node": "2.3.3",
     "buffer": "^6.0.3",
     "chalk": "4.1.0",
-    "compression-webpack-plugin": "5.0.2",
+    "compression-webpack-plugin": "6.1.2",
     "connect": "3.6.6",
     "cross-env": "^7.0.3",
     "crypto-browserify": "^3.12.1",
