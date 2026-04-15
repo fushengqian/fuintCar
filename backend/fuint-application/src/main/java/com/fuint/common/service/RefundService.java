@@ -7,6 +7,7 @@ import com.fuint.common.param.RefundPage;
 import com.fuint.framework.exception.BusinessCheckException;
 import com.fuint.framework.pagination.PaginationResponse;
 import com.fuint.framework.web.ResponseObject;
+import com.fuint.module.clientApi.request.RefundListRequest;
 import com.fuint.repository.model.MtRefund;
 
 import java.util.Date;
@@ -30,18 +31,21 @@ public interface RefundService extends IService<MtRefund> {
 
     /**
      * 获取用户的售后订单
-     * @param paramMap 查询参数
+     *
+     * @param  param 查询参数
      * @throws BusinessCheckException
+     * @return
      * */
-    ResponseObject getUserRefundList(Map<String, Object> paramMap) throws BusinessCheckException;
+    ResponseObject getUserRefundList(RefundListRequest param) throws BusinessCheckException;
 
     /**
      * 创建售后订单
      *
-     * @param reqDto
+     * @param  refundDto
      * @throws BusinessCheckException
+     * @return
      */
-    MtRefund createRefund(RefundDto reqDto) throws BusinessCheckException;
+    MtRefund createRefund(RefundDto refundDto) throws BusinessCheckException;
 
     /**
      * 根据ID获取售后订单信息
@@ -63,19 +67,21 @@ public interface RefundService extends IService<MtRefund> {
      * 更新售后订单
      *
      * @param  refundDto
+     * @param  accountInfo
      * @throws BusinessCheckException
      * @return
      * */
-    MtRefund updateRefund(RefundDto refundDto) throws BusinessCheckException;
+    MtRefund updateRefund(RefundDto refundDto, AccountInfo accountInfo) throws BusinessCheckException;
 
     /**
      * 同意售后订单
      *
      * @param  refundDto
+     * @param  accountInfo
      * @throws BusinessCheckException
      * @return
      * */
-    MtRefund agreeRefund(RefundDto refundDto) throws BusinessCheckException;
+    MtRefund agreeRefund(RefundDto refundDto, AccountInfo accountInfo) throws BusinessCheckException;
 
     /**
      * 发起退款

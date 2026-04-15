@@ -20,4 +20,7 @@ public class RefundListRequest extends PageParam implements Serializable {
     @ApiModelProperty(value="状态", name="status")
     private String status;
 
+    @ApiModelProperty(value="关键字", name="keyword")
+    private String keyword;
+
 }

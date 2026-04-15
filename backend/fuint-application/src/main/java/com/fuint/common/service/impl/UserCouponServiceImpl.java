@@ -351,7 +351,7 @@ public class UserCouponServiceImpl extends ServiceImpl<MtUserCouponMapper, MtUse
      * */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public ResponseObject getUserCouponList(Map<String, Object> paramMap) throws BusinessCheckException {
+    public ResponseObject getUserCouponList(Map<String, Object> paramMap) {
         Integer pageNumber = paramMap.get("pageNumber") == null ? Constants.PAGE_NUMBER : Integer.parseInt(paramMap.get("pageNumber").toString());
         Integer pageSize = paramMap.get("pageSize") == null ? Constants.PAGE_SIZE : Integer.parseInt(paramMap.get("pageSize").toString());
         String userId = paramMap.get("userId") == null ? "" : paramMap.get("userId").toString();
@@ -552,7 +552,7 @@ public class UserCouponServiceImpl extends ServiceImpl<MtUserCouponMapper, MtUse
      * @return
      * */
     @Override
-    public List<CouponDto> getPayAbleCouponList(Integer userId, Integer storeId, String useFor) throws BusinessCheckException {
+    public List<CouponDto> getPayAbleCouponList(Integer userId, Integer storeId, String useFor) {
         List<String> statusList = Arrays.asList(UserCouponStatusEnum.UNUSED.getKey());
         List<MtUserCoupon> userCouponList = mtUserCouponMapper.getUserCouponList(userId, statusList);
         List<CouponDto> dataList = new ArrayList<>();

@@ -123,10 +123,9 @@ public interface MemberService extends IService<MtUser> {
      *
      * @param  merchantId 商户ID
      * @param  mobile 会员手机
-     * @throws BusinessCheckException
      * @return
      */
-    MtUser queryMemberByMobile(Integer merchantId, String mobile) throws BusinessCheckException;
+    MtUser queryMemberByMobile(Integer merchantId, String mobile);
 
     /**
      * 根据会员号获取会员信息

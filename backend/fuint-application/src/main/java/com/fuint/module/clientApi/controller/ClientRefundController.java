@@ -1,9 +1,11 @@
 package com.fuint.module.clientApi.controller;
 
+import com.fuint.common.dto.AccountInfo;
 import com.fuint.common.dto.RefundDto;
 import com.fuint.common.dto.UserInfo;
 import com.fuint.common.dto.UserOrderDto;
 import com.fuint.common.enums.RefundStatusEnum;
+import com.fuint.common.param.RefundInfoParam;
 import com.fuint.common.service.OrderService;
 import com.fuint.common.service.RefundService;
 import com.fuint.common.util.TokenUtil;
@@ -63,14 +65,9 @@ public class ClientRefundController extends BaseController {
         } else {
             status = "";
         }
-        Map<String, Object> params = new HashMap();
-        params.put("userId", userInfo.getId());
-        if (StringUtil.isNotEmpty(status)) {
-            params.put("status", status);
-        }
-        params.put("pageNumber", param.getPage());
-
-        ResponseObject orderData = refundService.getUserRefundList(params);
+        param.setUserId(userInfo.getId());
+        param.setStatus(status);
+        ResponseObject orderData = refundService.getUserRefundList(param);
         return getSuccessResult(orderData.getData());
     }
 
@@ -142,28 +139,26 @@ public class ClientRefundController extends BaseController {
     @ApiOperation(value = "售后用户发货")
     @RequestMapping(value = "/delivery", method = RequestMethod.POST)
     @CrossOrigin
-    public ResponseObject delivery(@RequestBody Map<String, Object> param) throws BusinessCheckException {
+    public ResponseObject delivery(@RequestBody RefundInfoParam params) throws BusinessCheckException {
         UserInfo mtUser = TokenUtil.getUserInfo();
-        param.put("userId", mtUser.getId());
 
-        String refundId = param.get("refundId") == null ? "" : param.get("refundId").toString();
-        String expressName = param.get("expressName") == null ? "" : param.get("expressName").toString();
-        String expressNo = param.get("expressNo") == null ? "" : param.get("expressNo").toString();
-
-        RefundDto refundInfo = refundService.getRefundById(Integer.parseInt(refundId));
+        RefundDto refundInfo = refundService.getRefundById(params.getRefundId());
         if (refundInfo == null || (!refundInfo.getUserId().equals(mtUser.getId()))) {
-            return getFailureResult(2001);
+            return getFailureResult(201);
         }
 
-        if (StringUtil.isEmpty(expressName) || StringUtil.isEmpty(expressNo)) {
+        if (StringUtil.isEmpty(params.getExpressName()) || StringUtil.isEmpty(params.getExpressNo())) {
             return getFailureResult(201, "物流信息不能为空");
         }
 
         RefundDto refundDto = new RefundDto();
-        refundDto.setId(Integer.parseInt(refundId));
-        refundDto.setExpressName(expressName);
-        refundDto.setExpressNo(expressNo);
-        refundService.updateRefund(refundDto);
+        refundDto.setId(params.getRefundId());
+        refundDto.setExpressName(params.getExpressName());
+        refundDto.setExpressNo(params.getExpressNo());
+        AccountInfo accountInfo = new AccountInfo();
+        accountInfo.setAccountName(mtUser.getMobile());
+        accountInfo.setMerchantId(refundInfo.getMerchantId());
+        refundService.updateRefund(refundDto, accountInfo);
 
         return getSuccessResult(true);
     }

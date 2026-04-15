@@ -25,7 +25,7 @@ public interface UserCouponService extends IService<MtUserCoupon> {
      * @param paginationRequest
      * @return
      */
-    PaginationResponse<MtUserCoupon> queryUserCouponListByPagination(PaginationRequest paginationRequest) throws BusinessCheckException;
+    PaginationResponse<MtUserCoupon> queryUserCouponListByPagination(PaginationRequest paginationRequest);
 
     /**
      * 领取卡券
@@ -49,14 +49,14 @@ public interface UserCouponService extends IService<MtUserCoupon> {
      * @param status
      * @return
      * */
-    List<MtUserCoupon> getUserCouponList(Integer userId, List<String> status) throws BusinessCheckException;
+    List<MtUserCoupon> getUserCouponList(Integer userId, List<String> status);
 
     /**
      * 获取用户的卡券
      * @param paramMap 查询参数
      * @throws BusinessCheckException
      * */
-    ResponseObject getUserCouponList(Map<String, Object> paramMap) throws BusinessCheckException;
+    ResponseObject getUserCouponList(Map<String, Object> paramMap);
 
     /**
      * 获取会员可支付用的卡券
@@ -66,7 +66,7 @@ public interface UserCouponService extends IService<MtUserCoupon> {
      * @param useFor 用途
      * @return
      * */
-    List<CouponDto> getPayAbleCouponList(Integer userId, Integer storeId, String useFor) throws BusinessCheckException;
+    List<CouponDto> getPayAbleCouponList(Integer userId, Integer storeId, String useFor);
 
     /**
      * 获取会员卡券详情
@@ -81,7 +81,7 @@ public interface UserCouponService extends IService<MtUserCoupon> {
      * @param userCouponId
      * @return
      * */
-    MtUserCoupon getUserCouponDetail(Integer userCouponId) throws BusinessCheckException;
+    MtUserCoupon getUserCouponDetail(Integer userCouponId);
 
     /**
      * 根据过期时间查询会员卡券
@@ -92,7 +92,7 @@ public interface UserCouponService extends IService<MtUserCoupon> {
      * @param endTime
      * @return
      * */
-    List<MtUserCoupon> getUserCouponListByExpireTime(Integer userId, String status, String startTime, String endTime) throws BusinessCheckException;
+    List<MtUserCoupon> getUserCouponListByExpireTime(Integer userId, String status, String startTime, String endTime);
 
     /**
      * 给会员发送卡券（会员购买）
