@@ -288,7 +288,7 @@ public class BackendCashierController extends BaseController {
         }
 
         MtUser userInfo = memberService.queryMemberById(Integer.parseInt(userId));
-        if (accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0 && !accountInfo.getMerchantId().equals(userInfo.getMerchantId())) {
+        if (accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0 && userInfo != null && !accountInfo.getMerchantId().equals(userInfo.getMerchantId())) {
             return getFailureResult(1004);
         }
 
@@ -354,7 +354,7 @@ public class BackendCashierController extends BaseController {
              if (cartList.size() > 0) {
                  Integer userId = cartList.get(0).getUserId();
                  String isVisitor = cartList.get(0).getIsVisitor();
-                 Map<String, Object> cartInfo = orderService.calculateCartGoods(accountInfo.getMerchantId(), userId, cartList, 0, false, PlatformTypeEnum.PC.getCode(), OrderModeEnum.ONESELF.getKey());
+                 Map<String, Object> cartInfo = orderService.calculateCartGoods(accountInfo.getMerchantId(), userId, cartList, 0, false, PlatformTypeEnum.PC.getCode(), OrderModeEnum.ONESELF.getKey(), null);
                  dto.setNum(Integer.parseInt(cartInfo.get("totalNum").toString()));
                  dto.setAmount(new BigDecimal(cartInfo.get("totalPrice").toString()));
                  if (isVisitor.equals(YesOrNoEnum.NO.getKey())) {

@@ -587,7 +587,7 @@ public class RefundServiceImpl extends ServiceImpl<MtRefundMapper, MtRefund> imp
                     mtGoodsSkuMapper.updateById(mtGoodsSku);
                 }
                 // 生成入库记录
-                stockService.addStockRecord(orderInfo.getMerchantId(), orderInfo.getStoreId(), mtOrderGoods.getGoodsId(), mtOrderGoods.getSkuId(), "increase", mtOrderGoods.getNum().doubleValue(), "订单退款恢复库存，订单号：" + orderInfo.getOrderSn());
+                stockService.addStockRecord(orderInfo.getMerchantId(), orderInfo.getStoreId(), mtOrderGoods.getGoodsId(), mtOrderGoods.getSkuId(), "increase", mtOrderGoods.getNum(), "订单退款恢复库存，订单号：" + orderInfo.getOrderSn());
             }
         }
 

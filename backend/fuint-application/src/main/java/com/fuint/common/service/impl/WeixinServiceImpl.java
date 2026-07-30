@@ -376,7 +376,6 @@ public class WeixinServiceImpl implements WeixinService {
             if (!json.containsKey("errcode")) {
                 return json;
             } else {
-                logger.info("getWxProfile wxAppId = {}", wxAppId);
                 logger.error("获取微信getWxProfile出错：code = " + json.containsKey("errcode") + ",msg="+ json.get("errmsg"));
             }
         } catch (Exception e) {
@@ -415,7 +414,6 @@ public class WeixinServiceImpl implements WeixinService {
             if (!json.containsKey("errcode")) {
                 return json;
             } else {
-                logger.info("getWxOpenId wxAppId = {}", wxAppId);
                 logger.error("获取openId出错：code = " + json.containsKey("errcode") + ",msg="+ json.get("errmsg"));
             }
         } catch (Exception e) {
@@ -1338,7 +1336,6 @@ public class WeixinServiceImpl implements WeixinService {
         }
 
         WxPayApiConfigKit.setThreadLocalWxPayApiConfig(apiConfig);
-        logger.info("微信支付参数：{}", JsonUtil.toJSONString(apiConfig));
 
         return apiConfig;
     }
