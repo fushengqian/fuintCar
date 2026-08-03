@@ -1192,7 +1192,7 @@ public class CouponServiceImpl extends ServiceImpl<MtCouponMapper, MtCoupon> imp
      *
      * @param id 批次ID
      * @param uuid 批次ID
-     * @param accountInfo   操作人
+     * @param accountInfo 操作人
      * @return
      */
     @Override
