@@ -3,9 +3,12 @@ package com.fuint.common.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fuint.common.dto.order.OrderDto;
 import com.fuint.common.dto.order.VehicleDto;
 import com.fuint.common.dto.order.VehicleOrderDto;
+import com.fuint.common.dto.system.AccountInfo;
 import com.fuint.common.enums.StatusEnum;
+import com.fuint.common.param.CreateServiceOrderParam;
 import com.fuint.common.param.VehicleOrderPage;
 import com.fuint.common.service.*;
 import com.fuint.common.util.CommonUtil;
@@ -13,10 +16,7 @@ import com.fuint.framework.annoation.OperationServiceLog;
 import com.fuint.framework.exception.BusinessCheckException;
 import com.fuint.framework.pagination.PaginationResponse;
 import com.fuint.repository.mapper.MtVehicleOrderMapper;
-import com.fuint.repository.model.MtStore;
-import com.fuint.repository.model.MtUser;
-import com.fuint.repository.model.MtUserCoupon;
-import com.fuint.repository.model.MtVehicleOrder;
+import com.fuint.repository.model.*;
 import com.fuint.utils.StringUtil;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
@@ -49,6 +49,12 @@ public class VehicleOrderServiceImpl extends ServiceImpl<MtVehicleOrderMapper, M
     private MemberService memberService;
 
     private StoreService storeService;
+
+    private OrderService orderService;
+
+    private GoodsService goodsService;
+
+    private VehicleService vehicleService;
 
     @Override
     @OperationServiceLog(description = "查询车辆服务单列表")
@@ -205,6 +211,82 @@ public class VehicleOrderServiceImpl extends ServiceImpl<MtVehicleOrderMapper, M
             lambdaQueryWrapper.eq(MtVehicleOrder::getStatus, status);
         }
         return mtVehicleOrderMapper.selectList(lambdaQueryWrapper);
+    }
+
+    @Override
+    @OperationServiceLog(description = "后台服务开单")
+    @Transactional(rollbackFor = Exception.class)
+    public MtVehicleOrder createServiceOrder(CreateServiceOrderParam param, AccountInfo accountInfo) throws BusinessCheckException {
+        if (param.getServiceItems() == null || param.getServiceItems().isEmpty()) {
+            throw new BusinessCheckException("服务项目不能为空");
+        }
+
+        // 查询车辆信息
+        MtVehicle mtVehicle = vehicleService.queryVehicleById(param.getVehicleId());
+        if (mtVehicle == null) {
+            throw new BusinessCheckException("车辆不存在");
+        }
+        Integer userId = param.getUserId() != null ? param.getUserId() : mtVehicle.getUserId();
+        if (userId == null || userId == 0) {
+            throw new BusinessCheckException("未找到关联会员信息");
+        }
+        MtUser mtUser = memberService.queryMemberById(userId);
+        if (mtUser == null) {
+            throw new BusinessCheckException("会员不存在");
+        }
+
+        // 创建服务单
+        MtVehicleOrder mtVehicleOrder = new MtVehicleOrder();
+        mtVehicleOrder.setUserId(userId);
+        mtVehicleOrder.setVehiclePlateNo(mtVehicle.getVehiclePlateNo());
+        mtVehicleOrder.setVehicleId(mtVehicle.getId());
+        mtVehicleOrder.setMerchantId(accountInfo.getMerchantId());
+        mtVehicleOrder.setStoreId(param.getStoreId() != null ? param.getStoreId() : accountInfo.getStoreId());
+        mtVehicleOrder.setOrderSn(CommonUtil.createOrderSN(userId.toString()));
+        mtVehicleOrder.setCouponId(param.getCouponId() != null ? param.getCouponId() : 0);
+        mtVehicleOrder.setRemark(param.getRemark());
+        mtVehicleOrder.setOperator(accountInfo.getAccountName());
+        mtVehicleOrder.setStatus(StatusEnum.ENABLED.getKey());
+        mtVehicleOrder.setCreateTime(new Date());
+        mtVehicleOrder.setUpdateTime(new Date());
+        this.save(mtVehicleOrder);
+
+        // 为每个服务项目创建订单
+        List<Integer> orderIdList = new ArrayList<>();
+        for (CreateServiceOrderParam.ServiceItem item : param.getServiceItems()) {
+            MtGoods mtGoods = goodsService.queryGoodsById(item.getGoodsId());
+            if (mtGoods == null) {
+                throw new BusinessCheckException("商品不存在，ID：" + item.getGoodsId());
+            }
+
+            OrderDto orderDto = new OrderDto();
+            orderDto.setType("service");
+            orderDto.setGoodsId(item.getGoodsId());
+            orderDto.setBuyNum(item.getBuyNum() != null ? item.getBuyNum() : 1);
+            orderDto.setAmount(item.getPrice() != null ? item.getPrice() : mtGoods.getPrice());
+            orderDto.setUserId(userId);
+            orderDto.setStoreId(mtVehicleOrder.getStoreId());
+            orderDto.setOrderMode("oneself");
+            orderDto.setParam("vehicleOrderId:" + mtVehicleOrder.getId());
+            orderDto.setRemark("服务开单-" + mtVehicleOrder.getOrderSn());
+
+            // 如果有卡券，绑定到第一笔订单
+            if (param.getCouponId() != null && param.getCouponId() > 0 && orderIdList.isEmpty()) {
+                orderDto.setCouponId(param.getCouponId());
+            }
+
+            MtOrder mtOrder = orderService.saveOrder(orderDto);
+            orderIdList.add(mtOrder.getId());
+        }
+
+        // 更新服务单的关联订单ID
+        String orderIds = StringUtils.join(orderIdList, ",");
+        mtVehicleOrder.setOrderIds(orderIds);
+        mtVehicleOrder.setUpdateTime(new Date());
+        updateById(mtVehicleOrder);
+
+        log.info("服务开单成功，服务单ID：{}，订单ID列表：{}，操作人：{}", mtVehicleOrder.getId(), orderIds, accountInfo.getAccountName());
+        return mtVehicleOrder;
     }
 
     @Override

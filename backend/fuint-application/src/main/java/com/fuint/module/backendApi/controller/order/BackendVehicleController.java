@@ -22,6 +22,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -94,22 +95,19 @@ public class BackendVehicleController extends BaseController {
             mtVehicle = new MtVehicle();
         }
         Integer userId = null;
-        if (StringUtil.isNotEmpty(param.getUserNo()) && mtVehicle.getUserId() == null) {
-            MtUser mtUser = memberService.queryMemberByUserNo(accountInfo.getMerchantId(), param.getUserNo());
-            if (mtUser == null) {
-                mtUser = new MtUser();
-                mtUser.setUserNo(param.getUserNo());
-                mtUser.setName(param.getName());
-                mtUser.setMobile(param.getMobile());
-                mtUser.setMerchantId(accountInfo.getMerchantId());
-                mtUser.setStoreId(accountInfo.getStoreId());
-                mtUser.setStatus(StatusEnum.ENABLED.getKey());
-                mtUser = memberService.addMember(mtUser, null);
-                userId = mtUser.getId();
+        // 根据会员号或会员手机号查询/新增会员信息
+        if (StringUtil.isNotEmpty(param.getUserNo()) || StringUtil.isNotEmpty(param.getMobile())) {
+            MtUser mtUser = null;
+            // 优先根据会员号查询
+            if (StringUtil.isNotEmpty(param.getUserNo())) {
+                mtUser = memberService.queryMemberByUserNo(accountInfo.getMerchantId(), param.getUserNo());
             }
-        } else if (StringUtil.isNotEmpty(param.getMobile()) && mtVehicle.getUserId() == null) {
-            MtUser mtUser = memberService.queryMemberByMobile(accountInfo.getMerchantId(), param.getMobile());
+            // 会员号查不到则根据手机号查询
+            if (mtUser == null && StringUtil.isNotEmpty(param.getMobile())) {
+                mtUser = memberService.queryMemberByMobile(accountInfo.getMerchantId(), param.getMobile());
+            }
             if (mtUser == null) {
+                // 没查到会员信息，新增一个会员
                 mtUser = new MtUser();
                 mtUser.setName(param.getName());
                 mtUser.setMobile(param.getMobile());
@@ -118,16 +116,37 @@ public class BackendVehicleController extends BaseController {
                 mtUser.setStoreId(accountInfo.getStoreId());
                 mtUser.setStatus(StatusEnum.ENABLED.getKey());
                 mtUser = memberService.addMember(mtUser, null);
-                userId = mtUser.getId();
-            }
-        } else {
-            userId = mtVehicle.getUserId();
-            MtUser mtUser = memberService.queryMemberById(userId);
-            if (mtUser != null) {
-                mtUser.setMobile(param.getMobile());
-                mtUser.setUserNo(param.getUserNo());
-                mtUser.setName(param.getName());
+            } else {
+                // 查到已有会员，更新会员信息
+                if (StringUtil.isNotEmpty(param.getName())) {
+                    mtUser.setName(param.getName());
+                }
+                if (StringUtil.isNotEmpty(param.getMobile())) {
+                    mtUser.setMobile(param.getMobile());
+                }
+                if (StringUtil.isNotEmpty(param.getUserNo())) {
+                    mtUser.setUserNo(param.getUserNo());
+                }
                 memberService.updateMember(mtUser, false);
+            }
+            userId = mtUser.getId();
+        } else {
+            // 未传入会员号或手机号，保持原有关联会员
+            userId = mtVehicle.getUserId();
+            if (userId != null) {
+                MtUser mtUser = memberService.queryMemberById(userId);
+                if (mtUser != null) {
+                    if (StringUtil.isNotEmpty(param.getName())) {
+                        mtUser.setName(param.getName());
+                    }
+                    if (StringUtil.isNotEmpty(param.getMobile())) {
+                        mtUser.setMobile(param.getMobile());
+                    }
+                    if (StringUtil.isNotEmpty(param.getUserNo())) {
+                        mtUser.setUserNo(param.getUserNo());
+                    }
+                    memberService.updateMember(mtUser, false);
+                }
             }
         }
 
@@ -162,6 +181,64 @@ public class BackendVehicleController extends BaseController {
         vehicleService.updateVehicle(mtVehicle, accountInfo);
 
         return getSuccessResult(true);
+    }
+
+    @ApiOperation(value = "更新车辆行驶公里数", notes="更新车辆行驶公里数并记录时间")
+    @RequestMapping(value = "/updateMileage", method = RequestMethod.POST)
+    @CrossOrigin
+    public ResponseObject updateMileage(@RequestBody Map<String, String> param) throws BusinessCheckException {
+        AccountInfo accountInfo = TokenUtil.getAccountInfo();
+        Integer vehicleId = param.get("vehicleId") == null ? 0 : Integer.parseInt(param.get("vehicleId"));
+        Integer mileage = param.get("mileage") == null ? null : Integer.parseInt(param.get("mileage"));
+
+        if (vehicleId <= 0) {
+            return getFailureResult(201, "车辆ID不能为空");
+        }
+        if (mileage == null || mileage < 0) {
+            return getFailureResult(202, "行驶公里数不能为空或负数");
+        }
+
+        vehicleService.updateVehicleMileage(vehicleId, mileage, accountInfo);
+        return getSuccessResult(true);
+    }
+
+    @ApiOperation(value = "搜索车辆（服务开单选择车辆）", notes = "按车牌号或会员手机号搜索车辆及会员信息")
+    @RequestMapping(value = "/searchVehicles", method = RequestMethod.GET)
+    @CrossOrigin
+    public ResponseObject searchVehicles(@RequestParam String keyword) throws BusinessCheckException {
+        AccountInfo accountInfo = TokenUtil.getAccountInfo();
+        if (StringUtil.isEmpty(keyword)) {
+            return getFailureResult(201, "关键字不能为空");
+        }
+        List<MtVehicle> vehicleList = vehicleService.searchVehiclesByKeyword(accountInfo.getMerchantId(), keyword);
+        // 附加会员信息
+        List<Map<String, Object>> resultList = new ArrayList<>();
+        if (vehicleList != null) {
+            for (MtVehicle v : vehicleList) {
+                Map<String, Object> map = new HashMap<>();
+                map.put("id", v.getId());
+                map.put("vehiclePlateNo", v.getVehiclePlateNo());
+                map.put("vehicleType", v.getVehicleType());
+                map.put("vehicleBrand", v.getVehicleBrand());
+                map.put("vehicleModel", v.getVehicleModel());
+                map.put("vehicleColor", v.getVehicleColor());
+                map.put("vehicleMileage", v.getVehicleMileage());
+                map.put("mileageRecordTime", v.getMileageRecordTime());
+                map.put("vin", v.getVin());
+                map.put("userId", v.getUserId());
+                map.put("merchantId", v.getMerchantId());
+                if (v.getUserId() != null) {
+                    MtUser mtUser = memberService.queryMemberById(v.getUserId());
+                    if (mtUser != null) {
+                        map.put("name", mtUser.getName());
+                        map.put("mobile", mtUser.getMobile());
+                        map.put("userNo", mtUser.getUserNo());
+                    }
+                }
+                resultList.add(map);
+            }
+        }
+        return getSuccessResult(resultList);
     }
 
     @ApiOperation(value = "删除车辆", notes = "根据ID删除会员车辆")

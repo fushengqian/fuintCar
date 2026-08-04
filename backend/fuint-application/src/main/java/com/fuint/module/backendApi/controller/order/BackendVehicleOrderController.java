@@ -5,6 +5,7 @@ import com.fuint.common.dto.common.ParamDto;
 import com.fuint.common.dto.order.VehicleOrderDto;
 import com.fuint.common.enums.StatusEnum;
 import com.fuint.common.enums.VehicleOrderStatusEnum;
+import com.fuint.common.param.CreateServiceOrderParam;
 import com.fuint.common.param.VehicleOrderPage;
 import com.fuint.common.service.StoreService;
 import com.fuint.common.service.VehicleOrderService;
@@ -104,6 +105,18 @@ public class BackendVehicleOrderController extends BaseController {
         vehicleOrderService.updateVehicleOrder(mtVehicleOrder);
 
         return getSuccessResult(true);
+    }
+
+    @ApiOperation(value="服务开单", notes="后台创建服务单并批量生成订单")
+    @RequestMapping(value = "/createServiceOrder", method = RequestMethod.POST)
+    @CrossOrigin
+    public ResponseObject createServiceOrder(@RequestBody CreateServiceOrderParam param) throws BusinessCheckException {
+        AccountInfo accountInfo = TokenUtil.getAccountInfo();
+        if (accountInfo.getMerchantId() == null || accountInfo.getMerchantId() <= 0) {
+            return getFailureResult(5002);
+        }
+        MtVehicleOrder mtVehicleOrder = vehicleOrderService.createServiceOrder(param, accountInfo);
+        return getSuccessResult(mtVehicleOrder);
     }
     @ApiOperation(value = "更新车辆服务单状态")
     @RequestMapping(value = "/updateStatus", method = RequestMethod.POST)

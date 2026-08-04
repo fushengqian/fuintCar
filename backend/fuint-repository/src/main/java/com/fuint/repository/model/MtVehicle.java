@@ -41,6 +41,12 @@ public class MtVehicle implements Serializable {
     @ApiModelProperty("车辆品牌")
     private String vehicleBrand;
 
+    @ApiModelProperty("车辆行驶公里数")
+    private Integer vehicleMileage;
+
+    @ApiModelProperty("行驶公里数记录时间")
+    private Date mileageRecordTime;
+
     @ApiModelProperty("车架号")
     private String vin;
 

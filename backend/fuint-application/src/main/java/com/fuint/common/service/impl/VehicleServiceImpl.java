@@ -212,6 +212,9 @@ public class VehicleServiceImpl extends ServiceImpl<MtVehicleMapper, MtVehicle> 
             if (StringUtils.isNotEmpty(mtVehicle.getStatus())) {
                 vehicle.setStatus(mtVehicle.getStatus());
             }
+            if (mtVehicle.getUserId() != null && mtVehicle.getUserId() > 0) {
+                vehicle.setUserId(mtVehicle.getUserId());
+            }
             vehicle.setUpdateTime(new Date());
             mtVehicleMapper.updateById(vehicle);
         } else {
@@ -289,5 +292,65 @@ public class VehicleServiceImpl extends ServiceImpl<MtVehicleMapper, MtVehicle> 
             lambdaQueryWrapper.eq(MtVehicle::getVehiclePlateNo, vehiclePlateNo);
         }
         return mtVehicleMapper.selectList(lambdaQueryWrapper);
+    }
+
+    @Override
+    @OperationServiceLog(description = "更新车辆行驶公里数")
+    @Transactional(rollbackFor = Exception.class)
+    public void updateVehicleMileage(Integer vehicleId, Integer mileage, AccountInfo accountInfo) throws BusinessCheckException {
+        MtVehicle mtVehicle = mtVehicleMapper.selectById(vehicleId);
+        if (mtVehicle == null) {
+            throw new BusinessCheckException("车辆不存在");
+        }
+        if (accountInfo.getMerchantId() > 0 && !mtVehicle.getMerchantId().equals(accountInfo.getMerchantId())) {
+            throw new BusinessCheckException("不同商户，无操作权限");
+        }
+        mtVehicle.setVehicleMileage(mileage);
+        mtVehicle.setMileageRecordTime(new Date());
+        mtVehicle.setUpdateTime(new Date());
+        mtVehicle.setOperator(accountInfo.getAccountName());
+        updateById(mtVehicle);
+        logger.info("更新车辆行驶公里数，车辆ID：{}，公里数：{}，操作人：{}", vehicleId, mileage, accountInfo.getAccountName());
+    }
+
+    @Override
+    public List<MtVehicle> searchVehiclesByKeyword(Integer merchantId, String keyword) {
+        if (StringUtil.isEmpty(keyword)) {
+            return new ArrayList<>();
+        }
+        List<MtVehicle> result = new ArrayList<>();
+        // 按车牌号模糊搜索
+        LambdaQueryWrapper<MtVehicle> wrapper = Wrappers.lambdaQuery();
+        wrapper.ne(MtVehicle::getStatus, StatusEnum.DISABLE.getKey());
+        wrapper.eq(MtVehicle::getMerchantId, merchantId);
+        wrapper.like(MtVehicle::getVehiclePlateNo, keyword);
+        List<MtVehicle> plateList = mtVehicleMapper.selectList(wrapper);
+        if (plateList != null) {
+            result.addAll(plateList);
+        }
+        // 按会员手机号搜索
+        MtUser mtUser = memberService.queryMemberByMobile(merchantId, keyword);
+        if (mtUser != null) {
+            LambdaQueryWrapper<MtVehicle> userWrapper = Wrappers.lambdaQuery();
+            userWrapper.ne(MtVehicle::getStatus, StatusEnum.DISABLE.getKey());
+            userWrapper.eq(MtVehicle::getMerchantId, merchantId);
+            userWrapper.eq(MtVehicle::getUserId, mtUser.getId());
+            List<MtVehicle> userVehicles = mtVehicleMapper.selectList(userWrapper);
+            if (userVehicles != null) {
+                for (MtVehicle v : userVehicles) {
+                    boolean exists = false;
+                    for (MtVehicle r : result) {
+                        if (r.getId().equals(v.getId())) {
+                            exists = true;
+                            break;
+                        }
+                    }
+                    if (!exists) {
+                        result.add(v);
+                    }
+                }
+            }
+        }
+        return result;
     }
 }

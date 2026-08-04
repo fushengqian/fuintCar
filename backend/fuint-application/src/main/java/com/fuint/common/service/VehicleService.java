@@ -34,7 +34,6 @@ public interface VehicleService extends IService<MtVehicle> {
      * 分页查询会员车辆
      *
      * @param request 会员车辆
-     * @throws BusinessCheckException
      * @return
      * */
     PaginationResponse<VehicleDto> getUserVehicleListByPagination(HttpServletRequest request);
@@ -81,5 +80,25 @@ public interface VehicleService extends IService<MtVehicle> {
      * @return
      * */
     List<MtVehicle> queryVehicleList(Map<String, Object> paramMap);
+
+    /**
+     * 更新车辆行驶公里数
+     *
+     * @param vehicleId 车辆ID
+     * @param mileage 行驶公里数
+     * @param accountInfo 操作员
+     * @throws BusinessCheckException
+     * */
+    void updateVehicleMileage(Integer vehicleId, Integer mileage, AccountInfo accountInfo) throws BusinessCheckException;
+
+    /**
+     * 根据关键字搜索车辆及会员信息（用于服务开单选择车辆）
+     * 支持按车牌号、会员手机号搜索
+     *
+     * @param merchantId 商户ID
+     * @param keyword 关键字（车牌号或会员手机号）
+     * @return 车辆列表（含会员信息）
+     * */
+    List<MtVehicle> searchVehiclesByKeyword(Integer merchantId, String keyword);
 
 }

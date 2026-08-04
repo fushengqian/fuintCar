@@ -48,6 +48,12 @@ public class VehicleDto implements Serializable {
     @ApiModelProperty("车架号")
     private String vin;
 
+    @ApiModelProperty("车辆行驶公里数")
+    private Integer vehicleMileage;
+
+    @ApiModelProperty("行驶公里数记录时间")
+    private Date mileageRecordTime;
+
     @ApiModelProperty("是否默认")
     private String isDefault;
 

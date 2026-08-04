@@ -35,8 +35,14 @@ public class MtVehicleOrder implements Serializable {
     @ApiModelProperty("车牌号")
     private String vehiclePlateNo;
 
+    @ApiModelProperty("会员车辆ID")
+    private Integer vehicleId;
+
     @ApiModelProperty("卡券ID")
     private Integer couponId;
+
+    @ApiModelProperty("关联订单ID列表，逗号分隔")
+    private String orderIds;
 
     @ApiModelProperty("状态：A：已提交；B：服务中；C：已完成; D：已删除；")
     private String status;
