@@ -205,7 +205,7 @@ public class BackendVehicleController extends BaseController {
     @ApiOperation(value = "搜索车辆（服务开单选择车辆）", notes = "按车牌号或会员手机号搜索车辆及会员信息")
     @RequestMapping(value = "/searchVehicles", method = RequestMethod.GET)
     @CrossOrigin
-    public ResponseObject searchVehicles(@RequestParam String keyword) throws BusinessCheckException {
+    public ResponseObject searchVehicles(@RequestParam String keyword) {
         AccountInfo accountInfo = TokenUtil.getAccountInfo();
         if (StringUtil.isEmpty(keyword)) {
             return getFailureResult(201, "关键字不能为空");

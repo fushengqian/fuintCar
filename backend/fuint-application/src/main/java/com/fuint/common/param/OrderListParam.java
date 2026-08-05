@@ -35,6 +35,9 @@ public class OrderListParam extends PageParam implements Serializable {
     @ApiModelProperty(value="订单状态", name="status")
     private String status;
 
+    @ApiModelProperty(value="排除的订单状态", name="notStatus")
+    private String notStatus;
+
     @ApiModelProperty(value="支付状态", name="payStatus")
     private String payStatus;
 

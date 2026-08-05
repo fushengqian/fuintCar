@@ -19,7 +19,7 @@
       "pagePath": "pages/order/index",
       "iconPath": "static/tabbar/cate.png",
       "selectedIconPath": "static/tabbar/cate-active.png",
-      "text": "我的订单"
+      "text": "订单"
     },{
       "pagePath": "pages/user/index",
       "iconPath": "static/tabbar/user.png",

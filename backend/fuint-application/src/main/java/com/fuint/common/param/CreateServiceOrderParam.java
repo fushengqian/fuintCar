@@ -24,6 +24,9 @@ public class CreateServiceOrderParam {
     @ApiModelProperty("备注信息")
     private String remark;
 
+    @ApiModelProperty("关联的已有订单ID列表（客户提前在小程序下单的订单）")
+    private List<Integer> existingOrderIds;
+
     @ApiModelProperty("服务项目列表")
     private List<ServiceItem> serviceItems;
 

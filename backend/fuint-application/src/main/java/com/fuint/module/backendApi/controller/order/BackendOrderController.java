@@ -253,6 +253,25 @@ public class BackendOrderController extends BaseController {
     }
 
     /**
+     * 删除订单中的商品
+     */
+    @ApiOperation(value = "删除订单商品")
+    @RequestMapping(value = "/deleteGoods", method = RequestMethod.POST)
+    @CrossOrigin
+    @PreAuthorize("@pms.hasPermission('order:edit')")
+    public ResponseObject deleteGoods(@RequestBody Map<String, Object> param) throws BusinessCheckException {
+        Integer orderId = param.get("orderId") == null ? 0 : Integer.parseInt(param.get("orderId").toString());
+        Integer orderGoodsId = param.get("orderGoodsId") == null ? 0 : Integer.parseInt(param.get("orderGoodsId").toString());
+
+        if (orderId <= 0 || orderGoodsId <= 0) {
+            return getFailureResult(201, "参数错误");
+        }
+
+        BigDecimal newAmount = orderService.deleteOrderGoods(orderId, orderGoodsId);
+        return getSuccessResult(newAmount);
+    }
+
+    /**
      * 验证并核销订单
      */
     @ApiOperation(value = "验证并核销订单")

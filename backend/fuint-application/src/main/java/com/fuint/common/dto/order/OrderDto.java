@@ -5,6 +5,7 @@ import lombok.Data;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.List;
 
 /**
  * 订单实体类
@@ -126,5 +127,19 @@ public class OrderDto implements Serializable {
     @ApiModelProperty("最后操作人")
     private String operator;
 
+    @ApiModelProperty("多商品列表（一个订单包含多个商品时使用）")
+    private List<GoodsItem> goodsItems;
+
+    @Data
+    public static class GoodsItem implements Serializable {
+        @ApiModelProperty("商品ID")
+        private Integer goodsId;
+        @ApiModelProperty("skuID")
+        private Integer skuId;
+        @ApiModelProperty("数量")
+        private Integer num;
+        @ApiModelProperty("单价")
+        private BigDecimal price;
+    }
 }
 

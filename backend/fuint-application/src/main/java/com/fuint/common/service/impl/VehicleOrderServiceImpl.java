@@ -7,7 +7,12 @@ import com.fuint.common.dto.order.OrderDto;
 import com.fuint.common.dto.order.VehicleDto;
 import com.fuint.common.dto.order.VehicleOrderDto;
 import com.fuint.common.dto.system.AccountInfo;
+import com.fuint.common.enums.OrderStatusEnum;
+import com.fuint.common.enums.OrderTypeEnum;
+import com.fuint.common.enums.PayStatusEnum;
 import com.fuint.common.enums.StatusEnum;
+import com.fuint.common.enums.VehicleOrderStatusEnum;
+import com.fuint.common.enums.YesOrNoEnum;
 import com.fuint.common.param.CreateServiceOrderParam;
 import com.fuint.common.param.VehicleOrderPage;
 import com.fuint.common.service.*;
@@ -158,6 +163,31 @@ public class VehicleOrderServiceImpl extends ServiceImpl<MtVehicleOrderMapper, M
     public MtVehicleOrder updateVehicleOrder(MtVehicleOrder mtVehicleOrder) {
         mtVehicleOrder.setUpdateTime(new Date());
 
+        // 当状态改为已完成时，同步更新关联订单状态
+        if (VehicleOrderStatusEnum.COMPLETE.getKey().equals(mtVehicleOrder.getStatus())) {
+            String orderIds = mtVehicleOrder.getOrderIds();
+            if (StringUtil.isNotEmpty(orderIds)) {
+                String[] ids = orderIds.split(",");
+                for (String idStr : ids) {
+                    if (StringUtil.isNotEmpty(idStr.trim())) {
+                        Integer orderId = Integer.parseInt(idStr.trim());
+                        MtOrder mtOrder = orderService.getOrderInfo(orderId);
+                        if (mtOrder != null) {
+                            mtOrder.setPayStatus(PayStatusEnum.SUCCESS.getKey());
+                            mtOrder.setStatus(OrderStatusEnum.COMPLETE.getKey());
+                            mtOrder.setUpdateTime(new Date());
+                            try {
+                                orderService.updateOrder(mtOrder);
+                            } catch (BusinessCheckException e) {
+                                log.error("更新关联订单状态失败，订单ID：{}", orderId, e);
+                                throw new RuntimeException("更新关联订单状态失败：" + e.getMessage());
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         Boolean result = updateById(mtVehicleOrder);
         log.info("更新车辆服务单：{}", result);
 
@@ -251,27 +281,71 @@ public class VehicleOrderServiceImpl extends ServiceImpl<MtVehicleOrderMapper, M
         mtVehicleOrder.setUpdateTime(new Date());
         this.save(mtVehicleOrder);
 
-        // 为每个服务项目创建订单
         List<Integer> orderIdList = new ArrayList<>();
-        for (CreateServiceOrderParam.ServiceItem item : param.getServiceItems()) {
-            MtGoods mtGoods = goodsService.queryGoodsById(item.getGoodsId());
-            if (mtGoods == null) {
-                throw new BusinessCheckException("商品不存在，ID：" + item.getGoodsId());
+
+        // 关联已有订单（客户提前在小程序下单）
+        if (param.getExistingOrderIds() != null && !param.getExistingOrderIds().isEmpty()) {
+            for (Integer orderId : param.getExistingOrderIds()) {
+                MtOrder existingOrder = orderService.getOrderInfo(orderId);
+                if (existingOrder == null) {
+                    throw new BusinessCheckException("订单不存在，ID：" + orderId);
+                }
+                if (!existingOrder.getUserId().equals(userId)) {
+                    throw new BusinessCheckException("订单不属于该会员，订单ID：" + orderId);
+                }
+                // 更新已有订单的关联信息
+                existingOrder.setParam("vehicleOrderId:" + mtVehicleOrder.getId());
+                orderService.updateOrder(existingOrder);
+                orderIdList.add(orderId);
+            }
+        }
+
+        // 为服务项目创建订单（一个服务单一个订单，包含多个商品）
+        if (param.getServiceItems() != null && !param.getServiceItems().isEmpty()) {
+            List<OrderDto.GoodsItem> goodsItems = new ArrayList<>();
+            BigDecimal totalAmount = BigDecimal.ZERO;
+            Integer firstGoodsId = null;
+
+            for (CreateServiceOrderParam.ServiceItem item : param.getServiceItems()) {
+                MtGoods mtGoods = goodsService.queryGoodsById(item.getGoodsId());
+                if (mtGoods == null) {
+                    throw new BusinessCheckException("商品不存在，ID：" + item.getGoodsId());
+                }
+                BigDecimal price = item.getPrice() != null ? item.getPrice() : mtGoods.getPrice();
+                int num = item.getBuyNum() != null ? item.getBuyNum() : 1;
+
+                OrderDto.GoodsItem goodsItem = new OrderDto.GoodsItem();
+                goodsItem.setGoodsId(item.getGoodsId());
+                goodsItem.setSkuId(0);
+                goodsItem.setNum(num);
+                goodsItem.setPrice(price);
+                goodsItems.add(goodsItem);
+
+                totalAmount = totalAmount.add(price.multiply(new BigDecimal(num)));
+                if (firstGoodsId == null) {
+                    firstGoodsId = item.getGoodsId();
+                }
             }
 
             OrderDto orderDto = new OrderDto();
-            orderDto.setType("service");
-            orderDto.setGoodsId(item.getGoodsId());
-            orderDto.setBuyNum(item.getBuyNum() != null ? item.getBuyNum() : 1);
-            orderDto.setAmount(item.getPrice() != null ? item.getPrice() : mtGoods.getPrice());
+            orderDto.setType(OrderTypeEnum.GOODS.getKey());
+            orderDto.setGoodsId(firstGoodsId);
+            orderDto.setBuyNum(1);
+            orderDto.setAmount(totalAmount);
             orderDto.setUserId(userId);
+            orderDto.setMerchantId(accountInfo.getMerchantId());
             orderDto.setStoreId(mtVehicleOrder.getStoreId());
             orderDto.setOrderMode("oneself");
             orderDto.setParam("vehicleOrderId:" + mtVehicleOrder.getId());
             orderDto.setRemark("服务开单-" + mtVehicleOrder.getOrderSn());
+            orderDto.setIsVisitor(YesOrNoEnum.NO.getKey());
+            orderDto.setUsePoint(0);
+            orderDto.setCouponId(0);
+            orderDto.setSkuId(0);
+            orderDto.setGoodsItems(goodsItems);
 
-            // 如果有卡券，绑定到第一笔订单
-            if (param.getCouponId() != null && param.getCouponId() > 0 && orderIdList.isEmpty()) {
+            // 如果有卡券，绑定到订单
+            if (param.getCouponId() != null && param.getCouponId() > 0) {
                 orderDto.setCouponId(param.getCouponId());
             }
 

@@ -75,6 +75,9 @@ public class BackendVehicleOrderController extends BaseController {
     public ResponseObject info(@PathVariable("id") Integer id) throws BusinessCheckException {
         AccountInfo accountInfo = TokenUtil.getAccountInfo();
         MtVehicleOrder mtVehicleOrder = vehicleOrderService.getVehicleOrderById(id);
+        if (mtVehicleOrder == null) {
+            return getFailureResult(201, "服务单不存在");
+        }
         if (!accountInfo.getMerchantId().equals(mtVehicleOrder.getMerchantId())) {
             return getFailureResult(201, "您没有操作权限");
         }
@@ -147,6 +150,9 @@ public class BackendVehicleOrderController extends BaseController {
     public ResponseObject delete(@PathVariable("id") Integer id) throws BusinessCheckException {
         AccountInfo accountInfo = TokenUtil.getAccountInfo();
         MtVehicleOrder mtVehicleOrder = vehicleOrderService.getVehicleOrderById(id);
+        if (mtVehicleOrder == null) {
+            return getFailureResult(201, "服务单不存在");
+        }
         if (!accountInfo.getMerchantId().equals(mtVehicleOrder.getMerchantId())) {
             return getFailureResult(201, "不同商户，没有操作权限");
         }

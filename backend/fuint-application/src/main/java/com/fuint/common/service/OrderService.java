@@ -243,4 +243,13 @@ public interface OrderService extends IService<MtOrder> {
      * @return
      * */
     MtOrder doRecharge(HttpServletRequest request, RechargeParam rechargeParam) throws BusinessCheckException;
+
+    /**
+     * 删除订单中的商品并重新计算金额
+     *
+     * @param orderId 订单ID
+     * @param orderGoodsId 订单商品ID
+     * @return 更新后的订单金额
+     * */
+    BigDecimal deleteOrderGoods(Integer orderId, Integer orderGoodsId) throws BusinessCheckException;
 }

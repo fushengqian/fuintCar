@@ -205,6 +205,7 @@ public class OrderServiceImpl extends ServiceImpl<MtOrderMapper, MtOrder> implem
         Integer merchantId = orderListParam.getMerchantId() == null ? 0 : orderListParam.getMerchantId();
         Integer storeId = orderListParam.getStoreId() == null ? 0 : orderListParam.getStoreId();
         String status = orderListParam.getStatus() == null ? "": orderListParam.getStatus();
+        String notStatus = orderListParam.getNotStatus() == null ? "": orderListParam.getNotStatus();
         String payStatus = orderListParam.getPayStatus() == null ? "": orderListParam.getPayStatus();
         String settleStatus = orderListParam.getSettleStatus() == null ? "": orderListParam.getSettleStatus();
         String dataType = orderListParam.getDataType() == null ? "": orderListParam.getDataType();
@@ -310,6 +311,9 @@ public class OrderServiceImpl extends ServiceImpl<MtOrderMapper, MtOrder> implem
         }
         if (StringUtil.isNotBlank(type)) {
             lambdaQueryWrapper.eq(MtOrder::getType, type);
+        }
+        if (StringUtil.isNotBlank(notStatus)) {
+            lambdaQueryWrapper.ne(MtOrder::getStatus, notStatus);
         }
         if (StringUtil.isNotBlank(orderMode)) {
             lambdaQueryWrapper.eq(MtOrder::getOrderMode, orderMode);
@@ -493,18 +497,32 @@ public class OrderServiceImpl extends ServiceImpl<MtOrderMapper, MtOrder> implem
                     throw new BusinessCheckException("生成订单失败，请稍后重试");
                 }
             } else {
-                if (orderDto.getGoodsId() == null || orderDto.getGoodsId() <= 0) {
-                    throw new BusinessCheckException("生成订单失败，请稍后重试");
+                // 多商品下单（如服务开单）
+                if (orderDto.getGoodsItems() != null && !orderDto.getGoodsItems().isEmpty()) {
+                    for (OrderDto.GoodsItem goodsItem : orderDto.getGoodsItems()) {
+                        MtCart mtCart = new MtCart();
+                        mtCart.setGoodsId(goodsItem.getGoodsId());
+                        mtCart.setSkuId(goodsItem.getSkuId() != null ? goodsItem.getSkuId() : 0);
+                        mtCart.setNum(goodsItem.getNum() != null ? goodsItem.getNum() : 1);
+                        mtCart.setId(0);
+                        mtCart.setUserId(orderDto.getUserId());
+                        mtCart.setStatus(StatusEnum.ENABLED.getKey());
+                        cartList.add(mtCart);
+                    }
+                } else {
+                    if (orderDto.getGoodsId() == null || orderDto.getGoodsId() <= 0) {
+                        throw new BusinessCheckException("生成订单失败，请稍后重试");
+                    }
+                    // 直接购买
+                    MtCart mtCart = new MtCart();
+                    mtCart.setGoodsId(orderDto.getGoodsId());
+                    mtCart.setSkuId(orderDto.getSkuId());
+                    mtCart.setNum(orderDto.getBuyNum());
+                    mtCart.setId(0);
+                    mtCart.setUserId(orderDto.getUserId());
+                    mtCart.setStatus(StatusEnum.ENABLED.getKey());
+                    cartList.add(mtCart);
                 }
-                // 直接购买
-                MtCart mtCart = new MtCart();
-                mtCart.setGoodsId(orderDto.getGoodsId());
-                mtCart.setSkuId(orderDto.getSkuId());
-                mtCart.setNum(orderDto.getBuyNum());
-                mtCart.setId(0);
-                mtCart.setUserId(orderDto.getUserId());
-                mtCart.setStatus(StatusEnum.ENABLED.getKey());
-                cartList.add(mtCart);
             }
 
             // 校验会员等级购买限制
@@ -551,6 +569,7 @@ public class OrderServiceImpl extends ServiceImpl<MtOrderMapper, MtOrder> implem
 
             mtOrder.setAmount(new BigDecimal(cartData.get("totalPrice").toString()));
             mtOrder.setUsePoint(Integer.parseInt(cartData.get("usePoint").toString()));
+            mtOrder.setPointAmount(new BigDecimal(cartData.get("usePointAmount").toString()));
             mtOrder.setDiscount(new BigDecimal(cartData.get("couponAmount").toString()));
 
             // 实付金额（先加上配送费，会员折扣在后面统一处理）
@@ -1397,6 +1416,63 @@ public class OrderServiceImpl extends ServiceImpl<MtOrderMapper, MtOrder> implem
         mtOrder.setOperator(operator);
 
         mtOrderMapper.updateById(mtOrder);
+    }
+
+    /**
+     * 删除订单商品并重新计算金额
+     *
+     * @param orderId 订单ID
+     * @param orderGoodsId 订单商品ID
+     * @return
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    @OperationServiceLog(description = "删除订单商品")
+    public BigDecimal deleteOrderGoods(Integer orderId, Integer orderGoodsId) throws BusinessCheckException {
+        MtOrder mtOrder = mtOrderMapper.selectById(orderId);
+        if (mtOrder == null) {
+            throw new BusinessCheckException("订单不存在");
+        }
+        // 只允许未支付订单删除商品
+        if (!PayStatusEnum.WAIT.getKey().equals(mtOrder.getPayStatus())) {
+            throw new BusinessCheckException("只有未支付的订单才能删除商品");
+        }
+
+        // 查询并删除订单商品记录
+        MtOrderGoods orderGoods = mtOrderGoodsMapper.selectById(orderGoodsId);
+        if (orderGoods == null || !orderGoods.getOrderId().equals(orderId)) {
+            throw new BusinessCheckException("订单商品不存在");
+        }
+        mtOrderGoodsMapper.deleteById(orderGoodsId);
+
+        // 重新计算订单金额
+        Map<String, Object> params = new HashMap<>();
+        params.put("ORDER_ID", orderId);
+        List<MtOrderGoods> remainingGoods = mtOrderGoodsMapper.selectByMap(params);
+
+        if (remainingGoods == null || remainingGoods.isEmpty()) {
+            mtOrder.setAmount(BigDecimal.ZERO);
+            mtOrder.setPayAmount(BigDecimal.ZERO);
+            mtOrder.setDiscount(BigDecimal.ZERO);
+        } else {
+            BigDecimal totalAmount = BigDecimal.ZERO;
+            BigDecimal totalDiscount = BigDecimal.ZERO;
+            for (MtOrderGoods goods : remainingGoods) {
+                BigDecimal price = goods.getPrice() != null ? goods.getPrice() : BigDecimal.ZERO;
+                BigDecimal discount = goods.getDiscount() != null ? goods.getDiscount() : BigDecimal.ZERO;
+                int num = goods.getNum() != null ? goods.getNum() : 1;
+                totalAmount = totalAmount.add(price.multiply(new BigDecimal(num)));
+                totalDiscount = totalDiscount.add(discount);
+            }
+            mtOrder.setAmount(totalAmount);
+            mtOrder.setPayAmount(totalAmount.subtract(totalDiscount));
+            mtOrder.setDiscount(totalDiscount);
+        }
+        mtOrder.setUpdateTime(new Date());
+        mtOrderMapper.updateById(mtOrder);
+
+        logger.info("删除订单商品 orderId={}, orderGoodsId={}, 新金额={}", orderId, orderGoodsId, mtOrder.getAmount());
+        return mtOrder.getAmount();
     }
 
     /**
