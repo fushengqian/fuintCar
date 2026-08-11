@@ -18,7 +18,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.text.ParseException;
 import java.util.Arrays;
@@ -88,7 +87,7 @@ public class BackendReportController extends BaseController {
     @ApiOperation(value = "导出日销售统计报表")
     @RequestMapping(value = "/exportDailySales", method = RequestMethod.GET)
     @CrossOrigin
-    public void exportDailySales(HttpServletRequest request, HttpServletResponse response, @ModelAttribute StatisticParam param) throws ParseException {
+    public void exportDailySales(HttpServletResponse response, @ModelAttribute StatisticParam param) throws ParseException {
         AccountInfo accountInfo = TokenUtil.getAccountInfo();
         List<Integer> storeIds = param.getStoreIds();
         if (accountInfo.getStoreId() != null && accountInfo.getStoreId() > 0) {
@@ -99,6 +98,20 @@ public class BackendReportController extends BaseController {
         String[] title = { "日期", "店铺", "订单数量", "销售金额", "现金支付", "微信支付", "支付宝支付", "积分支付", "卡券核销", "余额支付" };
         String fileName = "日销售统计报表_" + DateUtil.formatDate(new Date(), "yyyy.MM.dd_HHmm") + ".xls";
         String sheetName = "日销售统计";
+
+        // 构建顶部汇总行
+        String[] summaryTitle = { "总订单笔数", "总销售金额", "总现金支付金额", "总微信支付金额", "总支付宝支付金额", "总积分支付金额", "总卡券核销金额", "总余额支付金额" };
+        String[] summaryValue = {
+                objectConvertToString(reportDto.getTotalOrderCount()),
+                objectConvertToString(reportDto.getTotalSalesAmount()),
+                objectConvertToString(reportDto.getTotalCashAmount()),
+                objectConvertToString(reportDto.getTotalWechatAmount()),
+                objectConvertToString(reportDto.getTotalAliPayAmount()),
+                objectConvertToString(reportDto.getTotalPointAmount()),
+                objectConvertToString(reportDto.getTotalCouponAmount()),
+                objectConvertToString(reportDto.getTotalBalanceAmount())
+        };
+        String[][] summary = { summaryTitle, summaryValue };
 
         List<DailySalesItemDto> list = reportDto.getDataList();
         String[][] content = new String[list.size()][title.length];
@@ -116,7 +129,7 @@ public class BackendReportController extends BaseController {
             content[i][9] = objectConvertToString(item.getBalanceAmount());
         }
 
-        HSSFWorkbook wb = ExcelUtil.getHSSFWorkbook(sheetName, title, content, null);
+        HSSFWorkbook wb = ExcelUtil.getHSSFWorkbook(sheetName, title, content, null, summary);
         ExcelUtil.setResponseHeader(response, fileName, wb);
         logger.info("导出日销售统计报表成功...");
     }
@@ -124,7 +137,7 @@ public class BackendReportController extends BaseController {
     @ApiOperation(value = "导出日收银统计报表")
     @RequestMapping(value = "/exportDailyCashier", method = RequestMethod.GET)
     @CrossOrigin
-    public void exportDailyCashier(HttpServletRequest request, HttpServletResponse response, @ModelAttribute StatisticParam param) throws ParseException {
+    public void exportDailyCashier(HttpServletResponse response, @ModelAttribute StatisticParam param) throws ParseException {
         AccountInfo accountInfo = TokenUtil.getAccountInfo();
         List<Integer> storeIds = param.getStoreIds();
         if (accountInfo.getStoreId() != null && accountInfo.getStoreId() > 0) {
@@ -135,6 +148,20 @@ public class BackendReportController extends BaseController {
         String[] title = { "日期", "店铺", "收银员", "订单数量", "销售金额", "现金支付", "微信支付", "支付宝支付", "积分支付", "卡券核销", "余额支付" };
         String fileName = "日收银统计报表_" + DateUtil.formatDate(new Date(), "yyyy.MM.dd_HHmm") + ".xls";
         String sheetName = "日收银统计";
+
+        // 构建顶部汇总行
+        String[] summaryTitle = { "总订单笔数", "总销售金额", "总现金支付金额", "总微信支付金额", "总支付宝支付金额", "总积分支付金额", "总卡券核销金额", "总余额支付金额" };
+        String[] summaryValue = {
+                objectConvertToString(reportDto.getTotalOrderCount()),
+                objectConvertToString(reportDto.getTotalSalesAmount()),
+                objectConvertToString(reportDto.getTotalCashAmount()),
+                objectConvertToString(reportDto.getTotalWechatAmount()),
+                objectConvertToString(reportDto.getTotalAliPayAmount()),
+                objectConvertToString(reportDto.getTotalPointAmount()),
+                objectConvertToString(reportDto.getTotalCouponAmount()),
+                objectConvertToString(reportDto.getTotalBalanceAmount())
+        };
+        String[][] summary = { summaryTitle, summaryValue };
 
         List<DailyCashierItemDto> list = reportDto.getDataList();
         String[][] content = new String[list.size()][title.length];
@@ -153,7 +180,7 @@ public class BackendReportController extends BaseController {
             content[i][10] = objectConvertToString(item.getBalanceAmount());
         }
 
-        HSSFWorkbook wb = ExcelUtil.getHSSFWorkbook(sheetName, title, content, null);
+        HSSFWorkbook wb = ExcelUtil.getHSSFWorkbook(sheetName, title, content, null, summary);
         ExcelUtil.setResponseHeader(response, fileName, wb);
         logger.info("导出日收银统计报表成功...");
     }
@@ -161,7 +188,7 @@ public class BackendReportController extends BaseController {
     @ApiOperation(value = "导出分类统计报表")
     @RequestMapping(value = "/exportDailyCate", method = RequestMethod.GET)
     @CrossOrigin
-    public void exportDailyCate(HttpServletRequest request, HttpServletResponse response, @ModelAttribute StatisticParam param) throws ParseException {
+    public void exportDailyCate(HttpServletResponse response, @ModelAttribute StatisticParam param) throws ParseException {
         AccountInfo accountInfo = TokenUtil.getAccountInfo();
         List<Integer> storeIds = param.getStoreIds();
         if (accountInfo.getStoreId() != null && accountInfo.getStoreId() > 0) {
@@ -172,6 +199,18 @@ public class BackendReportController extends BaseController {
         String[] title = { "日期", "店铺", "分类名称", "销售数量", "销售金额", "购买人数", "销售成本", "利润金额", "退款数量" };
         String fileName = "分类统计报表_" + DateUtil.formatDate(new Date(), "yyyy.MM.dd_HHmm") + ".xls";
         String sheetName = "分类统计";
+
+        // 构建顶部汇总行
+        String[] summaryTitle = { "总销售数量", "总销售金额", "总购买人数", "总销售成本", "总利润金额", "总退款数量" };
+        String[] summaryValue = {
+                objectConvertToString(reportDto.getTotalSalesCount()),
+                objectConvertToString(reportDto.getTotalSalesAmount()),
+                objectConvertToString(reportDto.getTotalBuyerCount()),
+                objectConvertToString(reportDto.getTotalCostAmount()),
+                objectConvertToString(reportDto.getTotalProfitAmount()),
+                objectConvertToString(reportDto.getTotalRefundCount())
+        };
+        String[][] summary = { summaryTitle, summaryValue };
 
         List<DailyCateItemDto> list = reportDto.getDataList();
         String[][] content = new String[list.size()][title.length];
@@ -188,7 +227,7 @@ public class BackendReportController extends BaseController {
             content[i][8] = objectConvertToString(item.getRefundCount());
         }
 
-        HSSFWorkbook wb = ExcelUtil.getHSSFWorkbook(sheetName, title, content, null);
+        HSSFWorkbook wb = ExcelUtil.getHSSFWorkbook(sheetName, title, content, null, summary);
         ExcelUtil.setResponseHeader(response, fileName, wb);
         logger.info("导出分类统计报表成功...");
     }

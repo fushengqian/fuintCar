@@ -247,7 +247,8 @@ public class VehicleOrderServiceImpl extends ServiceImpl<MtVehicleOrderMapper, M
     @OperationServiceLog(description = "后台服务开单")
     @Transactional(rollbackFor = Exception.class)
     public MtVehicleOrder createServiceOrder(CreateServiceOrderParam param, AccountInfo accountInfo) throws BusinessCheckException {
-        if (param.getServiceItems() == null || param.getServiceItems().isEmpty()) {
+        if ((param.getServiceItems() == null || param.getServiceItems().isEmpty()) 
+                && (param.getExistingOrderIds() == null || param.getExistingOrderIds().isEmpty())) {
             throw new BusinessCheckException("服务项目不能为空");
         }
 
