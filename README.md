@@ -18,7 +18,11 @@ fuint汽车美容4S店会员系统是一套开源的汽车服务行业会员管�
 <p>
    1、后台地址：<a target="_blank" href="https://www.fuint.cn/fuintCar/">https://www.fuint.cn/fuintCar/</a> 演示账号：fuint / 123456<br>
    2、swagger接口文档：<a target="_blank" href="https://www.fuint.cn/fuint-application/swagger-ui.html">https://www.fuint.cn/fuint-application/swagger-ui.html</a>
+   3、唯一官网：<a target="_blank" href="https://www.fuint.cn">https://www.fuint.cn</a>
 </p>
+
+<p><b>H5版体验：</b></p>
+<p><img src="https://fuint-cn.oss-cn-shenzhen.aliyuncs.com/uploads/9361ca90f5e94dbb8b20df7deac5b6bb.png" alt="qrcar.png" style="width: 224px; height: 219px;" width="224" height="219" class="loadingclass"/></p>
 
 #### 软件架构
 后端：JAVA SpringBoot + MYSQL Mybatis Plus + Redis
