@@ -1001,6 +1001,7 @@ public class OrderServiceImpl extends ServiceImpl<MtOrderMapper, MtOrder> implem
             if (userGrade != null) {
                 orderDto.setRemark("付费升级" + userGrade.getName());
                 orderDto.setAmount(new BigDecimal(userGrade.getCatchValue().toString()));
+                orderDto.setPayAmount(orderDto.getAmount());
             }
         }
 

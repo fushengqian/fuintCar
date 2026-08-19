@@ -2,11 +2,13 @@ package com.fuint.module.clientApi.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fuint.common.dto.content.NavigationDto;
+import com.fuint.common.dto.decorate.PageDecorationDto;
 import com.fuint.common.dto.member.UserInfo;
 import com.fuint.common.dto.order.VehicleDto;
 import com.fuint.common.enums.StatusEnum;
 import com.fuint.common.service.BannerService;
 import com.fuint.common.service.MerchantService;
+import com.fuint.common.service.PageDecorateService;
 import com.fuint.common.service.SettingService;
 import com.fuint.common.service.VehicleService;
 import com.fuint.common.util.TokenUtil;
@@ -57,6 +59,11 @@ public class ClientPageController extends BaseController {
     private SettingService settingService;
 
     /**
+     * 页面装修服务接口
+     */
+    private PageDecorateService pageDecorateService;
+
+    /**
      * 获取页面数据
      */
     @ApiOperation(value = "获取首页页面数据")
@@ -78,20 +85,26 @@ public class ClientPageController extends BaseController {
             params.put("merchantId", merchantId);
         }
 
-        List<MtBanner> bannerData = bannerService.queryBannerListByParams(params);
-        VehicleDto vehicle = null;
-        if (mtUser != null) {
-            List<VehicleDto> vehicles = vehicleService.getVehicleByUserId(mtUser.getId(), true);
-            if (vehicles != null && vehicles.size() > 0) {
-                vehicle = vehicles.get(0);
-            }
-        }
-        List<NavigationDto> navigation = settingService.getNavigation(merchantId, storeId, StatusEnum.ENABLED.getKey());
+        // 优先返回页面装修数据，无装修时返回默认组件数据（兼容旧版本）
+        PageDecorationDto page = pageDecorateService.getDefaultPage(merchantId, storeId, "index");
 
         Map<String, Object> outParams = new HashMap();
-        outParams.put("banner", bannerData);
-        outParams.put("vehicle", vehicle);
-        outParams.put("navigation", navigation);
+        if (page != null && page.getComponents() != null && page.getComponents().size() > 0) {
+            outParams.put("page", page);
+        } else {
+            List<MtBanner> bannerData = bannerService.queryBannerListByParams(params);
+            VehicleDto vehicle = null;
+            if (mtUser != null) {
+                List<VehicleDto> vehicles = vehicleService.getVehicleByUserId(mtUser.getId(), true);
+                if (vehicles != null && vehicles.size() > 0) {
+                    vehicle = vehicles.get(0);
+                }
+            }
+            List<NavigationDto> navigation = settingService.getNavigation(merchantId, storeId, StatusEnum.ENABLED.getKey());
+            outParams.put("banner", bannerData);
+            outParams.put("vehicle", vehicle);
+            outParams.put("navigation", navigation);
+        }
         return getSuccessResult(outParams);
     }
 }
