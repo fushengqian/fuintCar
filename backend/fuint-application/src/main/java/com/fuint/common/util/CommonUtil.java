@@ -399,6 +399,18 @@ public class CommonUtil {
             scriptPattern = Pattern.compile("e­xpression\\((.*?)\\)", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE | Pattern.DOTALL);
             value = scriptPattern.matcher(value).replaceAll("");
 
+            // Avoid '; sequences
+			scriptPattern = Pattern.compile("';", Pattern.CASE_INSENSITIVE| Pattern.MULTILINE | Pattern.DOTALL);
+			value = scriptPattern.matcher(value).replaceAll("");
+
+			// Avoid "); sequences
+			scriptPattern = Pattern.compile("\"\\);", Pattern.CASE_INSENSITIVE| Pattern.MULTILINE | Pattern.DOTALL);
+			value = scriptPattern.matcher(value).replaceAll("");
+
+			// Avoid '); sequences
+			scriptPattern = Pattern.compile("'\\);", Pattern.CASE_INSENSITIVE| Pattern.MULTILINE | Pattern.DOTALL);
+			value = scriptPattern.matcher(value).replaceAll("");
+
             // Avoid javascript:... e­xpressions
             scriptPattern = Pattern.compile("javascript:", Pattern.CASE_INSENSITIVE);
             value = scriptPattern.matcher(value).replaceAll("");
