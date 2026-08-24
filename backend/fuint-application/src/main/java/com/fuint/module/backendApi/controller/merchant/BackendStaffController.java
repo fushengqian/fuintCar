@@ -6,6 +6,7 @@ import com.fuint.common.dto.system.AccountInfo;
 import com.fuint.common.enums.StaffCategoryEnum;
 import com.fuint.common.enums.StatusEnum;
 import com.fuint.common.param.StaffPage;
+import com.fuint.common.service.SettingService;
 import com.fuint.common.service.StaffService;
 import com.fuint.common.util.CommonUtil;
 import com.fuint.common.util.PhoneFormatCheckUtils;
@@ -44,6 +45,11 @@ public class BackendStaffController extends BaseController {
     private StaffService staffService;
 
     /**
+     * 设置接口
+     */
+    private SettingService settingService;
+
+    /**
      * 获取员工列表
      */
     @ApiOperation(value = "获取员工列表")
@@ -66,6 +72,7 @@ public class BackendStaffController extends BaseController {
         Map<String, Object> result = new HashMap<>();
         result.put("paginationResponse", paginationResponse);
         result.put("categoryList", categoryList);
+        result.put("imagePath", settingService.getUploadBasePath());
 
         return getSuccessResult(result);
     }
@@ -99,6 +106,7 @@ public class BackendStaffController extends BaseController {
         String category = params.get("category") == null ? "0" : params.get("category").toString();
         String mobile = params.get("mobile") == null ? "" : CommonUtil.replaceXSS(params.get("mobile").toString());
         String realName = params.get("realName") == null ? "" : CommonUtil.replaceXSS(params.get("realName").toString());
+        String avatar = params.get("avatar") == null ? "" : CommonUtil.replaceXSS(params.get("avatar").toString());
         String description = params.get("description") == null ? "" : CommonUtil.replaceXSS(params.get("description").toString());
         String status = params.get("auditedStatus") == null ? StatusEnum.FORBIDDEN.getKey() : CommonUtil.replaceXSS(params.get("auditedStatus").toString());
 
@@ -122,6 +130,7 @@ public class BackendStaffController extends BaseController {
             mtStaff.setStoreId(Integer.parseInt(storeId));
         }
         mtStaff.setRealName(realName);
+        mtStaff.setAvatar(avatar);
         if (PhoneFormatCheckUtils.isChinaPhoneLegal(mobile)) {
             mtStaff.setMobile(mobile);
         }

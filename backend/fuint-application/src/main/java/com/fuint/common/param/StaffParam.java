@@ -31,6 +31,9 @@ public class StaffParam extends PageParam implements Serializable {
     @ApiModelProperty(value="真实姓名", name="realName")
     private String realName;
 
+    @ApiModelProperty(value="头像", name="avatar")
+    private String avatar;
+
     @ApiModelProperty(value="备注信息", name="description")
     private String description;
 
