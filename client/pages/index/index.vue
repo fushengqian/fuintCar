@@ -41,6 +41,8 @@
   import MescrollCompMixin from "@/components/mescroll-uni/mixins/mescroll-comp.js";
   import config from '@/config'
   import { loadAndApplyTabbar } from '@/utils/tabbar'
+  import { loadTheme, buildThemeVars } from '@/utils/theme'
+  import { switchStore, setMerchantNo, isThemeScopeMatched } from '@/utils/merchant'
   // #ifdef H5
   import H5Tabbar from '@/components/tabbar/index.vue'
   // #endif
@@ -112,7 +114,9 @@
         // 页面装修数据请求进行中标识（防止重复请求）
         pageLoading: false,
         // 门店信息请求进行中标识（防止重复请求）
-        storeFetching: false
+        storeFetching: false,
+        // 是否刚切换过商户/店铺（需要强制刷新主题与底部导航）
+        storeSwitched: false
       }
     },
 
@@ -121,9 +125,11 @@
      */
     onLoad({ storeId }) {
       storeId = storeId ? parseInt(storeId) : 0;
-      if (storeId > 0) {
-          uni.setStorageSync('storeId', storeId);
+      // 链接指定的店铺与本地不一致时切换店铺：
+      // 清空商户号与主题/导航缓存，避免沿用上一个商户的主题与底部导航
+      if (switchStore(storeId)) {
           uni.setStorageSync("reflashHomeData", true);
+          this.storeSwitched = true;
       }
       // 装修数据统一在 onGetStoreInfo 获取到当前店铺 storeId/merchantNo 后再加载，
       // 确保首页装修接口带的是用户实际所在商户的参数，而不是默认商户号
@@ -135,9 +141,10 @@
     onShow() {
       const app = this;
       // 拉取 tabBar 配置（缓存优先），自定义 tabBar 实例可能尚未就绪会自动重试
-      loadAndApplyTabbar(this)
+      // 切换商户/店铺时强制刷新，避免沿用上一个商户的导航配置
+      loadAndApplyTabbar(this, app.storeSwitched)
       // #ifdef H5
-      this.$refs.h5Tabbar && this.$refs.h5Tabbar.refresh()
+      app.$refs.h5Tabbar && app.$refs.h5Tabbar.refresh(app.storeSwitched)
       // #endif
       // #ifdef MP-WEIXIN
       // 微信注入的 getTabBar 挂在原生页面实例上，uni-app 需经 $scope 访问
@@ -223,8 +230,13 @@
              .then(result => {
                  app.storeInfo = result.data.storeInfo;
                  if (app.storeInfo) {
+                     const storeChanged = String(uni.getStorageSync("storeId") || '') !== String(app.storeInfo.id);
                      uni.setStorageSync("storeId", app.storeInfo.id);
-                     uni.setStorageSync("merchantNo", app.storeInfo.merchantNo);
+                     // 商户号就绪（或发生变化）后，主题/导航缓存若不属于当前商户则强制刷新
+                     const merchantChanged = setMerchantNo(app.storeInfo.merchantNo);
+                     if (app.storeSwitched || storeChanged || merchantChanged || !isThemeScopeMatched()) {
+                         app.refreshMerchantConfig();
+                     }
                      // 首次进入、或切换店铺需要刷新时，用当前商户/门店参数拉取页面数据
                      let isReflash = uni.getStorageSync("reflashHomeData");
                      app.isReflash = isReflash;
@@ -235,8 +247,30 @@
              })
              .finally(() => {
                  app.storeFetching = false;
+                 app.storeSwitched = false;
              })
-         }
+         },
+
+        /**
+         * 刷新当前商户的主题与底部导航配置
+         */
+        refreshMerchantConfig() {
+            const app = this;
+            // 强制拉取主题并同步页面 CSS 变量
+            loadTheme(true).then(theme => {
+                app.themeVars = buildThemeVars(theme);
+            });
+            // 强制拉取底部导航配置并应用到自定义 tabBar
+            loadAndApplyTabbar(app, true);
+            // #ifdef H5
+            app.$refs.h5Tabbar && app.$refs.h5Tabbar.refresh(true);
+            // #endif
+            // #ifdef MP-WEIXIN
+            const host = app.$scope || app;
+            const tb = typeof host.getTabBar === 'function' && host.getTabBar();
+            tb && tb.syncSelected && tb.syncSelected();
+            // #endif
+        }
     },
 
     /**

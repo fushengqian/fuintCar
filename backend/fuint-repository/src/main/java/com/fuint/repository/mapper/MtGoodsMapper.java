@@ -29,6 +29,11 @@ public interface MtGoodsMapper extends BaseMapper<MtGoods> {
 
     List<GoodsBean> selectGoodsList(@Param("merchantId") Integer merchantId, @Param("storeId") Integer storeId, @Param("cateId") Integer cateId, @Param("keyword") String keyword);
 
+    /**
+     * 仅查询商品列表（不关联SKU，一个商品只返回一条）
+     */
+    List<GoodsBean> selectOnlyGoodsList(@Param("merchantId") Integer merchantId, @Param("storeId") Integer storeId, @Param("cateId") Integer cateId, @Param("keyword") String keyword);
+
     List<GoodsTopBean> getGoodsSaleTopList(@Param("merchantId") Integer merchantId, @Param("storeId") Integer storeId, @Param("startTime") Date startTime, @Param("endTime") Date endTime);
 
     void removeMerchantGoods(@Param("merchantId") Integer merchantId);

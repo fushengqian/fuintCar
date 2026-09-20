@@ -48,7 +48,7 @@
     </view>
 
     <!-- 提交订单 -->
-    <view class="flow-fixed-footer b-f m-top10">
+    <view class="flow-fixed-footer b-f">
       <view class="dis-flex chackout-box">
         <view class="chackout-left pl-12">
             <view class="col-amount-do">应付金额：

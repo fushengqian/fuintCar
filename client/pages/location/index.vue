@@ -37,6 +37,7 @@
   import * as settingApi from '@/api/setting'
   import * as userApi from '@/api/user'
   import Empty from '@/components/empty'
+  import { switchStore } from '@/utils/merchant'
   export default {
     components: {
       Empty
@@ -91,7 +92,8 @@
         const app = this
         userApi.defaultStore(storeId)
           .then(result => {
-            uni.setStorageSync("storeId", storeId);
+            // 切换店铺：同步清空商户号与主题/导航缓存，避免沿用上一个商户的配置
+            switchStore(storeId);
             // 刷新相关页面数据
             uni.setStorageSync("reflashHomeData", true);
             uni.navigateBack();

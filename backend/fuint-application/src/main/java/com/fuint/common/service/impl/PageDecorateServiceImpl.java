@@ -5,11 +5,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fuint.common.dto.decorate.PageComponentDto;
-import com.fuint.common.dto.decorate.PageDecorationDto;
-import com.fuint.common.dto.decorate.TabbarDto;
-import com.fuint.common.dto.decorate.ThemeDto;
-import com.fuint.common.dto.decorate.UserPageDto;
+import com.fuint.common.dto.decorate.*;
 import com.fuint.common.dto.system.AccountInfo;
 import com.fuint.common.enums.SettingTypeEnum;
 import com.fuint.common.enums.StatusEnum;
@@ -39,11 +35,8 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+
+import java.util.*;
 
 /**
  * 页面装修业务接口实现类
@@ -151,6 +144,10 @@ public class PageDecorateServiceImpl extends ServiceImpl<MtPageMapper, MtPage> i
 
     /**
      * 按店铺查询默认装修页面
+     * @param merchantId 商户ID
+     * @param storeId 店铺ID
+     * @param pageType 页面类型
+     * @return 装修页面DTO
      */
     private PageDecorationDto getDefaultPageByStore(Integer merchantId, Integer storeId, String pageType) {
         LambdaQueryWrapper<MtPage> lambdaQueryWrapper = Wrappers.lambdaQuery();
@@ -172,6 +169,9 @@ public class PageDecorateServiceImpl extends ServiceImpl<MtPageMapper, MtPage> i
 
     /**
      * 按商户查询默认装修页面（不限定店铺，取最新一条）
+     * @param merchantId 商户ID
+     * @param pageType 页面类型
+     * @return 装修页面DTO
      */
     private PageDecorationDto getDefaultPageByMerchant(Integer merchantId, String pageType) {
         LambdaQueryWrapper<MtPage> lambdaQueryWrapper = Wrappers.lambdaQuery();
@@ -192,7 +192,10 @@ public class PageDecorateServiceImpl extends ServiceImpl<MtPageMapper, MtPage> i
 
     /**
      * 保存装修页面（新增或更新，组件全量覆盖）
-     *
+     * @param pageDto 装修页面DTO
+     * @param accountInfo 用户信息
+     * @return 装修页面实体
+     * @throws BusinessCheckException 业务检查异常
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -368,7 +371,7 @@ public class PageDecorateServiceImpl extends ServiceImpl<MtPageMapper, MtPage> i
      * 保存主题配置
      */
     @Override
-    public boolean saveTheme(ThemeDto themeDto, AccountInfo accountInfo) {
+    public boolean saveTheme(ThemeDto themeDto, AccountInfo accountInfo) throws BusinessCheckException {
         saveSetting(accountInfo, SettingTypeEnum.THEME.getKey(), themeDto);
         return true;
     }
@@ -529,10 +532,10 @@ public class PageDecorateServiceImpl extends ServiceImpl<MtPageMapper, MtPage> i
                 continue;
             }
             List<MtGoods> goodsEntities = mtGoodsMapper.selectList(Wrappers.lambdaQuery(MtGoods.class).in(MtGoods::getId, goodsIds));
-            Map<Integer, Double> saleMap = new HashMap<>();
+            Map<Integer, Integer> saleMap = new HashMap<>();
             if (goodsEntities != null) {
                 for (MtGoods goodsEntity : goodsEntities) {
-                    saleMap.put(goodsEntity.getId(), goodsEntity.getInitSale());
+                    saleMap.put(goodsEntity.getId(), goodsEntity.getInitSale() == null ? 0 : goodsEntity.getInitSale());
                 }
             }
             if (saleMap.size() == 0) {
@@ -547,13 +550,12 @@ public class PageDecorateServiceImpl extends ServiceImpl<MtPageMapper, MtPage> i
                 if (!(id instanceof Number)) {
                     continue;
                 }
-                Double sale = saleMap.get(((Number) id).intValue());
+                Integer sale = saleMap.get(((Number) id).intValue());
                 if (sale == null) {
                     continue;
                 }
-                int saleInt = (int) Math.round(sale);
-                item.put("initSale", saleInt);
-                item.put("saleNum", saleInt);
+                item.put("initSale", sale);
+                item.put("saleNum", sale);
             }
         }
     }
@@ -569,7 +571,7 @@ public class PageDecorateServiceImpl extends ServiceImpl<MtPageMapper, MtPage> i
         lambdaQueryWrapper.eq(MtPage::getIsDefault, YesOrNoEnum.YES.getKey());
         List<MtPage> pageList = mtPageMapper.selectList(lambdaQueryWrapper);
         for (MtPage mtPage : pageList) {
-            mtPage.setIsDefault("N");
+            mtPage.setIsDefault(YesOrNoEnum.NO.getKey());
             mtPage.setUpdateTime(new Date());
             mtPageMapper.updateById(mtPage);
         }
@@ -608,7 +610,7 @@ public class PageDecorateServiceImpl extends ServiceImpl<MtPageMapper, MtPage> i
     /**
      * 保存配置
      */
-    private void saveSetting(AccountInfo accountInfo, String type, Object data) {
+    private void saveSetting(AccountInfo accountInfo, String type, Object data) throws BusinessCheckException {
         MtSetting mtSetting = new MtSetting();
         mtSetting.setType(type);
         mtSetting.setName(type);

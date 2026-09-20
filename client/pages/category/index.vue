@@ -76,7 +76,7 @@
     <!-- 商品SKU弹窗 -->
     <SkuPopup v-if="!isLoading" v-model="showSkuPopup" :skuMode="skuMode" :goods="goods" @addCart="onAddCart"/>
     
-    <view class="flow-fixed-footer b-f m-top10">
+    <view class="flow-fixed-footer b-f">
       <view class="dis-flex chackout-box">
         <view class="chackout-left pl-12">
           <view class="col-amount-do">总金额：<text class="amount">￥{{ totalPrice.toFixed(2) }}</text></view>

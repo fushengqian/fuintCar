@@ -65,10 +65,10 @@
       this.load()
     },
     methods: {
-      async load() {
+      async load(force = false) {
         let config = null
         try {
-          config = await loadTabbar()
+          config = await loadTabbar(force)
         } catch (e) {
           config = null
         }
@@ -98,15 +98,15 @@
         this.textColor = style.textColor || '#999999'
         this.selectedColor = style.selectedColor || getThemePrimary()
         this.barHeight = Math.max(40, Math.min(Number(style.height) || 50, 80))
-        this.setSelected()
+        // 页面切换时路由可能尚未就绪，延迟重试保证选中态最终校正到位
+        this.syncSelected()
       },
-      // 页面 onShow 时调用：tab 切换后刷新选中态；首次未渲染时补拉取
-      refresh() {
-        if (!this.visible && !this.items.length) {
-          this.load()
-        } else {
-          this.syncSelected()
-        }
+      // 页面 onShow 时调用：重新应用配置并校正选中态
+      // 非强制时会命中本地缓存（仅一次本地读取，成本极低），
+      // 保证切换商户/店铺后导航与主题同步更新
+      // force 为 true 时强制重新拉取配置（切换商户/店铺后使用）
+      refresh(force = false) {
+        this.load(force)
       },
       // 同步选中态并延迟重试：页面切换时路由可能尚未就绪，延迟保证最终校正到位
       syncSelected() {

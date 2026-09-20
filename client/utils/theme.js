@@ -1,4 +1,5 @@
 import * as themeApi from '@/api/theme'
+import { getMerchantScope, isMerchantReady } from './merchant'
 
 // 无主题缓存/后台主题不可用时的兜底色：
 // 不使用品牌青，避免启动瞬间或主题拉取前闪出与后台主题不一致的青色；
@@ -34,8 +35,8 @@ export function getTheme() {
 /**
  * 缓存主题配置
  */
-export function setTheme(theme) {
-  uni.setStorageSync('theme', theme)
+export function setTheme(theme, scope) {
+  uni.setStorageSync('theme', { ...theme, _scope: scope || getMerchantScope() })
   uni.setStorageSync('theme_time', Date.now())
 }
 
@@ -104,34 +105,54 @@ function applyH5Theme(theme) {
  * 加载主题配置(带缓存,force 为 true 时强制刷新)
  */
 export function loadTheme(force) {
-  if (!force) {
-    const time = uni.getStorageSync('theme_time')
-    if (time && Date.now() - time < CACHE_DURATION) {
-      const cached = getTheme()
-      applyH5Theme(cached)
-      return Promise.resolve(cached)
+  const scope = getMerchantScope()
+  const cached = uni.getStorageSync('theme')
+  const cachedTheme = cached && cached.colors ? cached : DEFAULT_THEME
+  const scopeMatched = !!(cached && cached._scope === scope)
+  const time = uni.getStorageSync('theme_time')
+  const inCacheTime = !!(time && Date.now() - time < CACHE_DURATION)
+
+  // 切换店铺后商户号尚未就绪(systemConfig 未返回)时不请求,
+  // 否则请求头带的仍是上一个商户的商户号, 会拉到错误商户的主题
+  if (!isMerchantReady()) {
+    applyH5Theme(cachedTheme)
+    return Promise.resolve(cachedTheme)
+  }
+
+  // 缓存命中条件:未强制刷新 + 商户/店铺作用域一致 + 未超过缓存有效期
+  if (!force && scopeMatched && inCacheTime) {
+    applyH5Theme(cachedTheme)
+    return Promise.resolve(cachedTheme)
+  }
+
+  // 防止并发重复请求:作用域一致时复用同一个请求
+  if (loadingPromise) {
+    if (loadingPromise.scope === scope) {
+      return loadingPromise
     }
+    // 作用域已变化(切换了商户/店铺), 等当前请求结束后按新作用域重新拉取
+    return loadingPromise.then(() => loadTheme(force))
   }
-  // 防止并发重复请求
-  if (!loadingPromise) {
-    loadingPromise = themeApi.theme()
-      .then(res => {
-        const theme = res.data || {}
-        if (!theme.colors) {
-          theme.colors = DEFAULT_THEME.colors
-        }
-        setTheme(theme)
-        applyH5Theme(theme)
-        return theme
-      })
-      .catch(() => {
-        const theme = getTheme()
-        applyH5Theme(theme)
-        return theme
-      })
-      .finally(() => {
-        loadingPromise = null
-      })
-  }
+
+  loadingPromise = themeApi.theme()
+    .then(res => {
+      const theme = res.data || {}
+      if (!theme.colors) {
+        theme.colors = DEFAULT_THEME.colors
+      }
+      setTheme(theme, scope)
+      applyH5Theme(theme)
+      return theme
+    })
+    .catch(() => {
+      const theme = getTheme()
+      applyH5Theme(theme)
+      return theme
+    })
+    .finally(() => {
+      loadingPromise = null
+    })
+  // 记录本次请求所属作用域, 供并发调用判断是否可复用
+  loadingPromise.scope = scope
   return loadingPromise
 }

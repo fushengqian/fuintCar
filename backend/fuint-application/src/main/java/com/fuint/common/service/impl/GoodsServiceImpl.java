@@ -781,6 +781,8 @@ public class GoodsServiceImpl extends ServiceImpl<MtGoodsMapper, MtGoods> implem
         Integer storeId = (params.get("storeId") == null || StringUtil.isEmpty(params.get("storeId").toString())) ? 0 : Integer.parseInt(params.get("storeId").toString());
         Integer cateId = (params.get("cateId") == null || StringUtil.isEmpty(params.get("cateId").toString())) ? 0 : Integer.parseInt(params.get("cateId").toString());
         String keyword = params.get("keyword") == null ? "" : params.get("keyword").toString();
+        // onlyGoods=1 时按商品维度返回，一个商品只占一行，不展开SKU
+        Integer onlyGoods = (params.get("onlyGoods") == null || StringUtil.isEmpty(params.get("onlyGoods").toString())) ? 0 : Integer.parseInt(params.get("onlyGoods").toString());
 
         MtStore mtStore = storeService.queryStoreById(storeId);
         if (mtStore != null && mtStore.getMerchantId() != null) {
@@ -789,7 +791,12 @@ public class GoodsServiceImpl extends ServiceImpl<MtGoodsMapper, MtGoods> implem
         Page<MtGoods> pageHelper = PageHelper.startPage(page, pageSize);
         List<GoodsDto> dataList = new ArrayList<>();
 
-        List<GoodsBean> goodsList = mtGoodsMapper.selectGoodsList(merchantId, storeId, cateId, keyword);
+        List<GoodsBean> goodsList;
+        if (onlyGoods == 1) {
+            goodsList = mtGoodsMapper.selectOnlyGoodsList(merchantId, storeId, cateId, keyword);
+        } else {
+            goodsList = mtGoodsMapper.selectGoodsList(merchantId, storeId, cateId, keyword);
+        }
 
         for (GoodsBean goodsBean : goodsList) {
              GoodsDto goodsDto = new GoodsDto();

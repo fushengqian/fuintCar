@@ -1,6 +1,7 @@
 import * as TabbarApi from '@/api/tabbar'
 import config from '@/config'
 import { getThemePrimary } from '@/utils/theme'
+import { getMerchantScope, isMerchantReady } from '@/utils/merchant'
 
 // 统一图片地址为完整 URL
 // baseUrl 优先使用后端接口返回的 imagePath（图片上传根路径，可能与接口域名不一致，如 OSS/独立文件服务器），无则回退 apiUrl
@@ -71,14 +72,14 @@ export function normalizeConfig(config, imagePath) {
 const CACHE_TTL = 5 * 60 * 1000
 
 // 加载 tabBar 配置并应用到当前页面（自定义 tabBar 实例可能尚未就绪，自动重试）
-export function loadAndApplyTabbar(page) {
+export function loadAndApplyTabbar(page, force = false) {
   // #ifndef MP-WEIXIN
   // H5 等平台没有微信自定义 tabBar（getTabBar）机制，由页面内自定义组件渲染
-  return loadTabbar().then(() => {})
+  return loadTabbar(force).then(() => {})
   // #endif
   // #ifdef MP-WEIXIN
   console.log('[tabbar] loadAndApplyTabbar start')
-  return loadTabbar().then(config => {
+  return loadTabbar(force).then(config => {
     console.log('[tabbar] loadAndApplyTabbar config:', config)
     if (!config) return
     const tryApply = (times) => {
@@ -108,14 +109,22 @@ export function loadAndApplyTabbar(page) {
 // 加载 tabBar 配置并缓存
 export function loadTabbar(force = false) {
   return new Promise((resolve) => {
-    if (!force) {
-      const cached = uni.getStorageSync('tabbar')
-      const isValid = cached && cached.items && cached.items.length && Date.now() - (cached._ts || 0) < CACHE_TTL
-      console.log('[tabbar] loadTabbar cache check:', { isValid, cached })
-      if (isValid) {
-        resolve(normalizeConfig(cached))
-        return
-      }
+    const scope = getMerchantScope()
+    const cached = uni.getStorageSync('tabbar')
+    const hasCache = !!(cached && cached.items && cached.items.length)
+    // 缓存必须属于当前商户/店铺且未过期，否则切换商户/店铺后会沿用上一家的导航
+    const isValid = hasCache && cached._scope === scope && Date.now() - (cached._ts || 0) < CACHE_TTL
+    console.log('[tabbar] loadTabbar cache check:', { isValid, cached })
+    if (!force && isValid) {
+      resolve(normalizeConfig(cached))
+      return
+    }
+
+    // 切换店铺后商户号尚未返回时不做请求，避免用上一个商户的商户号拉到错误配置
+    if (!isMerchantReady()) {
+      console.log('[tabbar] merchant not ready, skip request')
+      resolve(hasCache ? normalizeConfig(cached) : null)
+      return
     }
 
     console.log('[tabbar] loadTabbar fetching from API...')
@@ -131,7 +140,7 @@ export function loadTabbar(force = false) {
         const hasItems = !!(tabbar && tabbar.items && tabbar.items.length)
         const config = normalizeConfig(tabbar, imagePath)
         if (hasItems) {
-          uni.setStorageSync('tabbar', { ...config, _ts: Date.now() })
+          uni.setStorageSync('tabbar', { ...config, _ts: Date.now(), _scope: scope })
           console.log('[tabbar] cache written')
         } else {
           uni.removeStorageSync('tabbar')
