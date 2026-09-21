@@ -1,5 +1,5 @@
 <template>
-  <view class="container">
+  <view :style="themeVars" class="container">
     <!-- 店铺页面组件 -->
     <Page :items="items" />
   </view>

@@ -197,7 +197,7 @@
       // 价格的字体颜色
       priceColor: {
         Type: String,
-        default: "#fe560a"
+        default: "var(--theme-price)"
       },
       // 立即购买按钮的文字
       buyNowText: {
@@ -212,7 +212,7 @@
       // 立即购买按钮的背景颜色
       buyNowBackgroundColor: {
         Type: String,
-       default: "linear-gradient(to right, #373F64, #373F64)"
+       default: "linear-gradient(to right, var(--theme-primary), var(--theme-primary))"
       },
       // 加入购物车按钮的文字
       addCartText: {
@@ -227,7 +227,7 @@
       // 加入购物车按钮的背景颜色
       addCartBackgroundColor: {
         Type: String,
-        default: "linear-gradient(to right, #373F64, #373F64)"
+        default: "linear-gradient(to right, var(--theme-primary), var(--theme-primary))"
       },
       // 不可点击时,按钮的样式
       disableStyle: {

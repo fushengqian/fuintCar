@@ -1,5 +1,5 @@
 <template>
-  <view class="container">
+  <view :style="themeVars" class="container">
     <!-- 页面标题 -->
     <view class="page-header">
       <view class="header-back" @click="onBack">

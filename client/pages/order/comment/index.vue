@@ -1,5 +1,5 @@
 <template>
-  <view v-if="!isLoading" class="container">
+  <view :style="themeVars" v-if="!isLoading" class="container">
     <view class="goods-list">
       <view class="goods-item" v-for="(item, index) in goodsList" :key="index">
         <!-- 商品详情 -->

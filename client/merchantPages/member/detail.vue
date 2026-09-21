@@ -1,5 +1,5 @@
 <template>
-  <view v-if="!isLoading" class="container">
+  <view :style="themeVars" v-if="!isLoading" class="container">
     <!-- 页面头部 -->
     <view class="main-header">
       <!-- 用户信息 -->

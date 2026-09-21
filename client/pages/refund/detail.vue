@@ -1,5 +1,5 @@
 <template>
-  <view v-if="!isLoading" class="container p-bottom">
+  <view :style="themeVars" v-if="!isLoading" class="container p-bottom">
 
     <!-- 顶部状态栏 -->
     <view class="detail-header dis-flex flex-y-center">

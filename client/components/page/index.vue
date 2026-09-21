@@ -43,6 +43,10 @@
       <block v-if="item.type === 'navBar'">
         <NavBar :itemStyle="item.style" :params="item.params" :dataList="item.dataList" />
       </block>
+      <!-- 会员信息 -->
+      <block v-if="item.type === 'memberInfo'">
+        <MemberInfo :itemStyle="item.style" :params="item.params" />
+      </block>
       <!-- 商品 -->
       <block v-if="item.type === 'goods'">
         <Goods :itemStyle="item.style" :params="item.params" :dataList="item.dataList" />
@@ -71,6 +75,7 @@
   import Article from './article'
   import Notice from './notice'
   import NavBar from './navBar'
+  import MemberInfo from './memberInfo'
   import Goods from './goods'
   import Blank from './blank'
   import RichText from './richText'
@@ -87,6 +92,7 @@
       Article,
       Notice,
       NavBar,
+      MemberInfo,
       Goods,
       Blank,
       RichText,
@@ -176,6 +182,9 @@
             break
           case 'location':
             // 门店信息：客户端直接使用当前 storeInfo 渲染
+            break
+          case 'memberInfo':
+            // 会员信息：会员数据（登录状态、余额积分、默认车牌）由客户端组件自行获取
             break
           case 'banner':
             // 后台 data.list = [{image, url}]，客户端轮播组件期望数组条目 {image, url}

@@ -43,6 +43,7 @@
   import store from '@/store'
   import config from '@/config'
   import { getShareQrCode } from '@/api/share'
+  import { getThemePrimary } from '@/utils/theme'
 
   export default {
     name: 'PosterImg',
@@ -234,6 +235,8 @@
       drawPoster(scale, pr) {
         const app = this
         const ctx = uni.createCanvasContext('sharePosterCanvas', this)
+        // 海报主色跟随后台配置的主题色（不要写死色值）
+        const primary = getThemePrimary()
 
         // H5 端按设备像素比缩放绘制上下文，实现高清输出
         pr = pr || 1
@@ -244,7 +247,7 @@
         const ch = app.canvasHeight / pr
 
         // 背景色
-        ctx.setFillStyle('#373F64')
+        ctx.setFillStyle(primary)
         ctx.fillRect(0, 0, cw, ch)
 
         // 顶部白色装饰圆
@@ -274,7 +277,7 @@
         ctx.fillRect(cardX, cardY, cardW, cardH)
 
         // 卡片顶部装饰条
-        ctx.setFillStyle('#373F64')
+        ctx.setFillStyle(primary)
         ctx.fillRect(cardX, cardY, cardW, 6 * scale)
 
         // 应用名称
@@ -285,7 +288,7 @@
         ctx.fillText(appName, cw / 2, cardY + 45 * scale)
 
         // subtitle
-        ctx.setFillStyle('#373F64')
+        ctx.setFillStyle(primary)
         ctx.setFontSize(16 * scale)
         ctx.fillText('邀请你一起加入', cw / 2, cardY + 75 * scale)
 
@@ -356,7 +359,7 @@
 
           // 底部提示（在二维码下方）
           const bottomTextY = qrY + qrSize + 25 * scale
-          ctx.setFillStyle('#373F64')
+          ctx.setFillStyle(primary)
           ctx.setFontSize(14 * scale)
           // #ifdef H5
           ctx.fillText('长按/扫码识别 立即加入', cw / 2, bottomTextY)
@@ -374,7 +377,7 @@
         } else {
           // 无二维码时，保留原有文字底部
           const bottomY = cardY + cardH - 40 * scale
-          ctx.setFillStyle('#373F64')
+          ctx.setFillStyle(primary)
           ctx.setFontSize(14 * scale)
           // #ifdef H5
           ctx.fillText('长按/扫码识别 立即加入', cw / 2, bottomY)
@@ -549,7 +552,7 @@
 
   .save-btn {
     flex: 1;
-    background: linear-gradient(135deg, #373F64, #373A60);
+    background: linear-gradient(135deg, var(--theme-primary), #373A60);
     color: #fff;
     max-width: 280rpx;
   }

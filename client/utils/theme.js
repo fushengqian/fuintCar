@@ -2,18 +2,20 @@ import * as themeApi from '@/api/theme'
 import { getMerchantScope, isMerchantReady } from './merchant'
 
 // 无主题缓存/后台主题不可用时的兜底色：
-// 不使用品牌青，避免启动瞬间或主题拉取前闪出与后台主题不一致的青色；
-// 用白色作为中性兜底，主题接口返回后即被覆盖
+// 必须用可读的中性深色，绝对不能用白色——主题色普遍用在按钮、选中态、卡片背景上，
+// 白色兜底会让这些元素与白色底融为一体（如首页「登录」按钮会直接看不见）。
+// 这里取与后台默认主题、uni.scss 品牌色一致的主题蓝，主题接口返回后即被覆盖。
 const DEFAULT_PRIMARY = '#ffffff'
 const DEFAULT_THEME = {
   themeId: '',
   themeName: '默认主题',
   colors: {
     primary: DEFAULT_PRIMARY,
-    secondary: '#e0f4f4',
+    // 与后台默认主题(主题蓝)保持一致的辅助色/价格色，避免兜底时颜色不统一
+    secondary: '#e8e9f1',
     text: '#333333',
     bg: '#f5f5f5',
-    price: '#f03c3c'
+    price: '#ff4d4f'
   }
 }
 
@@ -21,6 +23,9 @@ const DEFAULT_THEME = {
 // (App 启动时已通过 loadTheme(true) 强制拉取最新主题并写入缓存,
 // 因此页面 onShow 期间只需在缓存超时后兜底刷新, 避免每个页面反复请求导致换色闪烁)
 const CACHE_DURATION = 60 * 60 * 1000
+
+// 主题缓存版本:兜底色调整后递增, 让旧版本客户端里缓存的错误兜底色自动失效并重新拉取
+const CACHE_VERSION = 2
 
 let loadingPromise = null
 
@@ -36,8 +41,27 @@ export function getTheme() {
  * 缓存主题配置
  */
 export function setTheme(theme, scope) {
-  uni.setStorageSync('theme', { ...theme, _scope: scope || getMerchantScope() })
+  uni.setStorageSync('theme', { ...theme, _scope: scope || getMerchantScope(), _v: CACHE_VERSION })
   uni.setStorageSync('theme_time', Date.now())
+}
+
+/**
+ * 合并主题颜色并剔除无效值
+ *
+ * 后台未配置主题时返回的是空对象/空字符串，若直接写入 CSS 变量会得到非法值，
+ * 元素背景/文字色在计算时整体失效(表现为按钮、选中态"消失")，
+ * 因此这里统一用兜底色补全缺失或空的颜色。
+ */
+export function resolveColors(colors) {
+  const out = Object.assign({}, DEFAULT_THEME.colors)
+  const src = colors || {}
+  Object.keys(out).forEach(key => {
+    const value = src[key]
+    if (typeof value === 'string' && value.trim()) {
+      out[key] = value.trim()
+    }
+  })
+  return out
 }
 
 /**
@@ -49,14 +73,15 @@ export function setTheme(theme, scope) {
  */
 export function buildThemeVars(theme) {
   const t = theme || getTheme()
-  const colors = t.colors || {}
-  const c = Object.assign({}, DEFAULT_THEME.colors, colors)
+  const c = resolveColors(t.colors)
   const parts = []
   parts.push(`--theme-primary: ${c.primary}`)
   parts.push(`--theme-secondary: ${c.secondary}`)
   parts.push(`--theme-text: ${c.text}`)
   parts.push(`--theme-bg: ${c.bg}`)
   parts.push(`--theme-price: ${c.price}`)
+  // 主色上的文字色：主题色为浅色时使用深色文字，避免白字白底看不清
+  parts.push(`--theme-primary-text: ${isLightColor(c.primary) ? '#333333' : '#ffffff'}`)
   // 同时同步 SCSS 编译后对应的 CSS 变量，让 $fuint-theme 的 100+ 处引用也跟随主题
   parts.push(`--fuint-theme: ${c.primary}`)
   return parts.join('; ')
@@ -67,7 +92,7 @@ export function buildThemeVars(theme) {
  */
 export function getThemePrimary() {
   const t = getTheme()
-  return (t && t.colors && t.colors.primary) || DEFAULT_PRIMARY
+  return resolveColors(t && t.colors).primary
 }
 
 /**
@@ -90,13 +115,14 @@ export function isLightColor(color) {
 function applyH5Theme(theme) {
   // #ifdef H5
   const t = theme || getTheme()
-  const c = Object.assign({}, DEFAULT_THEME.colors, (t && t.colors) || {})
+  const c = resolveColors(t && t.colors)
   const style = document.documentElement.style
   style.setProperty('--theme-primary', c.primary)
   style.setProperty('--theme-secondary', c.secondary)
   style.setProperty('--theme-text', c.text)
   style.setProperty('--theme-bg', c.bg)
   style.setProperty('--theme-price', c.price)
+  style.setProperty('--theme-primary-text', isLightColor(c.primary) ? '#333333' : '#ffffff')
   style.setProperty('--fuint-theme', c.primary)
   // #endif
 }
@@ -108,7 +134,8 @@ export function loadTheme(force) {
   const scope = getMerchantScope()
   const cached = uni.getStorageSync('theme')
   const cachedTheme = cached && cached.colors ? cached : DEFAULT_THEME
-  const scopeMatched = !!(cached && cached._scope === scope)
+  // 缓存需同时匹配商户/店铺作用域与缓存版本(版本变化说明兜底色调整过，需重新拉取)
+  const scopeMatched = !!(cached && cached.colors && cached._scope === scope && cached._v === CACHE_VERSION)
   const time = uni.getStorageSync('theme_time')
   const inCacheTime = !!(time && Date.now() - time < CACHE_DURATION)
 
@@ -134,12 +161,12 @@ export function loadTheme(force) {
     return loadingPromise.then(() => loadTheme(force))
   }
 
-  loadingPromise = themeApi.theme()
+  const pending = themeApi.theme()
     .then(res => {
       const theme = res.data || {}
-      if (!theme.colors) {
-        theme.colors = DEFAULT_THEME.colors
-      }
+      // 后台未配置主题时返回空对象：用兜底色补全缺失/空颜色后再缓存，
+      // 避免非法色值让主色元素(按钮/选中态)整体消失
+      theme.colors = resolveColors(theme.colors)
       setTheme(theme, scope)
       applyH5Theme(theme)
       return theme
@@ -150,9 +177,13 @@ export function loadTheme(force) {
       return theme
     })
     .finally(() => {
-      loadingPromise = null
+      // 作用域已变化(切换商户/店铺)时可能已有新请求, 避免把新请求误清空
+      if (loadingPromise === pending) {
+        loadingPromise = null
+      }
     })
   // 记录本次请求所属作用域, 供并发调用判断是否可复用
-  loadingPromise.scope = scope
-  return loadingPromise
+  pending.scope = scope
+  loadingPromise = pending
+  return pending
 }

@@ -134,8 +134,9 @@
         }
       }
 
-      // 圆形
-      &.round .dots-item {
+      // 圆形(后台装修保存的是 circle，兼容历史配置里的 round)
+      &.round .dots-item,
+      &.circle .dots-item {
         width: 16rpx;
         height: 16rpx;
         border-radius: 20rpx;

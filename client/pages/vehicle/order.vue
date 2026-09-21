@@ -1,5 +1,5 @@
 <template>
-  <view v-if="!isLoading" class="container">
+  <view :style="themeVars" v-if="!isLoading" class="container">
     <!-- 我的车辆 -->
     <view class="row-item b-f m-top20 dis-flex" @click="switchVehicle()">
       <view class="row-title">服务车辆：</view>

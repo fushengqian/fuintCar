@@ -1,5 +1,5 @@
 <template>
-  <mescroll-body ref="mescrollRef" :sticky="true" @init="mescrollInit" :down="{ native: true }" @down="downCallback"
+  <mescroll-body :style="themeVars" ref="mescrollRef" :sticky="true" @init="mescrollInit" :down="{ native: true }" @down="downCallback"
     :up="upOption" @up="upCallback">
     <!-- 页面头部 -->
     <view class="header">
@@ -277,7 +277,7 @@
     text-align: center;
     color: #fff;
     border-radius: 5rpx;
-    background: linear-gradient(to right, $fuint-theme, $fuint-theme);
+    background: linear-gradient(to right, var(--theme-primary), var(--theme-primary));
   }
   
   // 排序组件
@@ -413,11 +413,11 @@
       color: #e49a3d;
     }
     .receive {
-      color: #FFFFFF;
+      color: var(--theme-primary-text);
       float: right;
       margin-right: 20rpx;
-      border: solid 1rpx $fuint-theme;
-      background: $fuint-theme;
+      border: solid 1rpx var(--theme-primary);
+      background: var(--theme-primary);
       padding: 8rpx 20rpx 8rpx 20rpx;
       border-radius: 5rpx;
       display: block;

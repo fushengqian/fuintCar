@@ -1,5 +1,5 @@
 <template>
-  <view class="container">
+  <view :style="themeVars" class="container">
     <view class="info-list">
       <view class="info-item">
           <view class="contacts avatar-warp">
@@ -30,8 +30,8 @@
           <text class="name">状态</text>
           <view class="value">
              <radio-group @change="statusChange">
-                <label class="radio"><radio value="false" color="#373F64" :checked="merchantInfo.status == 'false' ? true : false"/>营业中</label>
-                <label class="radio second"><radio value="true" color="#373F64" :checked="merchantInfo.status == 'true' ? true: false"/>已打烊</label>
+                <label class="radio"><radio value="false" :color="themeColor" :checked="merchantInfo.status == 'false' ? true : false"/>营业中</label>
+                <label class="radio second"><radio value="true" :color="themeColor" :checked="merchantInfo.status == 'true' ? true: false"/>已打烊</label>
              </radio-group>
           </view>
         </view>

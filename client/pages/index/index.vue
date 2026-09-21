@@ -8,7 +8,7 @@
           <!-- 门店信息 + 搜索框：吸顶固定 -->
           <view class="index-sticky-header">
               <Location v-if="storeInfo" :storeInfo="storeInfo"/>
-              <Search v-if="storeInfo" tips="请输入搜索关键字..." @event="$navTo('pages/search/index')"/>
+              <Search v-if="storeInfo" position="static" tips="请输入搜索关键字..." @event="$navTo('pages/search/index')"/>
           </view>
           <Banner v-if="storeInfo" :itemStyle="options.bannerStyle" :params="options.bannerParam" :dataList="banner"/>
           <Blank v-if="storeInfo" :itemStyle="options.blankStyle"/>
@@ -41,8 +41,8 @@
   import MescrollCompMixin from "@/components/mescroll-uni/mixins/mescroll-comp.js";
   import config from '@/config'
   import { loadAndApplyTabbar } from '@/utils/tabbar'
-  import { loadTheme, buildThemeVars } from '@/utils/theme'
   import { switchStore, setMerchantNo, isThemeScopeMatched } from '@/utils/merchant'
+  import { refreshMerchantConfig } from '@/utils/merchantConfig'
   // #ifdef H5
   import H5Tabbar from '@/components/tabbar/index.vue'
   // #endif
@@ -154,6 +154,8 @@
       // #endif
       showMessage();
       setCartTabBadge();
+      // 刷新装修组件中的会员信息（登录状态、余额积分、默认车牌可能在其它页面已变化）
+      uni.$emit('memberInfoRefresh');
       app.onGetStoreInfo();
       uni.getLocation({
           type: 'gcj02',
@@ -235,7 +237,7 @@
                      // 商户号就绪（或发生变化）后，主题/导航缓存若不属于当前商户则强制刷新
                      const merchantChanged = setMerchantNo(app.storeInfo.merchantNo);
                      if (app.storeSwitched || storeChanged || merchantChanged || !isThemeScopeMatched()) {
-                         app.refreshMerchantConfig();
+                         app.refreshMerchantTheme();
                      }
                      // 首次进入、或切换店铺需要刷新时，用当前商户/门店参数拉取页面数据
                      let isReflash = uni.getStorageSync("reflashHomeData");
@@ -254,22 +256,9 @@
         /**
          * 刷新当前商户的主题与底部导航配置
          */
-        refreshMerchantConfig() {
-            const app = this;
-            // 强制拉取主题并同步页面 CSS 变量
-            loadTheme(true).then(theme => {
-                app.themeVars = buildThemeVars(theme);
-            });
-            // 强制拉取底部导航配置并应用到自定义 tabBar
-            loadAndApplyTabbar(app, true);
-            // #ifdef H5
-            app.$refs.h5Tabbar && app.$refs.h5Tabbar.refresh(true);
-            // #endif
-            // #ifdef MP-WEIXIN
-            const host = app.$scope || app;
-            const tb = typeof host.getTabBar === 'function' && host.getTabBar();
-            tb && tb.syncSelected && tb.syncSelected();
-            // #endif
+        refreshMerchantTheme() {
+            // 统一走公共逻辑：强制拉取主题与底部导航，并把主题变量同步到已打开的页面
+            refreshMerchantConfig(this, true);
         }
     },
 
@@ -308,9 +297,6 @@
   top: 0;
   z-index: 100;
 }
-/* 搜索组件内部默认是 fixed 定位，默认布局中由上面 sticky 容器负责吸顶，
-   这里改回文档流，否则其不占位会遮挡下方的焦点图 */
-.index-sticky-header ::v-deep .search-wrapper {
-  position: static;
-}
+/* Search 组件默认自身 fixed 吸顶，这里用 position="static" 让它回到文档流占位，
+   由外层 sticky 容器负责吸顶，否则其不占位会遮挡下方的焦点图 */
 </style>

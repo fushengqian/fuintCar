@@ -47,7 +47,8 @@
 .main-loc {
   color: #ffffff;
   .diy-location {
-    background: linear-gradient(to bottom, $fuint-theme, $fuint-theme);
+    // 门店信息背景跟随主题色(原来的 $fuint-theme 是编译期常量, 不会随主题变化)
+    background: linear-gradient(to bottom, var(--theme-primary), var(--theme-primary));
     padding: 3rpx 20rpx 16rpx 20rpx;
   }
 

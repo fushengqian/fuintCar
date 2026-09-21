@@ -1,5 +1,5 @@
 <template>
-  <view class="container">
+  <view :style="themeVars" class="container">
     <view class="info-list">
       <view class="info-item">
         <view class="contacts">

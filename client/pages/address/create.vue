@@ -1,5 +1,5 @@
 <template>
-  <view class="container">
+  <view :style="themeVars" class="container">
     <!-- 标题 -->
     <view class="page-title">收货地址</view>
     <!-- 表单组件 -->

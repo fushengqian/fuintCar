@@ -1,5 +1,5 @@
 <template>
-  <view v-if="!isLoading" class="container">
+  <view :style="themeVars" v-if="!isLoading" class="container">
 
     <view class="header">
       <!-- 订单状态 -->
@@ -743,7 +743,7 @@
           &.active {
             color: #fff;
             border: none;
-            background: #373F64;
+            background: var(--theme-primary);
           }
         }
       }

@@ -1,5 +1,5 @@
 <template>
-  <view class="container">
+  <view :style="themeVars" class="container">
     <!-- 标题 -->
     <view class="page-title">把积分转赠给好友</view>
     <!-- 表单组件 -->

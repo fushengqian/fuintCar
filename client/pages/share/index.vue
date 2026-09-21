@@ -1,5 +1,5 @@
 <template>
-  <mescroll-body ref="mescrollRef" :sticky="true" @init="mescrollInit" :down="{ use: false }" :up="upOption" @up="upCallback">
+  <mescroll-body :style="themeVars" ref="mescrollRef" :sticky="true" @init="mescrollInit" :down="{ use: false }" :up="upOption" @up="upCallback">
     <!-- 分享头部区域 -->
     <view class="share-header">
       <view class="header-bg">
@@ -326,7 +326,7 @@
   }
 
   .header-bg {
-    background: linear-gradient(135deg, #373F64, #373A60);
+    background: linear-gradient(135deg, var(--theme-primary), #373A60);
     padding: 40rpx 30rpx;
     position: relative;
     overflow: hidden;
@@ -454,7 +454,7 @@
           background: none;
         }
         .iconfont {
-          color: #373F64;
+          color: var(--theme-primary);
           font-size: 56rpx;
         }
       }

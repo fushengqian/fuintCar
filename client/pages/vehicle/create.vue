@@ -1,5 +1,5 @@
 <template>
-  <view class="container">
+  <view :style="themeVars" class="container">
     <view class="page-title">请输入您的车牌号</view>
     <!-- 表单组件 -->
     <view class="form-wrapper">
@@ -22,9 +22,9 @@
       <view class="item">
         <text class="name">车辆类型：</text>
         <radio-group @change="radioChange">
-           <label class="radio-item"><radio class="radio" value="C" color="#373F64" :checked="true"/>轿车</label>
-           <label class="radio-item"><radio class="radio" value="S" color="#373F64" :checked="false"/>SUV</label>
-           <label class="radio-item"><radio class="radio" value="M" color="#373F64" :checked="false"/>MPV</label>
+           <label class="radio-item"><radio class="radio" value="C" :color="themeColor" :checked="true"/>轿车</label>
+           <label class="radio-item"><radio class="radio" value="S" :color="themeColor" :checked="false"/>SUV</label>
+           <label class="radio-item"><radio class="radio" value="M" :color="themeColor" :checked="false"/>MPV</label>
         </radio-group>
       </view>
     </view>

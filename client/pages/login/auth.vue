@@ -1,5 +1,5 @@
 <template>
-  <view class="container">
+  <view :style="themeVars" class="container">
     <view class="wechatapp">
       <view class="header"></view>
     </view>

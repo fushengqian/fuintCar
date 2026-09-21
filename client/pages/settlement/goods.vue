@@ -1,7 +1,7 @@
 <template>
-  <view class="container p-bottom">
+  <view :style="themeVars" class="container p-bottom">
     <view class="flow-mode">
-        <selectSwitch :switchList="orderModeList" checked_bj_color="#373F64" @change="switchMode"/> 
+        <selectSwitch :switchList="orderModeList" :checked_bj_color="themeColor" @change="switchMode"/> 
     </view>
     <!-- 快递配送：配送地址 -->
     <view @click="onSelectAddress" v-if="orderMode == false" class="flow-delivery">
@@ -112,7 +112,7 @@
         </view>
         <view class="flex-five dis-flex flex-x-end flex-y-center">
           <text class="points-money col-m">-￥{{ usePointAmount }}</text>
-          <u-switch v-model="isUsePoints" size="48" active-color="#373F64" @change="getCartList()"></u-switch>
+          <u-switch v-model="isUsePoints" size="48" :active-color="themeColor" @change="getCartList()"></u-switch>
         </view>
       </view>
      <!-- 会员折扣 -->

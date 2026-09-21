@@ -32,8 +32,8 @@
       "path": "pages/index/index",
       "style": {
         "navigationBarTitleText": "首页",
-        "navigationBarBackgroundColor": "#373F64",
-        "navigationBarTextStyle": "white",
+        "navigationBarBackgroundColor": "#ffffff",
+        "navigationBarTextStyle": "#ffffff",
         "enablePullDownRefresh": true
       }
     },
@@ -41,8 +41,8 @@
       "path": "pages/category/index",
       "style": {
         "navigationBarTitleText": "微店",
-        "navigationBarBackgroundColor": "#373F64",
-        "navigationBarTextStyle": "white"
+        "navigationBarBackgroundColor": "#ffffff",
+        "navigationBarTextStyle": "#ffffff"
       }
     },
     {
@@ -240,16 +240,16 @@
       "path": "pages/vehicleOrder/detail",
       "style": {
         "navigationBarTitleText": "服务单详情",
-        "navigationBarTextStyle": "white",
-        "navigationBarBackgroundColor": "#373F64"
+        "navigationBarTextStyle": "#ffffff",
+        "navigationBarBackgroundColor": "#ffffff"
       }
     },
     {
       "path": "pages/order/detail",
       "style": {
         "navigationBarTitleText": "订单详情",
-        "navigationBarTextStyle": "white",
-        "navigationBarBackgroundColor": "#373F64"
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff"
       }
     },
     {

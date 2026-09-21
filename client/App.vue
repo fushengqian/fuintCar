@@ -1,5 +1,5 @@
 <script>
-  import { switchStore } from '@/utils/merchant'
+  import { applyStoreIdFromOptions } from '@/utils/merchantConfig'
 
   export default {
 
@@ -28,23 +28,12 @@
 
       /**
        * 解析启动参数/链接中的 storeId 并切换店铺（H5 场景）
+       *
+       * 早于页面 onLoad 执行，保证主题/导航接口带的是当前链接对应店铺的参数，
+       * 而不是上次访问残留的；与当前店铺相同则不切换。
        */
       applyUrlStoreId(options) {
-        let storeId = options && options.query ? options.query.storeId : ''
-        // #ifdef H5
-        if (!storeId) {
-          try {
-            const match = window.location.href.match(/[?&]storeId=(\d+)/)
-            if (match) {
-              storeId = match[1]
-            }
-          } catch (e) {
-            // empty
-          }
-        }
-        // #endif
-        // 与首页 onLoad 保持一致：与当前店铺不同才切换（清空商户号与主题/导航缓存）
-        switchStore(storeId)
+        applyStoreIdFromOptions(options && options.query ? options.query : {})
       },
 
       /**

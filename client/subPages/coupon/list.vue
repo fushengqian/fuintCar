@@ -1,5 +1,5 @@
 <template>
-  <mescroll-body ref="mescrollRef" :sticky="true" @init="mescrollInit" :down="{ native: true }" @down="downCallback"
+  <mescroll-body :style="themeVars" ref="mescrollRef" :sticky="true" @init="mescrollInit" :down="{ native: true }" @down="downCallback"
     :up="upOption" @up="upCallback">
 
     <!-- 排序标签 -->
@@ -50,7 +50,8 @@
                       </view>
                       <!-- 面额 -->
                       <view v-if="item.amount > 0 && item.type === 'C'" class="desc_footer">
-                        <text class="price_x">¥{{ item.amount }}</text>
+                        <text class="price_x" v-if="item.content == '1'">¥{{ item.amount }}</text>
+                        <text class="price_x" v-if="item.content == '2'">{{ (item.amount / 10).toFixed(2) }}折</text>
                       </view>
                   </view>
                   <view class="attr-r">

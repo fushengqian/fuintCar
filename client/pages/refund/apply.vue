@@ -1,5 +1,5 @@
 <template>
-  <view v-if="!isLoading" class="container">
+  <view :style="themeVars" v-if="!isLoading" class="container">
 
     <!-- 商品详情 -->
     <view class="goods-detail b-f dis-flex flex-dir-row" v-for="(goods, idx) in orderInfo.goods" :key="idx">

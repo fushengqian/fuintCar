@@ -1,5 +1,5 @@
 <template>
-  <view v-show="!isLoading" class="container">
+  <view :style="themeVars" v-show="!isLoading" class="container">
     <!-- 卡券信息 -->
     <view v-if="!isLoading" class="coupon-info m-top20">
       <!-- 标题、分享 -->

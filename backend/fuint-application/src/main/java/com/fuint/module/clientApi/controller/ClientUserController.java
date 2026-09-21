@@ -224,12 +224,9 @@ public class ClientUserController extends BaseController {
                 return getFailureResult(1001);
             }
             MtStaff staffInfo = staffService.queryStaffByMobile(loginInfo.getMobile());
-            if (null == staffInfo) {
-                return getFailureResult(1004);
-            }
             // 校验店员与目标会员是否同商户
             MtUser targetUser = memberService.queryMemberById(Integer.parseInt(userId));
-            if (null == targetUser || !targetUser.getMerchantId().equals(staffInfo.getMerchantId())) {
+            if (staffInfo == null || targetUser == null || !targetUser.getMerchantId().equals(staffInfo.getMerchantId())) {
                 return getFailureResult(1004);
             }
             targetUserId = targetUser.getId();

@@ -1,6 +1,6 @@
 <template>
-    <view class="com-user">
-        <view class="user-main">
+    <view class="com-user" :style="boxStyle">
+        <view class="user-main" :style="cardStyle">
             <image class="avatar" :src="userInfo.avatar ? userInfo.avatar : '/static/default-avatar.png'"></image>
             <view class="uc">
                 <view class="name">Hi，你好！</view>
@@ -29,6 +29,16 @@
             vehicle: {
                 type: Object,
                 default: {}
+            },
+            // 外层容器样式（装修组件传入的覆盖样式，为空时保持原有默认样式）
+            boxStyle: {
+                type: String,
+                default: ''
+            },
+            // 会员卡片样式（装修组件传入的覆盖样式，为空时保持原有默认样式）
+            cardStyle: {
+                type: String,
+                default: ''
             }
         },
         methods: {
@@ -91,9 +101,9 @@
             align-items: center;
             border-radius: 60rpx;
             justify-content: center;
-            color: #fff;
+            color: var(--theme-primary-text);
             font-size: 26rpx;
-            background-color: $fuint-theme;
+            background-color: var(--theme-primary);
         }
         .qr{
             width: 80rpx;
@@ -103,15 +113,15 @@
             border-radius: 6rpx;
             justify-content: center;
             text-align: center;
-            color: $fuint-theme;
+            color: var(--theme-primary);
             font-size: 68rpx;
             background-color: #fff;
-            border: solid 1rpx $fuint-theme;
+            border: solid 1rpx var(--theme-primary);
             padding: 2rpx;
         }
         .plate {
-           background: $fuint-theme;
-           color: #ffffff;
+           background: var(--theme-primary);
+           color: var(--theme-primary-text);
            border: #f5f5f5 solid 1rpx;
            height: 100rpx;
            line-height: 100rpx;

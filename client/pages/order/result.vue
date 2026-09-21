@@ -1,5 +1,5 @@
 <template>
-  <view class="container">
+  <view :style="themeVars" class="container">
       <view class="success">
         <view v-if="isSuccess" class="result">
            <image class="icon" src='/static/pay/success.png'></image>

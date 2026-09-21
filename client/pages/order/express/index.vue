@@ -1,5 +1,5 @@
 <template>
-  <view v-if="!isLoading" class="container">
+  <view :style="themeVars" v-if="!isLoading" class="container">
     <!-- 物流信息 -->
     <view class="express i-card">
       <view class="info-item">

@@ -1,5 +1,5 @@
 <template>
-  <view class="container">
+  <view :style="themeVars" class="container">
     <!-- 时间筛选 -->
     <view class="time-filter">
       <picker

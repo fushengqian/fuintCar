@@ -19,6 +19,7 @@ import {
   getThemePrimary,
   isLightColor
 } from './utils/theme'
+import { applyStoreIdFromOptions, ensureMerchantConfig } from './utils/merchantConfig'
 
 Vue.config.productionTip = false
 
@@ -36,8 +37,15 @@ Vue.mixin({
       themeColor: getThemePrimary()
     }
   },
+  onLoad(options) {
+    // 会员端通过链接参数 storeId=xxx 切换商户：任意页面入口都要生效，
+    // 切换后清空主题/导航缓存，后续 onShow 会按新商户重新拉取
+    applyStoreIdFromOptions(options)
+  },
   onShow() {
-    loadTheme().then(theme => {
+    // 通过 storeId 切换后商户号可能尚未就绪，先同步店铺信息并刷新主题/导航，
+    // 保证切换商户时主题色与底部导航实时切换（非切换场景不会额外发请求）
+    ensureMerchantConfig(this).then(() => loadTheme()).then(theme => {
       this.themeVars = buildThemeVars(theme)
       // 微信小程序运行时设置顶部导航栏颜色，覆盖 pages.json 中的静态值
       // #ifdef MP-WEIXIN

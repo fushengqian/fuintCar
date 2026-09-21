@@ -1,5 +1,5 @@
 <template>
-  <view class="container b-f p-b">
+  <view :style="themeVars" class="container b-f p-b">
     <view class="base">
         <view class="merchant-name">
           <view class="name">{{ storeInfo ? storeInfo.name : systemName }}</view>
@@ -20,7 +20,7 @@
         </u-form>
     </view>
     
-    <neoceansoft-keyboard keyboardType="payment" behaviorBgColor="#373F64" @result="changeAmount" @paymentClick="doPay"></neoceansoft-keyboard>
+    <neoceansoft-keyboard keyboardType="payment" :behaviorBgColor="themeColor" @result="changeAmount" @paymentClick="doPay"></neoceansoft-keyboard>
 
     <view class="remark-popup">
        <uni-popup ref="remarkPopup" type="dialog">

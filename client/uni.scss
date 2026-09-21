@@ -13,7 +13,13 @@
  */
 
 /* 颜色变量 */
-$fuint-theme: #373F64;
+/**
+ * 主题色：不要写死色值！
+ * 具体颜色由 utils/theme.js 按后台配置的主题动态写入 CSS 变量 --theme-primary，
+ * 页面在根节点绑定 :style="themeVars" 后，全站的按钮/选中态/边框/图标会一起跟随主题。
+ * 如果这里写死色值，编译期就把颜色固定住了，后台换主题不会生效。
+ */
+$fuint-theme: var(--theme-primary);
 
 /* 行为相关颜色 */
 $uni-color-primary: #007aff;

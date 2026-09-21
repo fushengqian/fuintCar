@@ -1,5 +1,5 @@
 <template>
-  <view class="container">
+  <view :style="themeVars" class="container">
     <view class="addres-list">
       <radio-group>
       <view class="vehicle-item" v-for="(item, index) in list" :key="index">

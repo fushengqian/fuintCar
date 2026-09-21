@@ -1,5 +1,5 @@
 <template>
-  <view class="container">
+  <view :style="themeVars" class="container">
     <!-- 顶部选项卡 -->
     <view class="tab-wrapper">
       <view
@@ -157,7 +157,7 @@
   }
 
   .tab-active {
-    color: #373F64;
+    color: var(--theme-primary);
     font-weight: bold;
     &::after {
       content: '';
@@ -167,7 +167,7 @@
       transform: translateX(-50%);
       width: 60rpx;
       height: 6rpx;
-      background: #373F64;
+      background: var(--theme-primary);
       border-radius: 3rpx;
     }
   }

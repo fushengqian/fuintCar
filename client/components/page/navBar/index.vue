@@ -4,7 +4,7 @@
     <view class="data-list" :class="listClass">
       <view class="item-nav" v-for="(dataItem, index) in renderList" :key="index" :style="itemWidth">
         <view class="nav-to" :class="itemClass" :style="itemBoxStyle" @click="onLink(dataItem.url)">
-          <view class="item-image">
+          <view class="item-image" :style="iconStyle">
             <image class="image" mode="aspectFill" :src="dataItem.iconUrl"></image>
           </view>
           <view class="item-text">
@@ -95,6 +95,35 @@
         if (style.subColor) parts.push(`color: ${style.subColor}`)
         return parts.join('; ') + (parts.length ? ';' : '')
       },
+      // 后台图标样式：iconSize(px) 宽高、iconBg 背景色、iconBorder 边框色、iconRadius(px) 圆角、iconPadding(px) 内边距、iconMargin(px) 外边距
+      iconStyle() {
+        const style = this.itemStyle || {}
+        const parts = []
+        const size = parseInt(style.iconSize, 10)
+        if (size > 0) {
+          parts.push(`width: ${size * rpxRatio}rpx`)
+          parts.push(`height: ${size * rpxRatio}rpx`)
+        }
+        if (style.iconBg) {
+          parts.push(`background-color: ${style.iconBg}`)
+        }
+        if (style.iconBorder) {
+          parts.push(`border: 1rpx solid ${style.iconBorder}`)
+        }
+        const radius = parseInt(style.iconRadius, 10)
+        if (radius > 0) {
+          parts.push(`border-radius: ${radius * rpxRatio}rpx`)
+        }
+        const padding = parseInt(style.iconPadding, 10)
+        if (padding > 0) {
+          parts.push(`padding: ${padding * rpxRatio}rpx`)
+        }
+        const margin = parseInt(style.iconMargin, 10)
+        if (margin > 0) {
+          parts.push(`margin: ${margin * rpxRatio}rpx`)
+        }
+        return parts.join('; ') + (parts.length ? ';' : '')
+      },
       renderList() {
         const max = this.rowsNum * this.lineNum
         return (this.dataList || []).slice(0, max)
@@ -152,6 +181,9 @@
     width: 80rpx;
     height: 80rpx;
     margin-bottom: 10rpx;
+    box-sizing: border-box;
+    /* 圆角/边框需要裁掉溢出部分，否则图片会盖住圆角 */
+    overflow: hidden;
     .image {
       width: 100%;
       height: 100%;

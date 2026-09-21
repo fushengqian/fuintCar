@@ -1,5 +1,5 @@
 <template>
-  <view class="container">
+  <view :style="themeVars" class="container">
       <view class="success">
         <i></i>
         <p><view>使用成功!</view></p>

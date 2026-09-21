@@ -1,5 +1,5 @@
 <template>
-  <view v-if="!isLoading" class="container">
+  <view :style="themeVars" v-if="!isLoading" class="container">
 
     <!-- 预约时间 -->
     <view class="row-service b-f m-top20">

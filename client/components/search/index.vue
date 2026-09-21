@@ -1,6 +1,6 @@
 <template>
   <!-- 搜索框 -->
-  <view class="search-wrapper">
+  <view class="search-wrapper" :style="wrapperStyle">
     <view class="index-search" @click="onClick">
       <view class="index-cont-search t-c">
         <text class="search-icon iconfont icon-sousuo"></text>
@@ -18,9 +18,21 @@
         default: '搜索关键字...'
       },
       itemStyle: Object,
+      // 定位方式：留空时组件自身 fixed 吸顶；被吸顶容器包裹时传 static，让它回到文档流占位
+      position: {
+        type: String,
+        default: ''
+      }
     },
     data() {
       return {}
+    },
+
+    computed: {
+      // 用内联样式覆盖默认的 fixed，小程序端组件内部无法被页面样式覆盖
+      wrapperStyle() {
+        return this.position ? 'position: ' + this.position + ';' : ''
+      }
     },
 
     methods: {

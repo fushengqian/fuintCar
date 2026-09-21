@@ -1,5 +1,5 @@
 <template>
-  <view v-if="!isLoading" class="container b-f p-b">
+  <view :style="themeVars" v-if="!isLoading" class="container b-f p-b">
     <view class="article-title">
       <text>{{ detail.title }}</text>
     </view>

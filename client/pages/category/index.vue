@@ -1,10 +1,11 @@
 <template>
-  <view class="container">
-    <!--店铺切换-->
-    <Location v-if="storeInfo" :storeInfo="storeInfo"/>
+  <view class="container" :style="themeVars">
+    <!--店铺切换 + 搜索框：作为一个整体吸顶固定，不随页面滚动 -->
+    <view class="cate-sticky-header">
+      <Location v-if="storeInfo" :storeInfo="storeInfo"/>
     
-    <!-- 搜索框 -->
-    <Search tips="请输入搜索关键字..." @event="$navTo('pages/search/index')" />
+      <Search position="static" tips="请输入搜索关键字..." @event="$navTo('pages/search/index')" />
+    </view>
 
     <view class="cate-content dis-flex" v-if="list.length > 0">
       <!-- 左侧 分类 -->
@@ -118,6 +119,8 @@
         totalPrice: 0.00,
         // 列表高度
         scrollHeight: 500,
+        // 吸顶头部(门店信息 + 搜索框)实测高度
+        headerHeight: 0,
         // 一级分类：指针
         curIndex: 0,
         // 内容区竖向滚动条位置
@@ -143,7 +146,12 @@
 
     onLoad() {
       const app = this
-      app.setListHeight()
+      app.updateLayout()
+    },
+
+    onReady() {
+      // 首次渲染完成后按实测高度重新计算列表高度
+      this.updateLayout();
     },
 
     onShow() {
@@ -271,6 +279,8 @@
          settingApi.systemConfig()
            .then(result => {
                app.storeInfo = result.data.storeInfo;
+               // 门店信息渲染后头部高度会变化，重新计算列表高度
+               app.updateLayout();
            })
        },
       
@@ -278,12 +288,31 @@
         this.$navTo(`pages/goods/detail`, { goodsId })
       },
 
-      setListHeight() {
+      /**
+       * 计算吸顶头部(门店信息 + 搜索框)与底部结算栏的实测高度，
+       * 据此设置分类列表高度，让整页不再滚动，门店信息始终固定在顶部
+       */
+      updateLayout() {
         const app = this
-        uni.getSystemInfo({
-          success(res) {
-            app.scrollHeight = res.windowHeight - 120
-          }
+        this.$nextTick(() => {
+          const query = uni.createSelectorQuery().in(this)
+          query.select('.cate-sticky-header').boundingClientRect()
+          query.select('.flow-fixed-footer').boundingClientRect()
+          query.exec(res => {
+            const header = (res && res[0]) || {}
+            const footer = (res && res[1]) || {}
+            if (header.height) {
+              app.headerHeight = header.height
+            }
+            uni.getSystemInfo({
+              success(sys) {
+                // 取不到实测值时按 240rpx(头部) / 120rpx(结算栏) 估算
+                const headerHeight = app.headerHeight || (240 * sys.windowWidth / 750)
+                const footerHeight = footer.height || (120 * sys.windowWidth / 750)
+                app.scrollHeight = Math.max(200, sys.windowHeight - headerHeight - footerHeight)
+              }
+            })
+          })
         })
       },
 
@@ -375,12 +404,16 @@
   }
 </style>
 <style lang="scss" scoped>
+  // 吸顶头部：门店信息 + 搜索框整体固定，不随页面滚动
+  .cate-sticky-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: #ffffff;
+  }
+
   .cate-content {
     background: #fff;
-    margin-top: 118rpx;
-    /* #ifdef H5 */
-    margin-top: 124rpx;
-    /* #endif */
   }
   .cate-wrapper {
     padding: 0 20rpx 20rpx 20rpx;
@@ -399,7 +432,6 @@
     color: #444;
     height: 100%;
     background: #f8f8f8;
-    margin-bottom: 120rpx;
     overflow: hidden;
     &::-webkit-scrollbar {
         display: none !important;
@@ -428,7 +460,6 @@
     width: 100%;
     height: 100%;
     overflow: hidden;
-    margin-bottom: 80rpx;
   }
 
   .cate-right-cont {
@@ -585,17 +616,49 @@
                 width: 60rpx;
                 cursor: pointer;
             }
+            // 加购按钮：改为用主题色绘制(原来是固定颜色的图片，不跟随主题)
             .do-add {
-                background: url('~@/static/icon/add.png') no-repeat;
-                background-size: 100% 100%;
+                position: relative;
+                margin: 0 auto;
+                background: var(--theme-primary);
+                border-radius: 50%;
                 width: 45rpx;
                 height: 45rpx;
+                &::before,
+                &::after {
+                    content: '';
+                    position: absolute;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    background: var(--theme-primary-text);
+                }
+                &::before {
+                    width: 22rpx;
+                    height: 3rpx;
+                }
+                &::after {
+                    width: 3rpx;
+                    height: 22rpx;
+                }
             }
             .do-minus {
-                background-image: url('~@/static/icon/minus.png');
-                background-size: 100% 100%;
+                position: relative;
+                margin: 0 auto;
+                background: var(--theme-primary);
+                border-radius: 50%;
                 width: 45rpx;
                 height: 45rpx;
+                &::before {
+                    content: '';
+                    position: absolute;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    width: 22rpx;
+                    height: 3rpx;
+                    background: var(--theme-primary-text);
+                }
             }
             .multiSpec {
                 .num-badge {
@@ -613,12 +676,12 @@
                     right: 90rpx;
                 }
                 .select-spec {
-                    border: solid 1rpx $fuint-theme;
+                    border: solid 1rpx var(--theme-primary);
                     padding: 10rpx 20rpx 10rpx 20rpx;
                     font-size: 25rpx;
                     border-radius: 5rpx;
-                    color: #ffffff;
-                    background: $fuint-theme;
+                    color: var(--theme-primary-text);
+                    background: var(--theme-primary);
                 }
             }
         }
@@ -664,8 +727,9 @@
     
     // 提交按钮
     .flow-btn {
-      background: linear-gradient(to right, $fuint-theme, $fuint-theme);
-      color: #fff;
+      // 结算按钮跟随主题色
+      background: linear-gradient(to right, var(--theme-primary), var(--theme-primary));
+      color: var(--theme-primary-text);
       text-align: center;
       line-height: 92rpx;
       display: block;

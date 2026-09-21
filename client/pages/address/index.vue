@@ -1,5 +1,5 @@
 <template>
-  <view class="container">
+  <view :style="themeVars" class="container">
     <view class="addres-list">
       <view class="address-item" v-for="(item, index) in list" :key="index">
         <view class="contacts" @click="handleSetDefault(item.id)">

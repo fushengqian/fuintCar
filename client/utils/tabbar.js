@@ -106,57 +106,70 @@ export function loadAndApplyTabbar(page, force = false) {
   // #endif
 }
 
+// 同一个商户/店铺下的并发请求（切换店铺后多个页面会同时刷新导航）
+let loadingPromise = null
+
 // 加载 tabBar 配置并缓存
 export function loadTabbar(force = false) {
-  return new Promise((resolve) => {
-    const scope = getMerchantScope()
-    const cached = uni.getStorageSync('tabbar')
-    const hasCache = !!(cached && cached.items && cached.items.length)
-    // 缓存必须属于当前商户/店铺且未过期，否则切换商户/店铺后会沿用上一家的导航
-    const isValid = hasCache && cached._scope === scope && Date.now() - (cached._ts || 0) < CACHE_TTL
-    console.log('[tabbar] loadTabbar cache check:', { isValid, cached })
-    if (!force && isValid) {
-      resolve(normalizeConfig(cached))
-      return
-    }
+  const scope = getMerchantScope()
+  const cached = uni.getStorageSync('tabbar')
+  const hasCache = !!(cached && cached.items && cached.items.length)
+  // 缓存必须属于当前商户/店铺且未过期，否则切换商户/店铺后会沿用上一家的导航
+  const isValid = hasCache && cached._scope === scope && Date.now() - (cached._ts || 0) < CACHE_TTL
+  console.log('[tabbar] loadTabbar cache check:', { isValid, cached })
+  if (!force && isValid) {
+    return Promise.resolve(normalizeConfig(cached))
+  }
 
-    // 切换店铺后商户号尚未返回时不做请求，避免用上一个商户的商户号拉到错误配置
-    if (!isMerchantReady()) {
-      console.log('[tabbar] merchant not ready, skip request')
-      resolve(hasCache ? normalizeConfig(cached) : null)
-      return
-    }
+  // 切换店铺后商户号尚未返回时不做请求，避免用上一个商户的商户号拉到错误配置
+  if (!isMerchantReady()) {
+    console.log('[tabbar] merchant not ready, skip request')
+    return Promise.resolve(hasCache ? normalizeConfig(cached) : null)
+  }
 
-    console.log('[tabbar] loadTabbar fetching from API...')
-    TabbarApi.getTabbar()
-      .then(res => {
-        const data = res.data || {}
-        const tabbar = data.tabbar || data
-        // 后端返回的图片上传根路径（如 OSS 域名/独立文件服务器），与接口域名可能不一致
-        const imagePath = data.imagePath || ''
-        console.log('[tabbar] API response tabbar:', tabbar, 'imagePath:', imagePath)
-        // 仅当后台确实返回了导航项时才写入缓存；
-        // 否则不缓存默认配置，保证下次能重新请求到最新配置
-        const hasItems = !!(tabbar && tabbar.items && tabbar.items.length)
-        const config = normalizeConfig(tabbar, imagePath)
-        if (hasItems) {
-          uni.setStorageSync('tabbar', { ...config, _ts: Date.now(), _scope: scope })
-          console.log('[tabbar] cache written')
-        } else {
-          uni.removeStorageSync('tabbar')
-          console.log('[tabbar] cache removed (no items)')
-        }
-        resolve(config)
-      })
-      .catch(err => {
-        console.error('loadTabbar error:', err)
-        // 请求失败时回退缓存，无缓存则不渲染（不填充兜底数据）
-        const cached = uni.getStorageSync('tabbar')
-        if (cached && cached.items && cached.items.length) {
-          resolve(normalizeConfig(cached))
-        } else {
-          resolve(null)
-        }
-      })
+  // 并发保护：同一商户/店铺下的重复请求复用同一个，避免多页面同时刷新时重复请求
+  if (loadingPromise && loadingPromise.scope === scope) {
+    return loadingPromise
+  }
+
+  console.log('[tabbar] loadTabbar fetching from API...')
+  const request = TabbarApi.getTabbar()
+    .then(res => {
+      const data = res.data || {}
+      const tabbar = data.tabbar || data
+      // 后端返回的图片上传根路径（如 OSS 域名/独立文件服务器），与接口域名可能不一致
+      const imagePath = data.imagePath || ''
+      console.log('[tabbar] API response tabbar:', tabbar, 'imagePath:', imagePath)
+      // 仅当后台确实返回了导航项时才写入缓存；
+      // 否则不缓存默认配置，保证下次能重新请求到最新配置
+      const hasItems = !!(tabbar && tabbar.items && tabbar.items.length)
+      const config = normalizeConfig(tabbar, imagePath)
+      if (hasItems) {
+        uni.setStorageSync('tabbar', { ...config, _ts: Date.now(), _scope: scope })
+        console.log('[tabbar] cache written')
+      } else {
+        uni.removeStorageSync('tabbar')
+        console.log('[tabbar] cache removed (no items)')
+      }
+      return config
+    })
+    .catch(err => {
+      console.error('loadTabbar error:', err)
+      // 请求失败时回退缓存，无缓存则不渲染（不填充兜底数据）
+      const cached = uni.getStorageSync('tabbar')
+      if (cached && cached.items && cached.items.length) {
+        return normalizeConfig(cached)
+      }
+      return null
+    })
+  const pending = request.finally(() => {
+    // 作用域已变化(切换商户/店铺)时可能已有新请求，避免把新请求误清空
+    if (loadingPromise === pending) {
+      loadingPromise = null
+    }
   })
+  // 记录本次请求所属作用域，供并发调用判断是否可复用
+  pending.scope = scope
+  loadingPromise = pending
+  return pending
 }
