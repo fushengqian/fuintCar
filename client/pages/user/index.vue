@@ -1,7 +1,8 @@
 <template>
-  <view v-if="!isLoading" class="container" :style="themeVars">
+  <!-- 根节点始终渲染（Vue2 单根限制）：加载中只隐藏各内容区块，保证自定义 tabBar 不被卸载，避免底部导航闪动 -->
+  <view class="container" :style="themeVars">
     <!-- 页面头部 -->
-    <view v-if="compVisible('userInfoCard')" class="main-header" :style="[userInfoBgStyle, { order: compOrder('userInfoCard') }]">
+    <view v-if="!isLoading && compVisible('userInfoCard')" class="main-header" :style="[userInfoBgStyle, { order: compOrder('userInfoCard') }]">
       <!-- 用户信息 -->
       <view class="user-info">
         <!--头像-->
@@ -36,7 +37,7 @@
     </view>
 
     <!-- 我的资产 -->
-    <view class="asset-card" v-if="compVisible('userAssets')" :style="{ order: compOrder('userAssets') }">
+    <view class="asset-card" v-if="!isLoading && compVisible('userAssets')" :style="{ order: compOrder('userAssets') }">
       <block v-for="(item, index) in userAssetsItems" :key="index">
         <view class="asset-card-item" @click="onUserAsset(item)">
           <view class="asset-card-icon">
@@ -50,7 +51,7 @@
     </view>
 
     <!--会员升级 start-->
-    <view class="member-update" v-if="compVisible('vipUpgrade') && vipItems.length > 0" :style="{ order: compOrder('vipUpgrade') }">
+    <view class="member-update" v-if="!isLoading && compVisible('vipUpgrade') && vipItems.length > 0" :style="{ order: compOrder('vipUpgrade') }">
         <view class="update-title">
             <text>{{ vipTitle }}</text>
         </view>
@@ -76,7 +77,7 @@
     <!--会员升级 end-->
 
     <!-- 订单操作 -->
-    <view class="order-navbar" v-if="compVisible('orderEntry')" :style="{ order: compOrder('orderEntry') }">
+    <view class="order-navbar" v-if="!isLoading && compVisible('orderEntry')" :style="{ order: compOrder('orderEntry') }">
       <view class="order-navbar-item" v-for="(item, index) in orderItems" :key="index" @click="onTargetOrder(item)">
         <view class="item-icon">
           <text class="iconfont" :class="item.iconCls"></text>
@@ -87,7 +88,7 @@
     </view>
 
     <!-- 卡券统计 -->
-    <view class="my-asset" v-if="compVisible('couponStats')" :style="{ order: compOrder('couponStats') }">
+    <view class="my-asset" v-if="!isLoading && compVisible('couponStats')" :style="{ order: compOrder('couponStats') }">
       <view class="asset-left flex-box dis-flex flex-x-center">
         <view class="asset-left-item" v-for="(item, index) in couponStatsItems" :key="index" @click="onCouponStats(item)">
           <view class="item-value dis-flex flex-x-center">
@@ -101,7 +102,7 @@
     </view>
 
     <!-- 我的服务 -->
-    <view class="my-service" v-if="compVisible('serviceGrid')" :style="{ order: compOrder('serviceGrid') }">
+    <view class="my-service" v-if="!isLoading && compVisible('serviceGrid')" :style="{ order: compOrder('serviceGrid') }">
       <view class="service-title">{{ serviceTitle }}</view>
       <view class="service-content clearfix" :class="'service-col-' + serviceColumns">
         <block v-for="(item, index) in serviceItems" :key="index">
@@ -137,7 +138,7 @@
       </view>
     </view>
 
-    <view class="my-recommend" style="order: 100;"></view>
+    <view class="my-recommend" v-if="!isLoading" style="order: 100;"></view>
 
     <!-- 自定义 tabBar 占位 -->
     <view class="tabbar-safe-area" style="order: 101;"></view>

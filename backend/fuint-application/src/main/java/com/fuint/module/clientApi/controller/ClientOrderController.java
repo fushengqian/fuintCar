@@ -19,6 +19,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -50,7 +51,10 @@ public class ClientOrderController extends BaseController {
         UserInfo userInfo = TokenUtil.getUserInfo();
 
         if (userInfo == null) {
-            return getFailureResult(1001, "用户未登录");
+            PaginationResponse empty = new PaginationResponse();
+            empty.setContent(Collections.emptyList());
+            empty.setTotalElements(0);
+            return getSuccessResult(empty);
         }
 
         orderListParam.setUserId(userInfo.getId());

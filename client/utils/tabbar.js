@@ -71,6 +71,17 @@ export function normalizeConfig(config, imagePath) {
 // 缓存有效期（毫秒），防止后台修改配置后客户端长期读取旧缓存
 const CACHE_TTL = 5 * 60 * 1000
 
+// 同步读取当前商户/店铺下仍在有效期内的本地缓存
+// 供自定义 tabBar 在 created 阶段同步渲染，避免首帧底部导航缺失造成闪动
+export function getCachedTabbar() {
+  const cached = uni.getStorageSync('tabbar')
+  if (!cached || !cached.items || !cached.items.length) {
+    return null
+  }
+  const valid = cached._scope === getMerchantScope() && Date.now() - (cached._ts || 0) < CACHE_TTL
+  return valid ? normalizeConfig(cached) : null
+}
+
 // 加载 tabBar 配置并应用到当前页面（自定义 tabBar 实例可能尚未就绪，自动重试）
 export function loadAndApplyTabbar(page, force = false) {
   // #ifndef MP-WEIXIN

@@ -19,7 +19,7 @@
 </template>
 
 <script>
-  import { loadTabbar } from '@/utils/tabbar'
+  import { loadTabbar, getCachedTabbar } from '@/utils/tabbar'
   import { getThemePrimary } from '@/utils/theme'
 
   // 修正页面路径：去除前导斜杠与 query/hash、兼容完整链接、修正 page/ 前缀为 pages/
@@ -62,6 +62,11 @@
       }
     },
     created() {
+      // 先用本地缓存同步渲染，避免首帧底部导航缺失造成闪动（异步请求随后再校正一次）
+      const cached = getCachedTabbar()
+      if (cached) {
+        this.apply(cached, false)
+      }
       this.load()
     },
     methods: {
@@ -74,9 +79,14 @@
         }
         this.apply(config)
       },
-      apply(config) {
-        // 后端无配置/无有效导航项时不渲染（不填充任何兜底数据）
-        const hasItems = !!(config && config.items && config.items.length)
+      // needRetry 为 false 时只做一次同步校正（首帧渲染用），避免重复的延迟重试
+      apply(config, needRetry = true) {
+        // 未拿到配置（商户号尚未就绪/接口失败）时保持当前渲染，避免清空底部导航造成闪动
+        if (!config) {
+          return
+        }
+        // 后端无有效导航项/显式关闭时不渲染（不填充任何兜底数据）
+        const hasItems = !!(config.items && config.items.length)
         if (!hasItems || config.enabled === false) {
           this.items = []
           this.visible = false
@@ -98,8 +108,11 @@
         this.textColor = style.textColor || '#999999'
         this.selectedColor = style.selectedColor || getThemePrimary()
         this.barHeight = Math.max(40, Math.min(Number(style.height) || 50, 80))
-        // 页面切换时路由可能尚未就绪，延迟重试保证选中态最终校正到位
-        this.syncSelected()
+        // 先立即校正选中态；页面切换时路由可能尚未就绪，再延迟重试保证最终校正到位
+        this.setSelected()
+        if (needRetry) {
+          this.syncSelected()
+        }
       },
       // 页面 onShow 时调用：重新应用配置并校正选中态
       // 非强制时会命中本地缓存（仅一次本地读取，成本极低），
@@ -159,6 +172,8 @@
     display: flex;
     box-sizing: content-box;
     border-top: 1px solid #e5e5e5;
+    // H5 自带内置 tabBar 且未被隐藏，这里取两者较高值，避免自定义 tabBar 偏矮时露出下面一层
+    min-height: var(--window-bottom, 50px);
     padding-bottom: constant(safe-area-inset-bottom);
     padding-bottom: env(safe-area-inset-bottom);
 
@@ -168,19 +183,19 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 6px 0 0;
       cursor: pointer;
     }
 
+    // 尺寸与小程序端 custom-tab-bar/index.wxss 保持一致，避免两端切换时图标/文字大小不同
     &__icon {
-      width: 40rpx;
-      height: 40rpx;
-      margin-bottom: 2rpx;
+      width: 44rpx;
+      height: 44rpx;
     }
 
     &__text {
-      font-size: 20rpx;
-      line-height: 1.6;
+      margin-top: 6rpx;
+      font-size: 22rpx;
+      line-height: 1.2;
       white-space: nowrap;
     }
   }

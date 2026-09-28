@@ -80,4 +80,18 @@
 <style>
   /* 项目基础样式 */
   @import "./app.scss";
+
+  /* #ifdef H5 */
+  /*
+   * 隐藏 H5 内置 tabBar（uni-app 自动渲染的 uni-tabbar）：
+   * 本项目的底部导航由 components/tabbar 自定义渲染，内置 tabBar 的图标/字号/高度与其不一致，
+   * 一旦自定义导航被卸载（如"我的"页加载中根节点 v-if 为 false）或页面切换的瞬间，
+   * 内置 tabBar 就会露出来，造成底部导航"闪动"。
+   * 这里用 visibility 而非 display，避免影响 tabBar 占位带来的底部留白与 --window-bottom 相关布局。
+   */
+  uni-tabbar.uni-tabbar-bottom {
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+  /* #endif */
 </style>
