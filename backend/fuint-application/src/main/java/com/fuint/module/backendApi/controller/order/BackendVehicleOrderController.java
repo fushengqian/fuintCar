@@ -16,8 +16,8 @@ import com.fuint.framework.web.BaseController;
 import com.fuint.framework.web.ResponseObject;
 import com.fuint.repository.model.MtStore;
 import com.fuint.repository.model.MtVehicleOrder;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,7 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@Api(tags="后台管理-车辆服务单相关接口")
+@Tag(name="后台管理-车辆服务单相关接口")
 @RestController
 @AllArgsConstructor
 @RequestMapping(value = "/backendApi/vehicleOrder")
@@ -41,7 +41,7 @@ public class BackendVehicleOrderController extends BaseController {
      * */
     private StoreService storeService;
 
-    @ApiOperation(value="车辆服务单列表", notes="查询车辆服务单列表")
+    @Operation(summary="车辆服务单列表")
     @RequestMapping(value = "/list", method = RequestMethod.GET)
     @CrossOrigin
     public ResponseObject list(@ModelAttribute VehicleOrderPage vehicleOrderPage) throws BusinessCheckException {
@@ -69,7 +69,7 @@ public class BackendVehicleOrderController extends BaseController {
         return getSuccessResult(result);
     }
 
-    @ApiOperation(value="查询车辆服务单", notes="查询车辆服务单")
+    @Operation(summary="查询车辆服务单")
     @RequestMapping(value = "/info/{id}", method = RequestMethod.GET)
     @CrossOrigin
     public ResponseObject info(@PathVariable("id") Integer id) throws BusinessCheckException {
@@ -84,7 +84,7 @@ public class BackendVehicleOrderController extends BaseController {
         return getSuccessResult(mtVehicleOrder);
     }
 
-    @ApiOperation(value="更新服务单信息", notes="更新车辆服务单信息")
+    @Operation(summary="更新服务单信息")
     @RequestMapping(value = "/update", method = RequestMethod.POST)
     @CrossOrigin
     public ResponseObject update(@RequestBody Map<String, String> param) {
@@ -110,7 +110,7 @@ public class BackendVehicleOrderController extends BaseController {
         return getSuccessResult(true);
     }
 
-    @ApiOperation(value="服务开单", notes="后台创建服务单并批量生成订单")
+    @Operation(summary="服务开单")
     @RequestMapping(value = "/createServiceOrder", method = RequestMethod.POST)
     @CrossOrigin
     public ResponseObject createServiceOrder(@RequestBody CreateServiceOrderParam param) throws BusinessCheckException {
@@ -121,7 +121,7 @@ public class BackendVehicleOrderController extends BaseController {
         MtVehicleOrder mtVehicleOrder = vehicleOrderService.createServiceOrder(param, accountInfo);
         return getSuccessResult(mtVehicleOrder);
     }
-    @ApiOperation(value = "更新车辆服务单状态")
+    @Operation(summary="更新车辆服务单状态")
     @RequestMapping(value = "/updateStatus", method = RequestMethod.POST)
     @CrossOrigin
     public ResponseObject updateStatus(@RequestBody Map<String, String> param) throws BusinessCheckException {
@@ -144,7 +144,7 @@ public class BackendVehicleOrderController extends BaseController {
         return getSuccessResult(true);
     }
 
-    @ApiOperation(value = "删除车辆服务单", notes = "删除车辆服务单")
+    @Operation(summary="删除车辆服务单")
     @RequestMapping(value = "/delete/{id}", method = RequestMethod.GET)
     @CrossOrigin
     public ResponseObject delete(@PathVariable("id") Integer id) throws BusinessCheckException {

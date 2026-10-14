@@ -16,12 +16,12 @@ import com.fuint.module.clientApi.request.VehicleRequest;
 import com.fuint.repository.model.MtVehicle;
 import com.fuint.repository.model.MtVehicleOrder;
 import com.fuint.utils.StringUtil;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,7 +32,7 @@ import java.util.Map;
  * Created by FSQ
  * CopyRight https://www.fuint.cn
  */
-@Api(tags="会员端-会员车辆相关接口")
+@Tag(name="会员端-会员车辆相关接口")
 @RestController
 @AllArgsConstructor
 @RequestMapping(value = "/clientApi/vehicle")
@@ -56,7 +56,7 @@ public class ClientVehicleController extends BaseController {
     /**
      * 保存会员车辆信息
      */
-    @ApiOperation(value="保存会员车辆信息")
+    @Operation(summary="保存会员车辆信息")
     @RequestMapping(value = "/save", method = RequestMethod.POST)
     @CrossOrigin
     public ResponseObject save(HttpServletRequest request, @RequestBody VehicleRequest requestParam) throws BusinessCheckException {
@@ -93,7 +93,7 @@ public class ClientVehicleController extends BaseController {
     /**
      * 获取会员车辆列表
      */
-    @ApiOperation(value="获取会员车辆列表", notes="获取会员车辆列表")
+    @Operation(summary="获取会员车辆列表")
     @RequestMapping(value = "/list", method = RequestMethod.GET)
     @CrossOrigin
     public ResponseObject list(HttpServletRequest request) throws BusinessCheckException {
@@ -106,7 +106,7 @@ public class ClientVehicleController extends BaseController {
     /**
      * 获取会员车辆详情
      */
-    @ApiOperation(value="获取会员车辆详情", notes="根据ID获取会员车辆详情")
+    @Operation(summary="获取会员车辆详情")
     @RequestMapping(value = "/detail", method = RequestMethod.POST)
     @CrossOrigin
     public ResponseObject detail(HttpServletRequest request, @RequestBody VehicleRequest requestParam) throws BusinessCheckException {
@@ -132,7 +132,7 @@ public class ClientVehicleController extends BaseController {
     /**
      * 提交服务单
      */
-    @ApiOperation(value="提交服务单")
+    @Operation(summary="提交服务单")
     @RequestMapping(value = "/submitOrder", method = RequestMethod.POST)
     @CrossOrigin
     public ResponseObject submitOrder(HttpServletRequest request, @RequestBody VehicleOrderRequest requestParam) throws BusinessCheckException {

@@ -5,7 +5,11 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fuint.common.dto.decorate.*;
+import com.fuint.common.dto.decorate.PageComponentDto;
+import com.fuint.common.dto.decorate.PageDecorationDto;
+import com.fuint.common.dto.decorate.TabbarDto;
+import com.fuint.common.dto.decorate.ThemeDto;
+import com.fuint.common.dto.decorate.UserPageDto;
 import com.fuint.common.dto.system.AccountInfo;
 import com.fuint.common.enums.SettingTypeEnum;
 import com.fuint.common.enums.StatusEnum;
@@ -35,8 +39,11 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * 页面装修业务接口实现类
@@ -144,10 +151,6 @@ public class PageDecorateServiceImpl extends ServiceImpl<MtPageMapper, MtPage> i
 
     /**
      * 按店铺查询默认装修页面
-     * @param merchantId 商户ID
-     * @param storeId 店铺ID
-     * @param pageType 页面类型
-     * @return 装修页面DTO
      */
     private PageDecorationDto getDefaultPageByStore(Integer merchantId, Integer storeId, String pageType) {
         LambdaQueryWrapper<MtPage> lambdaQueryWrapper = Wrappers.lambdaQuery();
@@ -169,9 +172,6 @@ public class PageDecorateServiceImpl extends ServiceImpl<MtPageMapper, MtPage> i
 
     /**
      * 按商户查询默认装修页面（不限定店铺，取最新一条）
-     * @param merchantId 商户ID
-     * @param pageType 页面类型
-     * @return 装修页面DTO
      */
     private PageDecorationDto getDefaultPageByMerchant(Integer merchantId, String pageType) {
         LambdaQueryWrapper<MtPage> lambdaQueryWrapper = Wrappers.lambdaQuery();
@@ -192,10 +192,7 @@ public class PageDecorateServiceImpl extends ServiceImpl<MtPageMapper, MtPage> i
 
     /**
      * 保存装修页面（新增或更新，组件全量覆盖）
-     * @param pageDto 装修页面DTO
-     * @param accountInfo 用户信息
-     * @return 装修页面实体
-     * @throws BusinessCheckException 业务检查异常
+     *
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -218,12 +215,16 @@ public class PageDecorateServiceImpl extends ServiceImpl<MtPageMapper, MtPage> i
                 throw new BusinessCheckException("不同商户，无权限操作");
             }
         }
-
         if (accountInfo != null) {
-            pageDto.setMerchantId(accountInfo.getMerchantId());
-            pageDto.setStoreId(accountInfo.getStoreId());
+            if (accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0) {
+                pageDto.setMerchantId(accountInfo.getMerchantId());
+            } else {
+                throw new BusinessCheckException("平台账号无操作权限");
+            }
+            if (accountInfo.getStoreId() != null && accountInfo.getStoreId() > 0) {
+                pageDto.setStoreId(accountInfo.getStoreId());
+            }
         }
-        mtPage.setMerchantId(pageDto.getMerchantId() == null ? 0 : pageDto.getMerchantId());
         mtPage.setStoreId(pageDto.getStoreId() == null ? 0 : pageDto.getStoreId());
         mtPage.setPageName(pageDto.getPageName());
         mtPage.setPageType(pageDto.getPageType());
@@ -372,6 +373,11 @@ public class PageDecorateServiceImpl extends ServiceImpl<MtPageMapper, MtPage> i
      */
     @Override
     public boolean saveTheme(ThemeDto themeDto, AccountInfo accountInfo) throws BusinessCheckException {
+        if (accountInfo != null) {
+            if (accountInfo.getMerchantId() == null || accountInfo.getMerchantId() <= 0) {
+                throw new BusinessCheckException("平台账号无操作权限");
+            }
+        }
         saveSetting(accountInfo, SettingTypeEnum.THEME.getKey(), themeDto);
         return true;
     }
@@ -413,6 +419,11 @@ public class PageDecorateServiceImpl extends ServiceImpl<MtPageMapper, MtPage> i
      */
     @Override
     public boolean saveTabbar(TabbarDto tabbarDto, AccountInfo accountInfo) throws BusinessCheckException {
+        if (accountInfo != null) {
+            if (accountInfo.getMerchantId() == null || accountInfo.getMerchantId() <= 0) {
+                throw new BusinessCheckException("平台账号无操作权限");
+            }
+        }
         saveSetting(accountInfo, SettingTypeEnum.TABBAR.getKey(), tabbarDto);
         return true;
     }
@@ -440,6 +451,11 @@ public class PageDecorateServiceImpl extends ServiceImpl<MtPageMapper, MtPage> i
      */
     @Override
     public boolean saveUserPage(UserPageDto userPageDto, AccountInfo accountInfo) throws BusinessCheckException {
+        if (accountInfo != null) {
+            if (accountInfo.getMerchantId() == null || accountInfo.getMerchantId() <= 0) {
+                throw new BusinessCheckException("平台账号无操作权限");
+            }
+        }
         saveSetting(accountInfo, SettingTypeEnum.USER_PAGE.getKey(), userPageDto);
         return true;
     }
@@ -532,10 +548,11 @@ public class PageDecorateServiceImpl extends ServiceImpl<MtPageMapper, MtPage> i
                 continue;
             }
             List<MtGoods> goodsEntities = mtGoodsMapper.selectList(Wrappers.lambdaQuery(MtGoods.class).in(MtGoods::getId, goodsIds));
-            Map<Integer, Integer> saleMap = new HashMap<>();
+            Map<Integer, Double> saleMap = new HashMap<>();
             if (goodsEntities != null) {
                 for (MtGoods goodsEntity : goodsEntities) {
-                    saleMap.put(goodsEntity.getId(), goodsEntity.getInitSale() == null ? 0 : goodsEntity.getInitSale());
+                    Integer initSale = goodsEntity.getInitSale();
+                    saleMap.put(goodsEntity.getId(), initSale == null ? 0.0 : initSale.doubleValue());
                 }
             }
             if (saleMap.size() == 0) {
@@ -550,12 +567,13 @@ public class PageDecorateServiceImpl extends ServiceImpl<MtPageMapper, MtPage> i
                 if (!(id instanceof Number)) {
                     continue;
                 }
-                Integer sale = saleMap.get(((Number) id).intValue());
+                Double sale = saleMap.get(((Number) id).intValue());
                 if (sale == null) {
                     continue;
                 }
-                item.put("initSale", sale);
-                item.put("saleNum", sale);
+                int saleInt = (int) Math.round(sale);
+                item.put("initSale", saleInt);
+                item.put("saleNum", saleInt);
             }
         }
     }
@@ -571,7 +589,7 @@ public class PageDecorateServiceImpl extends ServiceImpl<MtPageMapper, MtPage> i
         lambdaQueryWrapper.eq(MtPage::getIsDefault, YesOrNoEnum.YES.getKey());
         List<MtPage> pageList = mtPageMapper.selectList(lambdaQueryWrapper);
         for (MtPage mtPage : pageList) {
-            mtPage.setIsDefault(YesOrNoEnum.NO.getKey());
+            mtPage.setIsDefault("N");
             mtPage.setUpdateTime(new Date());
             mtPageMapper.updateById(mtPage);
         }

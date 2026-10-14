@@ -1,6 +1,6 @@
 package com.fuint.common.param;
 
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import java.io.Serializable;
 
@@ -13,7 +13,7 @@ import java.io.Serializable;
 @Data
 public class BalanceListParam extends PageParam implements Serializable {
 
-    @ApiModelProperty(value="会员ID", name="userId")
+    @Schema(description="会员ID")
     private Integer userId;
 
 }

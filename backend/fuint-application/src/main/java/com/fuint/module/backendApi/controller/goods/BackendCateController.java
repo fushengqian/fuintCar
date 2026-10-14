@@ -15,8 +15,8 @@ import com.fuint.framework.web.BaseController;
 import com.fuint.framework.web.ResponseObject;
 import com.fuint.repository.model.MtGoodsCate;
 import com.fuint.repository.model.MtStore;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -32,7 +32,7 @@ import java.util.Map;
  * Created by FSQ
  * CopyRight https://www.fuint.cn
  */
-@Api(tags="管理端-商品分类相关接口")
+@Tag(name="管理端-商品分类相关接口")
 @RestController
 @AllArgsConstructor
 @RequestMapping(value = "/backendApi/goods/cate")
@@ -56,7 +56,7 @@ public class BackendCateController extends BaseController {
     /**
      * 获取商品分类列表
      */
-    @ApiOperation(value = "获取商品分类列表")
+    @Operation(summary="获取商品分类列表")
     @RequestMapping(value = "/list", method = RequestMethod.GET)
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('goods:cate:index')")
@@ -83,7 +83,7 @@ public class BackendCateController extends BaseController {
     /**
      * 更新商品分类状态
      */
-    @ApiOperation(value = "更新商品分类状态")
+    @Operation(summary="更新商品分类状态")
     @RequestMapping(value = "/updateStatus", method = RequestMethod.POST)
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('goods:cate:index')")
@@ -109,7 +109,7 @@ public class BackendCateController extends BaseController {
     /**
      * 保存商品分类
      */
-    @ApiOperation(value = "保存商品分类")
+    @Operation(summary="保存商品分类")
     @RequestMapping(value = "/save", method = RequestMethod.POST)
     @PreAuthorize("@pms.hasPermission('goods:cate:index')")
     public ResponseObject save(@RequestBody GoodsCateInfo cateInfo) throws BusinessCheckException {
@@ -135,7 +135,7 @@ public class BackendCateController extends BaseController {
     /**
      * 商品分类详情
      */
-    @ApiOperation(value = "商品分类详情")
+    @Operation(summary="商品分类详情")
     @RequestMapping(value = "/info/{id}", method = RequestMethod.GET)
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('goods:cate:index')")

@@ -25,9 +25,7 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        // Swagger 资源映射必须放在 /** 之前
-        registry.addResourceHandler("swagger-ui.html").addResourceLocations(
-                "classpath:/META-INF/resources/");
+        // springdoc-openapi 自带 UI 资源与 /swagger-ui.html 重定向，这里不再手动映射 swagger-ui.html
         registry.addResourceHandler("/webjars/**").addResourceLocations(
                 "classpath:/META-INF/resources/webjars/");
 
@@ -41,6 +39,11 @@ public class WebConfig implements WebMvcConfigurer {
 
         registry.addResourceHandler("/**").addResourceLocations(
                 "classpath:/static/");
+    }
+
+    @Override
+    public void configurePathMatch(PathMatchConfigurer configurer) {
+        configurer.setUseTrailingSlashMatch(true);
     }
 
     @Bean
@@ -119,7 +122,6 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addViewControllers(ViewControllerRegistry registry) {
-        // 将 swagger-ui.html 重定向到 swagger-ui/
-        registry.addRedirectViewController("/swagger-ui.html", "/swagger-ui/");
+        // /swagger-ui.html 的重定向由 springdoc-openapi 提供，这里不再配置
     }
 }

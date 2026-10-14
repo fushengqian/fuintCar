@@ -16,18 +16,18 @@ import com.fuint.framework.web.ResponseObject;
 import com.fuint.repository.model.MtUser;
 import com.fuint.repository.model.MtVehicle;
 import com.fuint.utils.StringUtil;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@Api(tags="后台管理-车辆相关接口")
+@Tag(name="后台管理-车辆相关接口")
 @RestController
 @AllArgsConstructor
 @RequestMapping(value = "/backendApi/vehicle")
@@ -43,7 +43,7 @@ public class BackendVehicleController extends BaseController {
      * */
     private MemberService memberService;
 
-    @ApiOperation(value="查询车辆列表", notes="查询车辆列表")
+    @Operation(summary="查询车辆列表")
     @RequestMapping(value = "/list", method = RequestMethod.GET)
     @CrossOrigin
     public ResponseObject list(HttpServletRequest request) throws BusinessCheckException {
@@ -59,7 +59,7 @@ public class BackendVehicleController extends BaseController {
         return getSuccessResult(result);
     }
 
-    @ApiOperation(value="查询车辆信息", notes="查询会员车辆信息")
+    @Operation(summary="查询车辆信息")
     @RequestMapping(value = "/info/{id}", method = RequestMethod.GET)
     @CrossOrigin
     public ResponseObject info(@PathVariable("id") Integer id) throws BusinessCheckException {
@@ -73,7 +73,7 @@ public class BackendVehicleController extends BaseController {
         return getSuccessResult(vehicleDto);
     }
 
-    @ApiOperation(value="保存车辆信息", notes="保存会员车辆信息")
+    @Operation(summary="保存车辆信息")
     @RequestMapping(value = "/save", method = RequestMethod.POST)
     @CrossOrigin
     public ResponseObject saveHandle(@RequestBody UserVehicleParam param) throws BusinessCheckException {
@@ -163,7 +163,7 @@ public class BackendVehicleController extends BaseController {
         return getSuccessResult(true);
     }
 
-    @ApiOperation(value = "更新车辆状态", notes="更新车辆状态信息")
+    @Operation(summary="更新车辆状态")
     @RequestMapping(value = "/updateStatus", method = RequestMethod.POST)
     @CrossOrigin
     public ResponseObject updateStatus(@RequestBody Map<String, String> param) throws BusinessCheckException {
@@ -183,7 +183,7 @@ public class BackendVehicleController extends BaseController {
         return getSuccessResult(true);
     }
 
-    @ApiOperation(value = "更新车辆行驶公里数", notes="更新车辆行驶公里数并记录时间")
+    @Operation(summary="更新车辆行驶公里数")
     @RequestMapping(value = "/updateMileage", method = RequestMethod.POST)
     @CrossOrigin
     public ResponseObject updateMileage(@RequestBody Map<String, String> param) throws BusinessCheckException {
@@ -202,7 +202,7 @@ public class BackendVehicleController extends BaseController {
         return getSuccessResult(true);
     }
 
-    @ApiOperation(value = "搜索车辆（服务开单选择车辆）", notes = "按车牌号或会员手机号搜索车辆及会员信息")
+    @Operation(summary="搜索车辆（服务开单选择车辆）")
     @RequestMapping(value = "/searchVehicles", method = RequestMethod.GET)
     @CrossOrigin
     public ResponseObject searchVehicles(@RequestParam String keyword) {
@@ -241,7 +241,7 @@ public class BackendVehicleController extends BaseController {
         return getSuccessResult(resultList);
     }
 
-    @ApiOperation(value = "删除车辆", notes = "根据ID删除会员车辆")
+    @Operation(summary="删除车辆")
     @RequestMapping(value = "/delete/{id}", method = RequestMethod.GET)
     @CrossOrigin
     public ResponseObject delete(@PathVariable("id") Integer id) throws BusinessCheckException {

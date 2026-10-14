@@ -1,10 +1,12 @@
 package com.fuint.module.clientApi.controller;
 
+import com.fuint.common.dto.order.ExpressTraceResultDto;
 import com.fuint.common.dto.order.OrderDto;
 import com.fuint.common.dto.member.UserInfo;
 import com.fuint.common.dto.order.UserOrderDto;
 import com.fuint.common.enums.OrderStatusEnum;
 import com.fuint.common.param.OrderListParam;
+import com.fuint.common.service.ExpressService;
 import com.fuint.common.service.OrderService;
 import com.fuint.common.util.TokenUtil;
 import com.fuint.framework.exception.BusinessCheckException;
@@ -13,12 +15,14 @@ import com.fuint.framework.web.BaseController;
 import com.fuint.framework.web.ResponseObject;
 import com.fuint.repository.model.MtOrder;
 import com.fuint.utils.StringUtil;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.AllArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -30,11 +34,13 @@ import java.util.Map;
  * Created by FSQ
  * CopyRight https://www.fuint.cn
  */
-@Api(tags="会员端-订单相关接口")
+@Tag(name="会员端-订单相关接口")
 @RestController
 @AllArgsConstructor
 @RequestMapping(value = "/clientApi/order")
 public class ClientOrderController extends BaseController {
+
+    private static final Logger logger = LoggerFactory.getLogger(ClientOrderController.class);
 
     /**
      * 订单服务接口
@@ -42,9 +48,14 @@ public class ClientOrderController extends BaseController {
     private OrderService orderService;
 
     /**
+     * 物流查询服务接口
+     * */
+    private ExpressService expressService;
+
+    /**
      * 获取我的订单列表
      */
-    @ApiOperation(value = "获取我的订单列表")
+    @Operation(summary="获取我的订单列表")
     @RequestMapping(value = "/list", method = RequestMethod.POST)
     @CrossOrigin
     public ResponseObject list(@RequestBody OrderListParam orderListParam) throws BusinessCheckException {
@@ -66,7 +77,7 @@ public class ClientOrderController extends BaseController {
     /**
      * 获取订单详情
      */
-    @ApiOperation(value = "获取订单详情")
+    @Operation(summary="获取订单详情")
     @RequestMapping(value = "/detail", method = RequestMethod.GET)
     @CrossOrigin
     public ResponseObject detail(HttpServletRequest request) throws BusinessCheckException {
@@ -89,9 +100,42 @@ public class ClientOrderController extends BaseController {
     }
 
     /**
+     * 查询订单物流信息(快递100)
+     */
+    @Operation(summary="查询订单物流信息")
+    @RequestMapping(value = "/express", method = RequestMethod.GET)
+    @CrossOrigin
+    public ResponseObject express(HttpServletRequest request) {
+        UserInfo mtUser = TokenUtil.getUserInfo();
+        if (mtUser == null) {
+            return getFailureResult(1001, "请先登录");
+        }
+
+        String orderId = request.getParameter("orderId");
+        if (StringUtil.isEmpty(orderId)) {
+            return getFailureResult(201, "订单不能为空");
+        }
+
+        try {
+            ExpressTraceResultDto result;
+            if (orderId.length() >= 12) {
+                result = expressService.queryExpressTraceByOrderSn(orderId, mtUser);
+            } else {
+                result = expressService.queryExpressTrace(Integer.parseInt(orderId), mtUser);
+            }
+            return getSuccessResult(result);
+        } catch (BusinessCheckException e) {
+            return getFailureResult(201, e.getMessage());
+        } catch (Exception e) {
+            logger.error("查询订单物流信息失败：{}", e.getMessage());
+            return getFailureResult(201, "物流信息查询失败，请稍后再试");
+        }
+    }
+
+    /**
      * 取消订单
      */
-    @ApiOperation(value = "取消订单")
+    @Operation(summary="取消订单")
     @RequestMapping(value = "/cancel", method = RequestMethod.GET)
     @CrossOrigin
     public ResponseObject cancel(HttpServletRequest request) throws BusinessCheckException {
@@ -119,7 +163,7 @@ public class ClientOrderController extends BaseController {
     /**
      * 确认收货
      */
-    @ApiOperation(value = "确认收货")
+    @Operation(summary="确认收货")
     @RequestMapping(value = "/receipt", method = RequestMethod.GET)
     @CrossOrigin
     public ResponseObject receipt(HttpServletRequest request) throws BusinessCheckException {
@@ -146,7 +190,7 @@ public class ClientOrderController extends BaseController {
     /**
      * 获取待办订单数量
      */
-    @ApiOperation(value = "获取待办订单数量")
+    @Operation(summary="获取待办订单数量")
     @RequestMapping(value = "/todoCounts", method = RequestMethod.GET)
     @CrossOrigin
     public ResponseObject todoCounts() {

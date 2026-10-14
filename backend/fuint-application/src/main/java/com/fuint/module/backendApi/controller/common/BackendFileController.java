@@ -8,8 +8,8 @@ import com.fuint.common.util.*;
 import com.fuint.framework.web.BaseController;
 import com.fuint.framework.web.ResponseObject;
 import com.fuint.utils.StringUtil;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import java.io.File;
 import java.util.Date;
 import java.util.HashMap;
@@ -36,7 +36,7 @@ import java.util.Set;
  * Created by FSQ
  * CopyRight https://www.fuint.cn
  */
-@Api(tags="管理端-文件上传相关接口")
+@Tag(name="管理端-文件上传相关接口")
 @RestController
 @AllArgsConstructor
 @RequestMapping(value = "/backendApi/file")
@@ -94,7 +94,7 @@ public class BackendFileController extends BaseController {
     /**
      * 后台上传文件
      */
-    @ApiOperation(value = "后台上传文件")
+    @Operation(summary="后台上传文件")
     @RequestMapping(value = "/upload", method = RequestMethod.POST)
     @CrossOrigin
     public ResponseObject uploadFileLocal(HttpServletRequest request) {

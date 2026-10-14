@@ -3,7 +3,7 @@ package com.fuint.common.dto.order;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.fuint.repository.model.MtStore;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import java.io.Serializable;
 import java.util.Date;
@@ -12,50 +12,50 @@ import java.util.Date;
 public class VehicleOrderDto implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    @ApiModelProperty("自增ID")
+    @Schema(description="自增ID")
     @TableId(value = "ID", type = IdType.AUTO)
     private Integer id;
 
-    @ApiModelProperty("服务单好")
+    @Schema(description="服务单好")
     private String orderSn;
 
-    @ApiModelProperty("车牌号")
+    @Schema(description="车牌号")
     private String vehiclePlateNo;
 
-    @ApiModelProperty("用户ID")
+    @Schema(description="用户ID")
     private Integer userId;
 
-    @ApiModelProperty("用户电话")
+    @Schema(description="用户电话")
     private String mobile;
 
-    @ApiModelProperty("会员号")
+    @Schema(description="会员号")
     private String userNo;
 
-    @ApiModelProperty("会员名称")
+    @Schema(description="会员名称")
     private String name;
 
-    @ApiModelProperty("店铺ID")
+    @Schema(description="店铺ID")
     private Integer storeId;
 
-    @ApiModelProperty("所属店铺")
+    @Schema(description="所属店铺")
     private MtStore storeInfo;
 
-    @ApiModelProperty("扫码编码")
+    @Schema(description="扫码编码")
     private String scanCode;
 
-    @ApiModelProperty("备注信息")
+    @Schema(description="备注信息")
     private String remark;
 
-    @ApiModelProperty("关联订单ID列表，逗号分隔")
+    @Schema(description="关联订单ID列表，逗号分隔")
     private String orderIds;
 
-    @ApiModelProperty("状态：A：已提交；B：服务中；C：已完成; D：已删除；")
+    @Schema(description="状态：A：已提交；B：服务中；C：已完成; D：已删除；")
     private String status;
 
-    @ApiModelProperty("创建时间")
+    @Schema(description="创建时间")
     private Date createTime;
 
-    @ApiModelProperty("更新时间")
+    @Schema(description="更新时间")
     private Date updateTime;
 
 }

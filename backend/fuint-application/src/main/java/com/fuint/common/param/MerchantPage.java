@@ -1,6 +1,6 @@
 package com.fuint.common.param;
 
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -16,13 +16,13 @@ public class MerchantPage extends PageParam implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    @ApiModelProperty("商户ID")
+    @Schema(description="商户ID")
     private String id;
 
-    @ApiModelProperty("商户名称")
+    @Schema(description="商户名称")
     private String name;
 
-    @ApiModelProperty("状态")
+    @Schema(description="状态")
     private String status;
 
 }

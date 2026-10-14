@@ -1,6 +1,6 @@
 package com.fuint.common.param;
 
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -14,34 +14,34 @@ import java.io.Serializable;
 @Data
 public class VehicleOrderPage extends PageParam implements Serializable {
 
-    @ApiModelProperty(value="ID", name="id")
+    @Schema(description="ID")
     private String id;
 
-    @ApiModelProperty(value="车牌号", name="vehiclePlateNo")
+    @Schema(description="车牌号")
     private String vehiclePlateNo;
 
-    @ApiModelProperty(value="订单号", name="orderSn")
+    @Schema(description="订单号")
     private String orderSn;
 
-    @ApiModelProperty(value="会员ID", name="userId")
+    @Schema(description="会员ID")
     private Integer userId;
 
-    @ApiModelProperty(value="会员号", name="userNo")
+    @Schema(description="会员号")
     private String userNo;
 
-    @ApiModelProperty(value="手机号", name="mobile")
+    @Schema(description="手机号")
     private String mobile;
 
-    @ApiModelProperty(value="店铺ID，逗号分隔", name="storeIds")
+    @Schema(description="店铺ID，逗号分隔")
     private String storeIds;
 
-    @ApiModelProperty(value="开始时间", name="startTime")
+    @Schema(description="开始时间")
     private String startTime;
 
-    @ApiModelProperty(value="结束时间", name="endTime")
+    @Schema(description="结束时间")
     private String endTime;
 
-    @ApiModelProperty(value="状态", name="status")
+    @Schema(description="状态")
     private String status;
 
 }

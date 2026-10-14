@@ -1,6 +1,6 @@
 package com.fuint.common.param;
 
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import java.io.Serializable;
 
@@ -15,9 +15,9 @@ public class SettlementPage extends PageParam implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    @ApiModelProperty("状态")
+    @Schema(description="状态")
     private String status;
 
-    @ApiModelProperty("描述")
+    @Schema(description="描述")
     private String description;
 }

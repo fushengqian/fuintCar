@@ -1,6 +1,6 @@
 package com.fuint.module.clientApi.request;
 
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import java.io.Serializable;
 
@@ -13,25 +13,25 @@ import java.io.Serializable;
 @Data
 public class VehicleRequest implements Serializable {
 
-    @ApiModelProperty(value="车辆ID", name="vehicleId")
+    @Schema(description="车辆ID")
     private Integer vehicleId;
 
-    @ApiModelProperty(value="车牌号", name="vehiclePlateNo")
+    @Schema(description="车牌号")
     private String vehiclePlateNo;
 
-    @ApiModelProperty(value="车辆品牌", name="vehicleBrand")
+    @Schema(description="车辆品牌")
     private String vehicleBrand;
 
-    @ApiModelProperty(value="车辆型号", name="vehicleModel")
+    @Schema(description="车辆型号")
     private String vehicleModel;
 
-    @ApiModelProperty(value="车辆类型", name="vehicleType")
+    @Schema(description="车辆类型")
     private String vehicleType;
 
-    @ApiModelProperty(value="状态", name="status")
+    @Schema(description="状态")
     private String status;
 
-    @ApiModelProperty(value="是否默认", name="isDefault")
+    @Schema(description="是否默认")
     private String isDefault;
 
 }

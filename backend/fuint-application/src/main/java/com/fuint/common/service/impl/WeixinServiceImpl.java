@@ -1,5 +1,6 @@
 package com.fuint.common.service.impl;
 
+import com.fuint.common.util.CommonUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
@@ -50,8 +51,8 @@ import weixin.popular.util.JsonUtil;
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.math.BigDecimal;
 import java.security.AlgorithmParameters;
@@ -218,8 +219,10 @@ public class WeixinServiceImpl implements WeixinService {
             }
         }
 
-        // JSAPI支付
-        if (orderInfo.getPayType().equals(PayTypeEnum.JSAPI.getKey())) {
+        // JSAPI支付（小程序、公众号内支付）
+        // 注意：积分兑换订单的 payType 是 POINT，但其剩余金额（如运费）仍需走微信支付，
+        // 因此除刷卡支付(MICROPAY)外统一按 JSAPI 下单，避免 trade_type 缺失导致下单失败
+        if (!PayTypeEnum.MICROPAY.getKey().equals(orderInfo.getPayType())) {
             reqData.put("trade_type", PayTypeEnum.JSAPI.getKey());
             reqData.put("openid", userInfo.getOpenId() == null ? "" : userInfo.getOpenId());
         }
@@ -284,7 +287,7 @@ public class WeixinServiceImpl implements WeixinService {
      * */
     public Map<String, String> processResXml(HttpServletRequest request) {
         try {
-            String xmlMsg = HttpKit.readData(request);
+            String xmlMsg = CommonUtil.readRequestBody(request);
             Map<String, String> result = WxPayKit.xmlToMap(xmlMsg);
             String returnCode = result.get("return_code");
             String orderSn = result.get("out_trade_no");

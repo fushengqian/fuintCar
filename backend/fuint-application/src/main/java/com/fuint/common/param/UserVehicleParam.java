@@ -1,6 +1,6 @@
 package com.fuint.common.param;
 
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import java.io.Serializable;
 import java.util.Date;
@@ -14,43 +14,43 @@ import java.util.Date;
 @Data
 public class UserVehicleParam implements Serializable {
 
-    @ApiModelProperty(value="车辆ID", name="id")
+    @Schema(description="车辆ID")
     private Integer id;
 
-    @ApiModelProperty(value="会员名称", name="name")
+    @Schema(description="会员名称")
     private String name;
 
-    @ApiModelProperty(value="会员会员号", name="userNo")
+    @Schema(description="会员会员号")
     private String userNo;
 
-    @ApiModelProperty(value="会员手机号", name="mobile")
+    @Schema(description="会员手机号")
     private String mobile;
 
-    @ApiModelProperty(value="车牌号", name="vehiclePlateNo")
+    @Schema(description="车牌号")
     private String vehiclePlateNo;
 
-    @ApiModelProperty(value="车辆类型", name="vehicleType")
+    @Schema(description="车辆类型")
     private String vehicleType;
 
-    @ApiModelProperty(value="车辆颜色", name="vehicleColor")
+    @Schema(description="车辆颜色")
     private String vehicleColor;
 
-    @ApiModelProperty(value="车辆品牌", name="vehicleBrand")
+    @Schema(description="车辆品牌")
     private String vehicleBrand;
 
-    @ApiModelProperty(value="车辆型号", name="vehicleModel")
+    @Schema(description="车辆型号")
     private String vehicleModel;
 
-    @ApiModelProperty(value="行驶公里数", name="mileage")
+    @Schema(description="行驶公里数")
     private Integer mileage;
 
-    @ApiModelProperty(value="下个保养日期", name="maintenanceDate")
+    @Schema(description="下个保养日期")
     private Date maintenanceDate;
 
-    @ApiModelProperty(value="所在地址", name="address")
+    @Schema(description="所在地址")
     private String address;
 
-    @ApiModelProperty(value="车架号", name="vin")
+    @Schema(description="车架号")
     private String vin;
 
 }

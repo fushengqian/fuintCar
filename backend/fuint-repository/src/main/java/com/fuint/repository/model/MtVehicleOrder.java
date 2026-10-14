@@ -3,8 +3,7 @@ package com.fuint.repository.model;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -12,53 +11,53 @@ import java.util.Date;
 
 @Data
 @TableName("mt_vehicle_order")
-@ApiModel(value = "MtVehicleOrder对象", description = "汽车服务单")
+@Schema(name="MtVehicleOrder对象", description="汽车服务单")
 public class MtVehicleOrder implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    @ApiModelProperty("自增ID")
+    @Schema(description="自增ID")
     @TableId(value = "ID", type = IdType.AUTO)
     private Integer id;
 
-    @ApiModelProperty("用户ID")
+    @Schema(description="用户ID")
     private Integer userId;
 
-    @ApiModelProperty("商户ID")
+    @Schema(description="商户ID")
     private Integer merchantId;
 
-    @ApiModelProperty("店铺ID")
+    @Schema(description="店铺ID")
     private Integer storeId;
 
-    @ApiModelProperty("服务单号")
+    @Schema(description="服务单号")
     private String orderSn;
 
-    @ApiModelProperty("车牌号")
+    @Schema(description="车牌号")
     private String vehiclePlateNo;
 
-    @ApiModelProperty("会员车辆ID")
+    @Schema(description="会员车辆ID")
     private Integer vehicleId;
 
-    @ApiModelProperty("卡券ID")
+    @Schema(description="卡券ID")
     private Integer couponId;
 
-    @ApiModelProperty("关联订单ID列表，逗号分隔")
+    @Schema(description="关联订单ID列表，逗号分隔")
     private String orderIds;
 
-    @ApiModelProperty("状态：A：已提交；B：服务中；C：已完成; D：已删除；")
+    @Schema(description="状态：A：已提交；B：服务中；C：已完成; D：已删除；")
     private String status;
 
-    @ApiModelProperty("扫码编码")
+    @Schema(description="扫码编码")
     private String scanCode;
 
-    @ApiModelProperty("备注信息")
+    @Schema(description="备注信息")
     private String remark;
 
-    @ApiModelProperty("操作人")
+    @Schema(description="操作人")
     private String operator;
 
-    @ApiModelProperty("创建时间")
+    @Schema(description="创建时间")
     private Date createTime;
 
-    @ApiModelProperty("更新时间")
+    @Schema(description="更新时间")
     private Date updateTime;
 }

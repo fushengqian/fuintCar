@@ -1,6 +1,6 @@
 package com.fuint.module.clientApi.request;
 
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import java.io.Serializable;
 
@@ -13,16 +13,16 @@ import java.io.Serializable;
 @Data
 public class VehicleOrderRequest implements Serializable {
 
-    @ApiModelProperty(value="车辆ID", name="vehicleId")
+    @Schema(description="车辆ID")
     private Integer vehicleId;
 
-    @ApiModelProperty(value="车牌号", name="couponId")
+    @Schema(description="车牌号")
     private Integer couponId;
 
-    @ApiModelProperty(value="备注信息", name="remark")
+    @Schema(description="备注信息")
     private String remark;
 
-    @ApiModelProperty(value="扫码编码", name="scanCode")
+    @Schema(description="扫码编码")
     private String scanCode;
 
 }

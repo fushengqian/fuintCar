@@ -1,7 +1,7 @@
 # fuint汽车服务美容保养和会员营销系统介绍
 
 #### 介绍
-fuint汽车美容4S店会员系统是一套开源的汽车服务行业会员管理和营销系统，支持多租户多门店的SaaS模式。系统基于前后端分离的架构，后端采用<b>Java SpringBoot</b> + <b>Mysql</b>，前端基于当前流行的<b>Uniapp</b>，<b>Element UI</b>，支持小程序、h5。提供会员车辆绑定管理，次卡核销服务，服务订单管理，以及汽车保养，周边商品售卖等功能。。
+fuint汽车美容4S店会员系统是一套开源的汽车服务行业会员管理和营销系统，支持多租户多门店的SaaS模式。系统基于前后端分离的架构，后端采用<b>Java SpringBoot3</b> + <b>Mysql</b>，前端基于当前流行的<b>Uniapp</b>，<b>Vue3</b>，<b>Element UI Plus</b>，支持小程序、h5。提供会员车辆绑定管理，次卡核销服务，服务订单管理，以及汽车保养，周边商品售卖等功能。。
 以下是前台的页面展示：
 <p><img src="https://fuint-cn.oss-cn-shenzhen.aliyuncs.com/screenshots/car/g1.png?v=1" alt="前台页面1"></p>
 <p><img src="https://fuint-cn.oss-cn-shenzhen.aliyuncs.com/screenshots/car/g2.png?v=2" alt="前台页面2"></p>
@@ -25,7 +25,7 @@ fuint汽车美容4S店会员系统是一套开源的汽车服务行业会员管�
 <p><img src="https://fuint-cn.oss-cn-shenzhen.aliyuncs.com/uploads/9361ca90f5e94dbb8b20df7deac5b6bb.png" alt="qrcar.png" style="width: 224px; height: 219px;" width="224" height="219" class="loadingclass"/></p>
 
 #### 软件架构
-后端：JAVA SpringBoot + MYSQL Mybatis Plus + Redis
+后端：JAVA SpringBoot3 + MYSQL Mybatis Plus + Redis
 前端：采用基于Vue的Uniapp、Element UI，前后端分离，支持微信小程序、h5等
 <p>后台截图：</p>
 <p><img src="https://fuint-cn.oss-cn-shenzhen.aliyuncs.com/screenshots/car/login.png?v=fuint" alt="登录界面"></p>
@@ -34,11 +34,11 @@ fuint汽车美容4S店会员系统是一套开源的汽车服务行业会员管�
 前端使用技术<br>
 2.1 Vue<br>
 2.2 Uniapp<br>
-2.3 Element UI
-2.4 Nodejs 14或16版本 
+2.3 Element UI Plus
+2.4 Nodejs 24版本 
 
 后端使用技术<br>
-1.1 SpringBoot 2.5<br>
+1.1 SpringBoot 3.2<br>
 1.2 Mybatis Plus<br>
 1.3 Maven<br>
 1.4 SpringSecurity<br>
