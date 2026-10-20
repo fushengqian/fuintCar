@@ -1,67 +1,67 @@
 # fuint汽车服务美容保养和会员营销系统介绍
 
 #### 介绍
-fuint汽车美容4S店会员系统是一套开源的汽车服务行业会员管理和营销系统，支持多租户多门店的SaaS模式。系统基于前后端分离的架构，后端采用<b>Java SpringBoot3</b> + <b>Mysql</b>，前端基于当前流行的<b>Uniapp</b>，<b>Vue3</b>，<b>Element UI Plus</b>，支持小程序、h5。提供会员车辆绑定管理，次卡核销服务，服务订单管理，以及汽车保养，周边商品售卖等功能。。
+fuint汽车美容4S店会员系统是一套延禾技术（www.fuint.cn）自研开源的汽车服务行业会员管理和营销系统，支持多租户多门店的SaaS模式。系统基于前后端分离的架构，后端采用<b>Java SpringBoot3</b> + <b>Mysql</b>，前端基于当前流行的<b>Uniapp</b>，<b>Vue3</b>，<b>Element UI Plus</b>，支持小程序、h5。提供会员车辆绑定管理，次卡核销服务，服务订单管理，以及汽车保养，周边商品售卖等功能。。
 以下是前台的页面展示：
-<p><img src="https://fuint-cn.oss-cn-shenzhen.aliyuncs.com/screenshots/car/g1.png?v=1" alt="前台页面1"></p>
-<p><img src="https://fuint-cn.oss-cn-shenzhen.aliyuncs.com/screenshots/car/g2.png?v=2" alt="前台页面2"></p>
-<p><img src="https://fuint-cn.oss-cn-shenzhen.aliyuncs.com/screenshots/car/g3.png?v=2" alt="前台页面3"></p>
+![fuint汽车服务系统会员端页面截图1](assets/g1.png)
+
+![fuint汽车服务系统会员端页面截图2](assets/g2.png)
+
+![fuint汽车服务系统会员端页面截图3](assets/g3.png)
 
 本系统侧重于线下实体店的私域流量的运营，同时提供会员端小程序和收银系统的线上线下统一渠道，帮助商户降低获客成本。顾客通过扫码支付成为私域流量，支付即可成为会员。积分和卡券功能建立起会员等级体系，通过消息推送和短信营销方便触达用户。
-<p>1、会员运营自动化：商家通过日常活动设置，如开卡礼设置，沉睡唤醒等，成为会员后自动给顾客送优惠券，让顾客更有黏性，提升会员运营效率。</p>
-<p>2、打通收银系统和会员营销的壁垒，代客下单收银，支付即成为会员。</p>
-<p>3、会员体系完整化：积分兑换、积分转赠、会员等级权益、积分加速、买单折扣。</p>
-<p>4、会员卡券齐全：储值卡、电子券、优惠券、集次卡、计次卡、实体卡购买并兑换、会员充值、余额支付。</p>
-<p>5、线上代客下单收银系统，后台管理员可帮助临柜的会员下单、扫码支付。</p>
-<p>6、支持手机短信、站内弹框消息、微信订阅消息：支持包括发货消息、卡券到期提醒、活动提醒、会员到期提醒、积分余额变动提醒等消息。</p>
-<b>官网演示地址：</b><br>
-<p>
-   1、后台地址：<a target="_blank" href="https://www.fuint.cn/fuintCar/">https://www.fuint.cn/fuintCar/</a> 演示账号：fuint / 123456<br>
-   2、swagger接口文档：<a target="_blank" href="https://www.fuint.cn/fuint-application/swagger-ui.html">https://www.fuint.cn/fuint-application/swagger-ui.html</a><br>
-   3、唯一官网：<a target="_blank" href="https://www.fuint.cn">https://www.fuint.cn</a>
-</p>
+1、会员运营自动化：商家通过日常活动设置，如开卡礼设置，沉睡唤醒等，成为会员后自动给顾客送优惠券，让顾客更有黏性，提升会员运营效率。
+2、打通收银系统和会员营销的壁垒，代客下单收银，支付即成为会员。
+3、会员体系完整化：积分兑换、积分转赠、会员等级权益、积分加速、买单折扣。
+4、会员卡券齐全：储值卡、电子券、优惠券、集次卡、计次卡、实体卡购买并兑换、会员充值、余额支付。
+5、线上代客下单收银系统，后台管理员可帮助临柜的会员下单、扫码支付。
+6、支持手机短信、站内弹框消息、微信订阅消息：支持包括发货消息、卡券到期提醒、活动提醒、会员到期提醒、积分余额变动提醒等消息。
+官网演示地址
+1、后台地址：https://www.fuint.cn/fuintCar/ 演示账号：fuint / 123456
+2、swagger接口文档：https://www.fuint.cn/fuint-application/swagger-ui.html
+3、唯一官网：https://www.fuint.cn
 
-<p><b>H5版体验：</b></p>
-<p><img src="https://fuint-cn.oss-cn-shenzhen.aliyuncs.com/uploads/9361ca90f5e94dbb8b20df7deac5b6bb.png" alt="qrcar.png" style="width: 224px; height: 219px;" width="224" height="219" class="loadingclass"/></p>
+H5版体验：
+![fuint汽车服务系统会员端页面截图3](assets/h5.png)
 
 #### 软件架构
 后端：JAVA SpringBoot3 + MYSQL Mybatis Plus + Redis
 前端：采用基于Vue的Uniapp、Element UI，前后端分离，支持微信小程序、h5等
-<p>后台截图：</p>
-<p><img src="https://fuint-cn.oss-cn-shenzhen.aliyuncs.com/screenshots/car/login.png?v=fuint" alt="登录界面"></p>
-<p><img src="https://fuint-cn.oss-cn-shenzhen.aliyuncs.com/screenshots/car/home.png?v=fuint" alt="首页"></p>
 
-前端使用技术<br>
-2.1 Vue<br>
-2.2 Uniapp<br>
-2.3 Element UI Plus
-2.4 Nodejs 24版本 
+#### 后台截图：
+![后台登录界面](assets/login.png)
+![后台首页](assets/home.png)
 
-后端使用技术<br>
-1.1 SpringBoot 3.2<br>
-1.2 Mybatis Plus<br>
-1.3 Maven<br>
-1.4 SpringSecurity<br>
-1.5 Druid<br>
-1.6 Slf4j<br>
-1.7 Fastjson<br>
-1.8 JWT<br>
-1.9 Redis<br>
-1.10 Quartz<br>
-1.11 Mysql 5.7或8版<br>
-1.12 Swagger UI<br>
+#### 前端使用技术
+1. Vue3;
+2. Uniapp;
+3. Element UI Plus;
+4. Nodejs 24版本;
+
+#### 后端使用技术
+1. SpringBoot 3.2;
+2. Mybatis Plus
+3. Maven
+4. SpringSecurity
+5. Druid
+6. Slf4j
+7. Fastjson
+8. JWT
+9. Redis
+10. Quartz
+11. Mysql 5.7 或 5.8版
+12. Swagger UI
 
 
 #### 安装步骤
-推荐软件环境版本：jdk 1.8、jdk11、jdk17、mysql 5.7、5.8
+推荐软件环境版本：jdk17+、mysql 5.7、5.8
 1. 导入db目录下的数据库文件。
 2. 修改config目录下的配置文件。
 3. 将工程打包，把jar包上传并执行。
-<p>提示：无后端和linux基础的朋友，可以使用<b>宝塔</b>部署，非常方便简单。</p>
+提示：无后端和linux基础的朋友，可以使用<b>宝塔</b>部署，非常方便简单。
 
 
 #### 前台使用说明
-
 1.  会员登录，登录成功后可看到会员的卡券列表。
 2.  卡券领取和购买，预存券的充值等。
 3.  核销卡券，会员在前台出示二维码，管理员用微信扫一扫即可核销。
@@ -97,14 +97,14 @@ fuint汽车美容4S店会员系统是一套开源的汽车服务行业会员管�
 4.  希望大家多多支持原创软件
 5.  请勿去除版权标签，要商用请购买源码授权（非常便宜），感谢理解！
 
-不足和待完善之处请谅解！源码仅供学习交流，更多功能欢迎进群咨询讨论，或需安装帮助请联系我们（<b>麻烦先点star！！！！！！</b>）。<br>
-官方网站：https://www.fuint.cn <br>
-开源不易，感谢支持！<br>
-<b>作者wx：fsq_better：</b><br>
-<p><img src="https://fuint-cn.oss-cn-shenzhen.aliyuncs.com/screenshots/qr.png" alt="公众号二维码"></p>
+不足和待完善之处请谅解！源码仅供学习交流，更多功能欢迎进群咨询讨论，或需安装帮助请联系我们（麻烦先点star！）
+官方网站：https://www.fuint.cn 
+开源不易，感谢支持！
+作者wx：fsq_better
+![fuint公众号二维码](assets/qr.png)
 
 
 特别鸣谢：<br>
-Mybaits Plus: https://github.com/baomidou/mybatis-plus<br>
-Vue: https://github.com/vuejs/vue<br>
-Element UI: https://element.eleme.cn
+1. Mybaits Plus: https://github.com/baomidou/mybatis-plus
+2. Vue: https://github.com/vuejs/vue
+3. Element UI: https://element.eleme.cn
