@@ -101,6 +101,7 @@ H5版体验：
 官方网站：https://www.fuint.cn 
 开源不易，感谢支持！
 作者wx：fsq_better
+
 ![fuint公众号二维码](assets/qr.png)
 
 
