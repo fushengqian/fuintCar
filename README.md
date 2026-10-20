@@ -100,8 +100,7 @@ H5版体验：
 不足和待完善之处请谅解！源码仅供学习交流，更多功能欢迎进群咨询讨论，或需安装帮助请联系我们（麻烦先点star！）
 官方网站：https://www.fuint.cn 
 开源不易，感谢支持！
-作者wx：fsq_better
-
+作者wx：fsq_better<br>
 ![fuint公众号二维码](assets/qr.png)
 
 
