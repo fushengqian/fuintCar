@@ -1,5 +1,9 @@
 package com.fuint.module.backendApi.controller.coupon;
 
+
+
+import java.util.ArrayList;
+import com.fuint.common.vo.UserCouponExportVo;
 import com.fuint.common.Constants;
 import com.fuint.common.dto.system.AccountInfo;
 import com.fuint.common.dto.common.ParamDto;
@@ -29,7 +33,6 @@ import com.fuint.utils.StringUtil;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.AllArgsConstructor;
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -239,40 +242,28 @@ public class BackendUserCouponController extends BaseController {
 
         PaginationResponse<MtUserCoupon> result = userCouponService.queryUserCouponListByPagination(new PaginationRequest(Constants.PAGE_NUMBER, Constants.MAX_ROWS, searchParams));
 
-        // excel标题
-        String[] title = { "核销二维码", "卡券ID", "卡券名称", "会员手机号", "状态", "面额", "余额" };
-
-        // excel文件名
-        String fileName = "会员卡券"+ DateUtil.formatDate(new Date(), "yyyy.MM.dd_HHmm") +".xls";
-
-        // sheet名
-        String sheetName = "数据列表";
-
-        String[][] content = null;
-
-        List<MtUserCoupon> list = result.getContent();
-
-        if (list.size() > 0) {
-            content= new String[list.size()][title.length];
+        // 组装导出数据（表头由 UserCouponExportVo 的 @ExcelProperty 声明）
+        List<UserCouponExportVo> data = new ArrayList<>();
+        for (MtUserCoupon obj : result.getContent()) {
+            if (obj == null) {
+                continue;
+            }
+            MtCoupon mtCoupon = couponService.queryCouponById(obj.getCouponId());
+            if (mtCoupon == null) {
+                continue;
+            }
+            UserCouponExportVo vo = new UserCouponExportVo();
+            vo.setCode(objectConvertToString(obj.getCode()));
+            vo.setCouponId(objectConvertToString(obj.getCouponId()));
+            vo.setCouponName(objectConvertToString(mtCoupon.getName()));
+            vo.setMobile(objectConvertToString(obj.getMobile()));
+            vo.setStatus(UserCouponStatusEnum.getValue(obj.getStatus()));
+            vo.setAmount(objectConvertToString(obj.getAmount() != null ? obj.getAmount().toString() : "0.00"));
+            vo.setBalance(objectConvertToString(obj.getBalance() != null ? obj.getBalance().toString() : "0.00"));
+            data.add(vo);
         }
 
-        for (int i = 0; i < list.size(); i++) {
-             MtUserCoupon obj = list.get(i);
-             MtCoupon mtCoupon = couponService.queryCouponById(obj.getCouponId());
-             if (mtCoupon != null) {
-                 content[i][0] = objectConvertToString(obj.getCode());
-                 content[i][1] = objectConvertToString(obj.getCouponId());
-                 content[i][2] = objectConvertToString(mtCoupon.getName());
-                 content[i][3] = objectConvertToString(obj.getMobile());
-                 content[i][4] = UserCouponStatusEnum.getValue(obj.getStatus());
-                 content[i][5] = objectConvertToString(obj.getAmount() != null ? obj.getAmount().toString() : "0.00");
-                 content[i][6] = objectConvertToString(obj.getBalance() != null ? obj.getBalance().toString() : "0.00");
-             }
-        }
-
-        // 创建HSSFWorkbook
-        HSSFWorkbook wb = ExcelUtil.getHSSFWorkbook(sheetName, title, content, null);
-        ExcelUtil.setResponseHeader(response, fileName, wb);
+        ExcelUtil.exportXlsx(response, "会员卡券" + DateUtil.formatDate(new Date(), "yyyy.MM.dd_HHmm"), "数据列表", UserCouponExportVo.class, data);
 
         logger.info("导出会员卡券成功，accountInfo = {}", accountInfo.getAccountName());
         return;

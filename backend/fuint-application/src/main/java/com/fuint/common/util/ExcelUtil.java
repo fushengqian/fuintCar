@@ -178,4 +178,22 @@ public class ExcelUtil {
         response.setHeader("Content-Disposition", "attachment;filename*=utf-8''" + encodedFileName + ".xlsx");
         EasyExcel.write(response.getOutputStream(), clazz).sheet(sheetName).doWrite(data);
     }
+
+    /**
+     * 导出 Excel（xlsx，自定义多行表头，用于带顶部汇总行的报表）
+     *
+     * @param response
+     * @param fileName  文件名（不含扩展名）
+     * @param sheetName sheet名称
+     * @param head      表头（可多行，第一行即汇总标题行）
+     * @param rows      数据行
+     */
+    public static void exportXlsxWithHead(HttpServletResponse response, String fileName, String sheetName,
+                                          List<List<String>> head, List<List<Object>> rows) throws IOException {
+        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        response.setCharacterEncoding("utf-8");
+        String encodedFileName = URLEncoder.encode(fileName, StandardCharsets.UTF_8.name()).replaceAll("\\+", "%20");
+        response.setHeader("Content-Disposition", "attachment;filename*=utf-8''" + encodedFileName + ".xlsx");
+        EasyExcel.write(response.getOutputStream()).head(head).sheet(sheetName).doWrite(rows);
+    }
 }
