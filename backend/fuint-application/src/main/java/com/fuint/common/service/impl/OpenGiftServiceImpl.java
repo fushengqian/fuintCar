@@ -175,6 +175,7 @@ public class OpenGiftServiceImpl extends ServiceImpl<MtOpenGiftMapper, MtOpenGif
 
         mtOpenGift.setStatus(StatusEnum.DISABLE.getKey());
         mtOpenGift.setUpdateTime(new Date());
+        mtOpenGift.setOperator(accountInfo.getAccountName());
 
         mtOpenGiftMapper.updateById(mtOpenGift);
     }

@@ -1,8 +1,5 @@
 package com.fuint.module.backendApi.controller.coupon;
 
-
-
-
 import java.util.stream.Collectors;
 import java.util.Objects;
 import com.fuint.common.vo.GiveLogExportVo;
@@ -16,7 +13,6 @@ import com.fuint.common.service.GiveService;
 import com.fuint.common.util.CommonUtil;
 import com.fuint.common.util.ExcelUtil;
 import com.fuint.common.util.TokenUtil;
-import com.fuint.common.util.XlsUtil;
 import com.fuint.framework.exception.BusinessCheckException;
 import com.fuint.framework.pagination.PaginationResponse;
 import com.fuint.framework.web.BaseController;
@@ -54,8 +50,8 @@ import static com.fuint.common.util.XlsUtil.objectConvertToString;
 @RequestMapping(value = "/backendApi/give")
 public class BackendGiveLogController extends BaseController {
 
-
     private static final Logger logger = LoggerFactory.getLogger(BackendGiveLogController.class);
+
     private MtUserCouponMapper mtUserCouponMapper;
 
     private MtCouponGroupMapper mtCouponGroupMapper;
@@ -96,7 +92,7 @@ public class BackendGiveLogController extends BaseController {
     @Operation(summary="查询转赠详情")
     @RequestMapping(value = "/giveItem", method = RequestMethod.GET)
     @CrossOrigin
-    public ResponseObject giveItem(HttpServletRequest request) throws BusinessCheckException {
+    public ResponseObject giveItem(HttpServletRequest request) {
         String giveId = request.getParameter("giveId");
 
         if (StringUtil.isEmpty(giveId)) {
@@ -144,8 +140,15 @@ public class BackendGiveLogController extends BaseController {
     @Operation(summary="导出转赠记录")
     @RequestMapping(value = "/export", method = RequestMethod.GET)
     @ResponseBody
-    public void export(HttpServletRequest request, HttpServletResponse response) throws Exception {
+    public void export(HttpServletRequest request, HttpServletResponse response) {
+        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getParameter("token"));
         GiveLogPage giveLogPage = new GiveLogPage();
+        if (accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0) {
+            giveLogPage.setMerchantId(accountInfo.getMerchantId());
+        }
+        if (accountInfo.getStoreId() != null && accountInfo.getStoreId() > 0) {
+            giveLogPage.setStoreId(accountInfo.getStoreId());
+        }
         giveLogPage.setPage(Constants.PAGE_NUMBER);
         giveLogPage.setPageSize(Constants.MAX_ROWS);
         PaginationResponse<GiveDto> paginationResponse = giveService.queryGiveListByPagination(giveLogPage);
