@@ -4,7 +4,6 @@
     "selectedColor": "#ff0000",
     "borderStyle": "black",
     "backgroundColor": "#ffffff",
-    "fontSize":"30rpx",
     "list": [{
       "pagePath": "pages/index/index",
       "iconPath": "static/tabbar/home.png",
