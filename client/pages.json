@@ -340,6 +340,19 @@
   "subPackages": [{
      "root": "subPages",
      "pages": [
+		{
+		  "path": "comment/index",
+		  "style": {
+			"navigationBarTitleText": "发表评价"
+		  }
+		},
+		{
+		  "path": "comment/my",
+		  "style": {
+			"navigationBarTitleText": "我的评价",
+			"enablePullDownRefresh": true
+		  }
+		},
          {
            "path": "book/index",
            "style": {
