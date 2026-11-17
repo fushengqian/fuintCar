@@ -130,8 +130,9 @@ public class ClientRefundController extends BaseController {
             return getFailureResult(201, "售后订单ID不能为空");
         }
         RefundDto refundInfo = refundService.getRefundById(Integer.parseInt(refundId));
-        if (!userInfo.getId().equals(refundInfo.getUserId())) {
-            return getFailureResult(201);
+        // 只能查看本人的售后单
+        if (refundInfo == null || !userInfo.getId().equals(refundInfo.getUserId())) {
+            return getFailureResult(201, "售后订单信息有误");
         }
         return getSuccessResult(refundInfo);
     }
