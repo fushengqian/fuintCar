@@ -371,7 +371,8 @@
         const gridComp = app.getComp('serviceGrid')
         if (gridComp && gridComp.data && gridComp.data.items && gridComp.data.items.length > 0) {
           const configItems = gridComp.data.items
-          app.service = configItems.map(item => {
+          // 过滤后台禁用的服务项
+          app.service = configItems.filter(item => !item.disabled).map(item => {
             const target = defaultService.find(s => s.name === item.name)
             const isContact = (item.name && item.name.indexOf('客服') > -1) || (item.openType && item.openType === 'contact')
             return {

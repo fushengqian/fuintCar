@@ -93,7 +93,7 @@ public class BackendRefundController extends BaseController {
     @RequestMapping(value = "/preCheck", method = RequestMethod.GET)
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('refund:index')")
-    public ResponseObject preCheck(@RequestParam Integer orderId) throws BusinessCheckException {
+    public ResponseObject preCheck(@RequestParam(name = "orderId") Integer orderId) throws BusinessCheckException {
         if (orderId == null || orderId <= 0) {
             return getFailureResult(1001, "订单ID不能为空");
         }

@@ -71,7 +71,7 @@ public class BackendCaptchaController {
     @Operation(summary="验证图形验证码")
     @RequestMapping(value="/checkCode", method = RequestMethod.POST)
     @ResponseBody
-    public String checkCode(@RequestParam String code, HttpServletRequest request) {
+    public String checkCode(@RequestParam(name = "code") String code, HttpServletRequest request) {
         String uuid = request.getParameter("uuid") == null ? "" : request.getParameter("uuid");
         Boolean flag = captchaService.checkCodeByUuid(code, uuid);
         if (flag) {

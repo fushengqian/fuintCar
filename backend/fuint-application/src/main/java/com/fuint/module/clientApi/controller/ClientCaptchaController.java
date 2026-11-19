@@ -68,7 +68,7 @@ public class ClientCaptchaController extends BaseController {
     @Operation(summary="校验图形验证码")
     @RequestMapping(value = "/checkCode", method = RequestMethod.POST)
     @CrossOrigin
-    public ResponseObject checkCode(@RequestParam String code, HttpServletRequest request) {
+    public ResponseObject checkCode(@RequestParam(name = "code") String code, HttpServletRequest request) {
         String uuid = request.getParameter("uuid") == null ? "" : request.getParameter("uuid");
 
         Boolean result = captchaService.checkCodeByUuid(code, uuid);

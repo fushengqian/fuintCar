@@ -306,7 +306,8 @@ public class BackendGoodsController extends BaseController {
         Integer cateId = (param.get("cateId") == null || StringUtil.isEmpty(param.get("cateId").toString())) ? 0 : Integer.parseInt(param.get("cateId").toString());
         String storeIds = (param.get("storeId") == null) ? null : param.get("storeId").toString();
         String type = param.get("type") == null ? "" : param.get("type").toString();
-        String couponIds = param.get("couponIds") == null ? "" : param.get("couponIds").toString();
+        // 仅在扩展信息提交时（携带couponIds键）才更新，null表示本次未提交，避免基础信息保存时误清空
+        String couponIds = param.get("couponIds") == null ? null : param.get("couponIds").toString();
         String serviceTime = param.get("serviceTime") == null ? "0" : param.get("serviceTime").toString();
         Integer bookId = (param.get("bookId") == null || StringUtil.isEmpty(param.get("bookId").toString())) ? 0 : Integer.parseInt(param.get("bookId").toString());
         List<LinkedHashMap> skuList = param.get("skuData") == null ? new ArrayList<>() : (List) param.get("skuData");
@@ -388,6 +389,13 @@ public class BackendGoodsController extends BaseController {
             }
             sku.setPrice(skuPrice);
 
+            // 该规格的会员价，0表示未设置（回退商品级会员价差价平移）
+            BigDecimal skuMemberPrice = new BigDecimal("0");
+            if (skuDto.get("memberPrice") != null && StringUtil.isNotEmpty(skuDto.get("memberPrice").toString())) {
+                skuMemberPrice = new BigDecimal(skuDto.get("memberPrice").toString());
+            }
+            sku.setMemberPrice(skuMemberPrice);
+
             BigDecimal skuLinePrice = new BigDecimal("0");
             if (skuDto.get("linePrice") != null && StringUtil.isNotEmpty(skuDto.get("linePrice").toString())) {
                 skuLinePrice = new BigDecimal(skuDto.get("linePrice").toString());
@@ -443,7 +451,8 @@ public class BackendGoodsController extends BaseController {
         if (StringUtil.isNotEmpty(serviceTime)) {
             mtGoods.setServiceTime(Integer.parseInt(serviceTime));
         }
-        if (StringUtil.isNotEmpty(couponIds)) {
+        if (couponIds != null) {
+            // 支持清空（设为空串），关闭附赠卡券后不再发放
             mtGoods.setCouponIds(couponIds);
         }
         mtGoods.setIsSingleSpec(isSingleSpec);
@@ -470,6 +479,11 @@ public class BackendGoodsController extends BaseController {
         }
         if (StringUtil.isNotEmpty(price)) {
             mtGoods.setPrice(new BigDecimal(price));
+        }
+        // 基础会员价：仅在扩展信息 tab 提交了该字段时写入，空值表示未设置会员价（0）
+        if (param.containsKey("memberPrice")) {
+            String memberPrice = param.get("memberPrice") == null ? "" : param.get("memberPrice").toString();
+            mtGoods.setMemberPrice(StringUtil.isEmpty(memberPrice) ? new BigDecimal("0") : new BigDecimal(memberPrice));
         }
         if (StringUtil.isNotEmpty(linePrice)) {
             mtGoods.setLinePrice(new BigDecimal(linePrice));
