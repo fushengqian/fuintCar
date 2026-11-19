@@ -55,11 +55,15 @@ public class ClientVehicleOrderController extends BaseController {
     @RequestMapping(value = "/detail", method = RequestMethod.GET)
     @CrossOrigin
     public ResponseObject detail(HttpServletRequest request) throws BusinessCheckException {
+        UserInfo userInfo = TokenUtil.getUserInfo();
         String orderId = request.getParameter("orderId");
         if (StringUtil.isEmpty(orderId)) {
             return getFailureResult(201, "服务单ID不能为空");
         }
         MtVehicleOrder orderInfo = vehicleOrderService.getVehicleOrderById(Integer.parseInt(orderId));
+        if (orderInfo == null || userInfo == null || !userInfo.getId().equals(orderInfo.getUserId())) {
+            return getFailureResult(201, "服务单信息有误");
+        }
         return getSuccessResult(orderInfo);
     }
 }
