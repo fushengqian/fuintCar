@@ -573,7 +573,9 @@ public class OrderServiceImpl extends ServiceImpl<MtOrderMapper, MtOrder> implem
             }
 
             boolean isUsePoint = orderDto.getUsePoint() > 0 ? true : false;
-            cartData = calculateCartGoods(orderInfo.getMerchantId(), orderDto.getUserId(), cartList, orderDto.getCouponId(), isUsePoint, orderDto.getPlatform(), orderInfo.getOrderMode(), orderDto.getCouponIds());
+            // 游客订单按原价计价（订单归属不变）
+            Integer calcUserId = YesOrNoEnum.YES.getKey().equals(orderDto.getIsVisitor()) ? 0 : orderDto.getUserId();
+            cartData = calculateCartGoods(orderInfo.getMerchantId(), calcUserId, cartList, orderDto.getCouponId(), isUsePoint, orderDto.getPlatform(), orderInfo.getOrderMode(), orderDto.getCouponIds());
 
             mtOrder.setAmount(new BigDecimal(cartData.get("totalPrice").toString()));
             mtOrder.setUsePoint(Integer.parseInt(cartData.get("usePoint").toString()));
@@ -705,8 +707,11 @@ public class OrderServiceImpl extends ServiceImpl<MtOrderMapper, MtOrder> implem
                  orderGoods.setNum(cart.getNum());
                  // 计算会员折扣
                  BigDecimal price = cart.getGoodsInfo().getPrice();
+                 // 已按基础会员价计价的商品，行价已含等级折扣，不再叠加原价折扣
+                 BigDecimal cartMemberPrice = cart.getGoodsInfo().getMemberPrice();
+                 boolean usedMemberPrice = cartMemberPrice != null && cartMemberPrice.compareTo(new BigDecimal("0")) > 0;
                  boolean isDiscount = cart.getGoodsInfo().getIsMemberDiscount().equals(YesOrNoEnum.YES.getKey()) ? true : false;
-                 if (percent.compareTo(new BigDecimal("0")) > 0 && isDiscount) {
+                 if (percent.compareTo(new BigDecimal("0")) > 0 && isDiscount && !usedMemberPrice) {
                      orderGoods.setPrice(price.multiply(percent));
                      BigDecimal discount = price.subtract(price.multiply(percent)).multiply(new BigDecimal(cart.getNum()));
                      orderGoods.setDiscount(discount);
@@ -2402,12 +2407,14 @@ public class OrderServiceImpl extends ServiceImpl<MtOrderMapper, MtOrder> implem
         BigDecimal percent = new BigDecimal("0");
         Integer storeId = 0;
         if (cartList.size() > 0) {
-            // 会员折扣
-            MtUserGrade userGrade = userGradeService.queryUserGradeById(userInfo.getMerchantId(), userInfo.getGradeId() != null ? userInfo.getGradeId() : 1, userId);
-            if (userGrade != null && userGrade.getDiscount() != null && userGrade.getDiscount() > 0 && !userInfo.getIsStaff().equals(YesOrNoEnum.YES.getKey())) {
-                percent = new BigDecimal(userGrade.getDiscount()).divide(new BigDecimal("10"), BigDecimal.ROUND_CEILING, 4);
-                if (percent.compareTo(new BigDecimal("0")) <= 0) {
-                    percent = new BigDecimal("1");
+            // 会员折扣（游客不参与）
+            if (userInfo != null) {
+                MtUserGrade userGrade = userGradeService.queryUserGradeById(userInfo.getMerchantId(), userInfo.getGradeId() != null ? userInfo.getGradeId() : 1, userId);
+                if (userGrade != null && userGrade.getDiscount() != null && userGrade.getDiscount() > 0 && !YesOrNoEnum.YES.getKey().equals(userInfo.getIsStaff())) {
+                    percent = new BigDecimal(userGrade.getDiscount()).divide(new BigDecimal("10"), BigDecimal.ROUND_CEILING, 4);
+                    if (percent.compareTo(new BigDecimal("0")) <= 0) {
+                        percent = new BigDecimal("1");
+                    }
                 }
             }
             for (MtCart cart : cartList) {
@@ -2419,16 +2426,48 @@ public class OrderServiceImpl extends ServiceImpl<MtOrderMapper, MtOrder> implem
                 if (mtGoodsInfo == null || !mtGoodsInfo.getStatus().equals(StatusEnum.ENABLED.getKey())) {
                     continue;
                 }
+                // 商品原价（SKU价格覆盖前，用于会员价差价换算）
+                BigDecimal originalPrice = mtGoodsInfo.getPrice();
                 // 取对应sku的价格
+                MtGoodsSku cartSku = null;
                 if (cart.getSkuId() != null && cart.getSkuId() > 0) {
-                    MtGoodsSku mtGoodsSku = mtGoodsSkuMapper.selectById(cart.getSkuId());
-                    if (mtGoodsSku != null && mtGoodsSku.getPrice().compareTo(new BigDecimal("0")) > 0) {
-                        mtGoodsInfo.setPrice(mtGoodsSku.getPrice());
+                    cartSku = mtGoodsSkuMapper.selectById(cart.getSkuId());
+                    if (cartSku != null && cartSku.getPrice().compareTo(new BigDecimal("0")) > 0) {
+                        mtGoodsInfo.setPrice(cartSku.getPrice());
                     }
                 }
-                // 会员支付折扣
+                // 基础会员价基数：SKU级会员价优先，其次商品级会员价（多规格按差价平移到SKU）
+                BigDecimal goodsMemberPrice = mtGoodsInfo.getMemberPrice();
+                BigDecimal memberBase = null;
+                BigDecimal skuMemberPrice = cartSku != null ? cartSku.getMemberPrice() : null;
+                if (skuMemberPrice != null && skuMemberPrice.compareTo(new BigDecimal("0")) > 0) {
+                    memberBase = skuMemberPrice;
+                } else if (goodsMemberPrice != null && goodsMemberPrice.compareTo(new BigDecimal("0")) > 0) {
+                    if (cartSku != null) {
+                        memberBase = cartSku.getPrice().subtract(originalPrice.subtract(goodsMemberPrice));
+                    } else {
+                        memberBase = goodsMemberPrice;
+                    }
+                }
+                // 基础会员价：有等级折扣时行价=会员价基数×等级折扣，否则按会员价原价；游客不享受会员价
+                boolean useMemberPrice = memberBase != null && userInfo != null;
+                if (memberBase != null && !useMemberPrice) {
+                    mtGoodsInfo.setMemberPrice(new BigDecimal("0"));
+                }
+                if (useMemberPrice) {
+                    if (memberBase.compareTo(new BigDecimal("0.01")) < 0) {
+                        memberBase = new BigDecimal("0.01");
+                    }
+                    if (percent.compareTo(new BigDecimal("0")) > 0) {
+                        mtGoodsInfo.setPrice(memberBase.multiply(percent).setScale(2, BigDecimal.ROUND_HALF_UP));
+                    } else {
+                        mtGoodsInfo.setPrice(memberBase.setScale(2, BigDecimal.ROUND_HALF_UP));
+                    }
+                    mtGoodsInfo.setMemberPrice(memberBase);
+                }
+                // 会员支付折扣（按原价打折；已按会员价计价的商品不叠加，避免双重优惠）
                 boolean isDiscount = mtGoodsInfo.getIsMemberDiscount().equals(YesOrNoEnum.YES.getKey()) ? true : false;
-                if (percent.compareTo(new BigDecimal("0")) > 0 && isDiscount) {
+                if (percent.compareTo(new BigDecimal("0")) > 0 && isDiscount && !useMemberPrice) {
                     BigDecimal discount = mtGoodsInfo.getPrice().subtract(mtGoodsInfo.getPrice().multiply(percent)).multiply(new BigDecimal(cart.getNum()));
                     memberDiscount = memberDiscount.add(discount);
                 }
@@ -2460,7 +2499,10 @@ public class OrderServiceImpl extends ServiceImpl<MtOrderMapper, MtOrder> implem
                         if (mtGoodsSku.getWeight().compareTo(new BigDecimal("0")) > 0) {
                             mtGoods.setWeight(mtGoodsSku.getWeight());
                         }
-                        mtGoods.setPrice(mtGoodsSku.getPrice());
+                        // 已按会员价计价的商品保留会员价，不覆盖回SKU原价
+                        if (!useMemberPrice) {
+                            mtGoods.setPrice(mtGoodsSku.getPrice());
+                        }
                         mtGoods.setLinePrice(mtGoodsSku.getLinePrice());
                         mtGoods.setStock(mtGoodsSku.getStock());
                     }
@@ -2641,7 +2683,7 @@ public class OrderServiceImpl extends ServiceImpl<MtOrderMapper, MtOrder> implem
         BigDecimal payPrice = totalPrice.subtract(couponAmount);
 
         // 可用积分、可用积分金额
-        Integer myPoint = userInfo.getPoint() == null ? 0 : userInfo.getPoint();
+        Integer myPoint = userInfo != null && userInfo.getPoint() != null ? userInfo.getPoint() : 0;
         Integer usePoint = 0;
         BigDecimal usePointAmount = new BigDecimal("0");
         if (hasPointGoods) {
@@ -2908,5 +2950,26 @@ public class OrderServiceImpl extends ServiceImpl<MtOrderMapper, MtOrder> implem
             idList.add(couponId);
         }
         return idList;
+    }
+
+    /**
+     * 获取待核销订单数量（已支付、到店自提、未核销的实物订单）
+     * 查询口径与getUserOrderList的dataType=todo保持一致
+     * */
+    @Override
+    public Long getTodoOrderCount(Integer merchantId, Integer storeId, Date beginTime, Date endTime) {
+        LambdaQueryWrapper<MtOrder> lambdaQueryWrapper = Wrappers.lambdaQuery();
+        lambdaQueryWrapper.ne(MtOrder::getStatus, OrderStatusEnum.DELETED.getKey());
+        lambdaQueryWrapper.eq(MtOrder::getPayStatus, PayStatusEnum.SUCCESS.getKey());
+        lambdaQueryWrapper.eq(MtOrder::getConfirmStatus, YesOrNoEnum.NO.getKey());
+        lambdaQueryWrapper.eq(MtOrder::getType, OrderTypeEnum.GOODS.getKey());
+        lambdaQueryWrapper.eq(MtOrder::getOrderMode, OrderModeEnum.ONESELF.getKey());
+        lambdaQueryWrapper.eq(MtOrder::getMerchantId, merchantId);
+        if (storeId != null && storeId > 0) {
+            lambdaQueryWrapper.eq(MtOrder::getStoreId, storeId);
+        }
+        lambdaQueryWrapper.ge(MtOrder::getCreateTime, beginTime);
+        lambdaQueryWrapper.le(MtOrder::getCreateTime, endTime);
+        return mtOrderMapper.selectCount(lambdaQueryWrapper);
     }
 }

@@ -766,4 +766,20 @@ public class RefundServiceImpl extends ServiceImpl<MtRefundMapper, MtRefund> imp
         balanceReq.setUpdateTime(new Date());
         return balanceReq;
     }
+
+    /**
+     * 获取待审核售后单数量
+     * */
+    @Override
+    public Long getRefundTodoCount(Integer merchantId, Integer storeId, Date beginTime, Date endTime) {
+        LambdaQueryWrapper<MtRefund> lambdaQueryWrapper = Wrappers.lambdaQuery();
+        lambdaQueryWrapper.eq(MtRefund::getMerchantId, merchantId);
+        if (storeId != null && storeId > 0) {
+            lambdaQueryWrapper.eq(MtRefund::getStoreId, storeId);
+        }
+        lambdaQueryWrapper.eq(MtRefund::getStatus, RefundStatusEnum.CREATED.getKey());
+        lambdaQueryWrapper.ge(MtRefund::getCreateTime, beginTime);
+        lambdaQueryWrapper.le(MtRefund::getCreateTime, endTime);
+        return mtRefundMapper.selectCount(lambdaQueryWrapper);
+    }
 }

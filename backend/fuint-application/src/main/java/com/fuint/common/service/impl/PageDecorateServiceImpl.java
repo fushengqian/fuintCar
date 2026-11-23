@@ -20,9 +20,11 @@ import com.fuint.common.service.SettingService;
 import com.fuint.framework.exception.BusinessCheckException;
 import com.fuint.framework.pagination.PaginationResponse;
 import com.fuint.repository.mapper.MtGoodsMapper;
+import com.fuint.repository.mapper.MtGoodsSkuMapper;
 import com.fuint.repository.mapper.MtPageItemMapper;
 import com.fuint.repository.mapper.MtPageMapper;
 import com.fuint.repository.model.MtGoods;
+import com.fuint.repository.model.MtGoodsSku;
 import com.fuint.repository.model.MtPage;
 import com.fuint.repository.model.MtPageItem;
 import com.fuint.repository.model.MtSetting;
@@ -39,6 +41,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -62,6 +65,8 @@ public class PageDecorateServiceImpl extends ServiceImpl<MtPageMapper, MtPage> i
     private MtPageItemMapper mtPageItemMapper;
 
     private MtGoodsMapper mtGoodsMapper;
+
+    private MtGoodsSkuMapper mtGoodsSkuMapper;
 
     /**
      * 系统设置服务接口
@@ -197,6 +202,9 @@ public class PageDecorateServiceImpl extends ServiceImpl<MtPageMapper, MtPage> i
     @Override
     @Transactional(rollbackFor = Exception.class)
     public MtPage savePage(PageDecorationDto pageDto, AccountInfo accountInfo) throws BusinessCheckException {
+        if (accountInfo.getMerchantId() == null || accountInfo.getMerchantId() < 1) {
+            throw new BusinessCheckException("平台方帐号无法执行该操作，请使用商户帐号操作");
+        }
         if (StringUtil.isBlank(pageDto.getPageName())) {
             throw new BusinessCheckException("页面名称不能为空");
         }
@@ -225,7 +233,8 @@ public class PageDecorateServiceImpl extends ServiceImpl<MtPageMapper, MtPage> i
                 pageDto.setStoreId(accountInfo.getStoreId());
             }
         }
-        mtPage.setStoreId(pageDto.getStoreId() == null ? 0 : pageDto.getStoreId());
+        mtPage.setMerchantId(accountInfo.getMerchantId());
+        mtPage.setStoreId(accountInfo.getStoreId());
         mtPage.setPageName(pageDto.getPageName());
         mtPage.setPageType(pageDto.getPageType());
         mtPage.setShareTitle(pageDto.getShareTitle());
@@ -548,14 +557,13 @@ public class PageDecorateServiceImpl extends ServiceImpl<MtPageMapper, MtPage> i
                 continue;
             }
             List<MtGoods> goodsEntities = mtGoodsMapper.selectList(Wrappers.lambdaQuery(MtGoods.class).in(MtGoods::getId, goodsIds));
-            Map<Integer, Double> saleMap = new HashMap<>();
+            Map<Integer, MtGoods> goodsMap = new HashMap<>();
             if (goodsEntities != null) {
                 for (MtGoods goodsEntity : goodsEntities) {
-                    Integer initSale = goodsEntity.getInitSale();
-                    saleMap.put(goodsEntity.getId(), initSale == null ? 0.0 : initSale.doubleValue());
+                    goodsMap.put(goodsEntity.getId(), goodsEntity);
                 }
             }
-            if (saleMap.size() == 0) {
+            if (goodsMap.size() == 0) {
                 continue;
             }
             for (Object obj : goodsList) {
@@ -567,10 +575,38 @@ public class PageDecorateServiceImpl extends ServiceImpl<MtPageMapper, MtPage> i
                 if (!(id instanceof Number)) {
                     continue;
                 }
-                Double sale = saleMap.get(((Number) id).intValue());
-                if (sale == null) {
+                MtGoods goodsEntity = goodsMap.get(((Number) id).intValue());
+                if (goodsEntity == null) {
                     continue;
                 }
+                // 回填最新价格（多规格取第一个SKU，与商品列表口径一致）
+                BigDecimal price = goodsEntity.getPrice();
+                BigDecimal linePrice = goodsEntity.getLinePrice();
+                BigDecimal memberPrice = goodsEntity.getMemberPrice();
+                if (YesOrNoEnum.NO.getKey().equals(goodsEntity.getIsSingleSpec())) {
+                    Map<String, Object> skuParam = new HashMap<>();
+                    skuParam.put("goods_id", goodsEntity.getId().toString());
+                    skuParam.put("status", StatusEnum.ENABLED.getKey());
+                    List<MtGoodsSku> goodsSkuList = mtGoodsSkuMapper.selectByMap(skuParam);
+                    if (goodsSkuList.size() > 0) {
+                        MtGoodsSku sku = goodsSkuList.get(0);
+                        price = sku.getPrice();
+                        linePrice = sku.getLinePrice();
+                        if (sku.getMemberPrice() != null && sku.getMemberPrice().compareTo(BigDecimal.ZERO) > 0) {
+                            memberPrice = sku.getMemberPrice();
+                        }
+                    }
+                }
+                if (price != null) {
+                    item.put("price", price);
+                }
+                if (linePrice != null) {
+                    item.put("linePrice", linePrice);
+                }
+                if (memberPrice != null) {
+                    item.put("memberPrice", memberPrice);
+                }
+                Double sale = goodsEntity.getInitSale() == null ? 0.0 : goodsEntity.getInitSale().doubleValue();
                 int saleInt = (int) Math.round(sale);
                 item.put("initSale", saleInt);
                 item.put("saleNum", saleInt);
