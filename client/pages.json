@@ -438,7 +438,13 @@
             "path": "commission/orders",
             "style": {
                "navigationBarTitleText": "佣金订单"
-            }
+             }
+         },
+         {
+            "path": "commission/rules",
+            "style": {
+               "navigationBarTitleText": "奖励说明"
+             }
          }
     ]
   },
